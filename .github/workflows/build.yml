@@ -1,4 +1,4 @@
-name: Run Build and Test
+name: Build and Test
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
           make build
 
   e2e-tests:
-    needs: build
+    needs: [build]
     name: e2e / ${{ matrix.suite.name }}
     runs-on: ubuntu-latest
     strategy:
