@@ -29,7 +29,7 @@ RUN echo "clickhouse-client clickhouse-server/root_password password root" | deb
 RUN DEBIAN_FRONTEND=noninteractive apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8919F6BD2B48D754 && \
   echo "deb https://packages.clickhouse.com/deb lts main" >> /etc/apt/sources.list && \
   apt-get update -qq && \
-  apt-get install -y clickhouse-server=24.8.14.39 clickhouse-client=24.8.14.39 clickhouse-common-static=24.8.14.39 && \
+  apt-get install -y clickhouse-server=25.3.1.2703 clickhouse-client=25.3.1.2703 clickhouse-common-static=25.3.1.2703 && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
