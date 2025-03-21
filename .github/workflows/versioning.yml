@@ -3,7 +3,7 @@ name: Automatic Versioning
 on:
   push:
     branches:
-      - main
+      - altinity
   workflow_call:
   workflow_dispatch:
 
@@ -34,6 +34,6 @@ jobs:
         id: calculate-version
         uses: bitshifted/git-auto-semver@v1
         with:
-          main_branch: main
+          main_branch: altinity
           create_tag: true
           tag_prefix: "v"
