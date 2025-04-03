@@ -1,0 +1,124 @@
+{{- range .Values.transfers }}
+{{- if ne .mode "disabled" }}
+
+{{- $TransferName := printf "%s-%s-%s" $.Release.Name $.Values.global.cluster .name }}
+
+{{- $profileName := .resource_profile | default "default_profile"}}
+{{- $resources := index $.Values $profileName }}
+{{- $resources = merge $resources $.Values.default_profile }}
+
+{{- $type := .type | default "INCREMENT_ONLY" }}
+{{- $log_level := .log_level | default "info" }}
+# to force a pod restart on configs change
+{{- $checksum := printf "%s|%s|%s|%s"
+      ($.Files.Get (printf "configs/%s.yaml" .name))
+      ($.Files.Get "configs/defaults.yaml")
+      ($.Files.Get (printf "db-hosts/%s.yaml" .src))
+      ($.Files.Get (printf "db-hosts/%s.yaml" .dst))
+      | sha256sum
+}}
+
+---
+apiVersion: apps/v1
+  {{- if eq $type "SNAPSHOT_ONLY" }}
+    {{- if .cron_expression }}
+kind: CronJob
+    {{- else }}
+kind: Job
+    {{- end }}
+  {{- else }}
+kind: StatefulSet
+  {{- end }}
+metadata:
+  name: {{ $TransferName }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $.Release.Name }}
+    app.kubernetes.io/component: {{ $TransferName }}
+spec:
+    {{- if eq $type "SNAPSHOT_ONLY" }}
+  completions: {{ .job_count | default 1 }}
+  parallelism: {{ .job_count | default 1 }}
+  completionMode: Indexed
+  backoffLimit: {{ .backoffLimit | default 1 }}
+      {{- if .cron_expression }}
+  schedule: {{ .cron_expression }}
+      {{- end }}
+    {{- else }}
+  replicas: {{ .job_count | default 1 }}
+    {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: {{ $TransferName }}
+  template:
+    metadata:
+        {{- if $.Values.annotations }}
+      annotations:
+        {{- toYaml $.Values.annotations | nindent 8 }}
+        {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ $.Release.Name }}
+        app.kubernetes.io/component: {{ $TransferName }}
+        checksum/config: {{ substr 0 12 $checksum }} # Forces a pod restart on configs change
+    spec:
+        {{- if $.Values.coordinator_s3 }}
+      serviceAccountName: {{ $.Values.coordinator_s3.serviceAccountName }}
+        {{- end }}
+        {{- if $.Values.affinity }}
+      affinity:
+        {{- toYaml $.Values.affinity | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: {{ $.Release.Name }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          command:
+            - "sh"
+            - "-c"
+            - >
+              {{- if eq .mode "debug" }} 
+              sleep infinity; 
+              {{- end }}
+              /usr/local/bin/trcli 
+              {{- if eq $type "SNAPSHOT_ONLY" }} activate {{- else }} replicate {{- end }}
+              --transfer /config/transfer.yaml
+              --log-level {{ $log_level }}
+              --log-config console
+              --metrics-prefix transfer
+        {{- if $.Values.coordinator_s3 }}
+              --coordinator s3
+              --coordinator-s3-bucket {{ $.Values.coordinator_s3.bucket }}
+        {{- end }}
+              --coordinator-job-count {{ .job_count | default 1 }}
+              --coordinator-process-count {{ .process_count | default 4 }}
+          env:
+          - name: GOMEMLIMIT
+            valueFrom:
+              resourceFieldRef:
+                resource: limits.memory
+        {{- if $.Values.coordinator_s3 }}
+        - name: AWS_REGION
+            value: {{ $.Values.coordinator_s3.region }}
+        {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ $.Release.Name }}-{{ .dst }}
+            - secretRef:
+                name: {{ $.Release.Name }}-{{ .src }}
+            {{- if $.Values.ports }}
+          ports:
+            {{- toYaml $.Values.ports | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          resources:
+            {{- toYaml $resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ $.Release.Name }}-{{ $.Values.global.cluster }}-{{ .name }}
+            items:
+              - key: transfer.yaml
+                path: transfer.yaml
+{{- end -}}
+{{- end -}}
