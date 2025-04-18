@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/library/go/core/xerrors"
@@ -378,11 +379,11 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 		},
 		Namespace:     "",
 		RestartPolicy: "Never",
-		PodName:       "transferia-runner",
+		PodName:       "runner",
 		Image:         a.config.DockerImage(),
 		LogDriver:     "local",
 		Network:       "host",
-		ContainerName: "",
+		ContainerName: "transferia-runner",
 		Volumes: []container.Volume{
 			{
 				Name:          "data",
@@ -391,9 +392,10 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 				VolumeType:    "bind",
 			},
 		},
-		Command:      nil,
-		Args:         nil,
-		Timeout:      0,
+		Command: nil,
+		Args:    nil,
+		// FIXME: make this configurable
+		Timeout:      12 * time.Hour,
 		AttachStdout: true,
 		AttachStderr: true,
 		AutoRemove:   true,
