@@ -15,7 +15,7 @@ import (
 
 type GpfdistTableSink struct {
 	// pipesWriter used to push data by its `.Write()` method.
-	pipesWriter *gpfdist.PipesWriter
+	pipesWriter *gpfdist.PipeWriter
 	gpfdist     *gpfdistbin.Gpfdist
 
 	// stopExtWriter waits for ExtWriter self-stop, and forcely cancels it if `timeout` expires.
@@ -44,7 +44,7 @@ func (s *GpfdistTableSink) Close() error {
 }
 
 func (s *GpfdistTableSink) Push(items []*abstract.ChangeItem) error {
-	lines := make([]string, len(items))
+	lines := make([][]byte, len(items))
 	for i, item := range items {
 		if item.Kind != abstract.InsertKind {
 			return xerrors.Errorf("unexpected item kind %s", string(item.Kind))
@@ -52,9 +52,9 @@ func (s *GpfdistTableSink) Push(items []*abstract.ChangeItem) error {
 		if len(item.ColumnValues) != 1 {
 			return xerrors.Errorf("unexpected item with %d values", len(item.ColumnValues))
 		}
-		line, ok := item.ColumnValues[0].(string)
+		line, ok := item.ColumnValues[0].([]byte)
 		if !ok || len(line) == 0 {
-			return xerrors.Errorf("expected item's value to be string, got '%T' or empty string", item.ColumnValues[0])
+			return xerrors.Errorf("expected item's value to be []byte, got '%T' or empty []byte", item.ColumnValues[0])
 		}
 		lines[i] = line
 	}
@@ -72,6 +72,7 @@ func InitGpfdistTableSink(
 	if err != nil {
 		return nil, xerrors.Errorf("unable to init gpfdist: %w", err)
 	}
+	logger.Log.Debugf("Gpfdist for sink initialized")
 
 	type workerResult struct {
 		rows int64
@@ -101,7 +102,7 @@ func InitGpfdistTableSink(
 	}()
 
 	// Run PipesWriter that would asyncly serve its `.Write()` method calls.
-	pipesWriter, err := gpfdist.InitPipesWriter(gpfd)
+	pipesWriter, err := gpfdist.InitPipeWriter(gpfd)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to init pipes writer: %w", err)
 	}

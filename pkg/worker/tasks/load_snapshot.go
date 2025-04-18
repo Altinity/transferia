@@ -10,7 +10,7 @@ import (
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/library/go/core/xerrors"
-	"github.com/transferia/transferia/library/go/slices"
+	yslices "github.com/transferia/transferia/library/go/slices"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/coordinator"
 	"github.com/transferia/transferia/pkg/abstract/model"
@@ -378,7 +378,7 @@ func (l *SnapshotLoader) dumpTablePartsToLogs(parts []*model.OperationTablePart)
 			end = len(parts)
 		}
 
-		partsToDump := slices.Map(parts[i:end], func(part *model.OperationTablePart) string {
+		partsToDump := yslices.Map(parts[i:end], func(part *model.OperationTablePart) string {
 			return part.String()
 		})
 		logger.Log.Info(fmt.Sprintf("Tables parts (shards) to copy [%v, %v]", i+1, end), log.Strings("parts", partsToDump))
@@ -868,40 +868,34 @@ func (l *SnapshotLoader) DoUploadTables(ctx context.Context, source abstract.Sto
 	var tableUploadErr error
 
 	progressTracker := NewSnapshotTableProgressTracker(ctx, l.operationID, l.cp, &l.progressUpdateMutex)
+	defer progressTracker.Close()
 
-	for {
+	for ctx.Err() == nil {
 		if err := parallelismSemaphore.Acquire(ctx, 1); err != nil {
-			logger.Log.Error("Failed to acquire semaphore to load next table", log.Any("worker_index", l.workerIndex), log.Error(ctx.Err()))
-			if tableUploadErr != nil {
-				return errors.CategorizedErrorf(categories.Internal, "Upload error: %w", err)
-			}
-			return errors.CategorizedErrorf(categories.Internal, "failed to acquire semaphore: %w", err)
-		}
-		waitToComplete.Add(1)
-
-		if ctx.Err() != nil {
-			logger.Log.Warn("Context is canceled while upload tables", log.Error(ctx.Err()))
-			waitToComplete.Done()
-			parallelismSemaphore.Release(1)
-			break // Transfer canceled
+			logger.Log.Error("Failed to acquire semaphore to load next table", log.Any("worker_index", l.workerIndex), log.Error(err))
+			continue
 		}
 
 		nextPart, err := nextTablePartProvider()
 		if err != nil {
+			parallelismSemaphore.Release(1)
 			logger.Log.Error("Unable to get next table to upload", log.Int("worker_index", l.workerIndex), log.Error(ctx.Err()))
 			return errors.CategorizedErrorf(categories.Internal, "unable to get next table to upload: %w", err)
 		}
 		if nextPart == nil {
-			waitToComplete.Done()
 			parallelismSemaphore.Release(1)
 			break // No more tables to transfer
 		}
 
+		waitToComplete.Add(1)
 		logger.Log.Info(
 			fmt.Sprintf("Assigned table part '%v' to worker %v", nextPart, l.workerIndex),
 			log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex))
 
 		go func() {
+			defer waitToComplete.Done()
+			defer parallelismSemaphore.Release(1)
+
 			upload := func() error {
 				if ctx.Err() != nil {
 					logger.Log.Warn(
@@ -1009,9 +1003,6 @@ func (l *SnapshotLoader) DoUploadTables(ctx context.Context, source abstract.Sto
 				return nil
 			}
 
-			defer waitToComplete.Done()
-			defer parallelismSemaphore.Release(1)
-
 			expBackoff := backoff.NewExponentialBackOff()
 			expBackoff.MaxElapsedTime = 0
 			notify := func(err error, dur time.Duration) {
@@ -1030,10 +1021,9 @@ func (l *SnapshotLoader) DoUploadTables(ctx context.Context, source abstract.Sto
 
 	}
 	waitToComplete.Wait()
-	progressTracker.Close()
 
 	if tableUploadErr != nil {
-		return tableUploadErr
+		return errors.CategorizedErrorf(categories.Internal, "Upload error: %w", tableUploadErr)
 	}
 
 	return nil

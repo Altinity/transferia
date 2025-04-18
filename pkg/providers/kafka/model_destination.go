@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"github.com/transferia/transferia/library/go/core/xerrors"
-	"github.com/transferia/transferia/library/go/slices"
+	yslices "github.com/transferia/transferia/library/go/slices"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	debeziumparameters "github.com/transferia/transferia/pkg/debezium/parameters"
@@ -51,7 +51,7 @@ type TopicConfigEntry struct {
 }
 
 func topicConfigEntryToSlices(t []TopicConfigEntry) [][2]string {
-	return slices.Map(t, func(tt TopicConfigEntry) [2]string {
+	return yslices.Map(t, func(tt TopicConfigEntry) [2]string {
 		return [2]string{tt.ConfigName, tt.ConfigValue}
 	})
 }
@@ -131,8 +131,8 @@ func (d *KafkaDestination) Serializer() (model.SerializationFormat, bool) {
 	return formatSettings, d.SaveTxOrder
 }
 
-func (d *KafkaDestination) BuffererConfig() bufferer.BuffererConfig {
-	return bufferer.BuffererConfig{
+func (d *KafkaDestination) BuffererConfig() *bufferer.BuffererConfig {
+	return &bufferer.BuffererConfig{
 		TriggingCount:    d.FormatSettings.BatchingSettings.MaxChangeItems,
 		TriggingSize:     uint64(d.FormatSettings.BatchingSettings.MaxMessageSize),
 		TriggingInterval: d.FormatSettings.BatchingSettings.Interval,

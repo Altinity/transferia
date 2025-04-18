@@ -2,17 +2,17 @@ package kafka
 
 import (
 	"context"
-	"encoding/gob"
 
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/library/go/core/xerrors"
-	"github.com/transferia/transferia/library/go/slices"
+	yslices "github.com/transferia/transferia/library/go/slices"
 	"github.com/transferia/transferia/pkg/abstract"
 	cpclient "github.com/transferia/transferia/pkg/abstract/coordinator"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/middlewares"
 	"github.com/transferia/transferia/pkg/providers"
 	"github.com/transferia/transferia/pkg/providers/kafka/client"
+	"github.com/transferia/transferia/pkg/util/gobwrapper"
 	"github.com/transferia/transferia/pkg/util/set"
 	"go.ytsaurus.tech/library/go/core/log"
 )
@@ -21,8 +21,8 @@ func init() {
 	destinationFactory := func() model.Destination {
 		return new(KafkaDestination)
 	}
-	gob.RegisterName("*server.KafkaSource", new(KafkaSource))
-	gob.RegisterName("*server.KafkaDestination", new(KafkaDestination))
+	gobwrapper.RegisterName("*server.KafkaSource", new(KafkaSource))
+	gobwrapper.RegisterName("*server.KafkaDestination", new(KafkaDestination))
 	model.RegisterSource(ProviderType, func() model.Source {
 		return new(KafkaSource)
 	})
@@ -95,7 +95,7 @@ func (p *Provider) Sniffer(_ context.Context) (abstract.Fetchable, error) {
 		if err != nil {
 			return nil, xerrors.Errorf("unable to list topics: %w", err)
 		}
-		topics = slices.Filter(topics, func(s string) bool {
+		topics = yslices.Filter(topics, func(s string) bool {
 			return !systemTopics.Contains(s) // ignore system topics
 		})
 	}

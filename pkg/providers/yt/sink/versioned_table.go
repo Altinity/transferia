@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/library/go/core/xerrors/multierr"
-	xslices "github.com/transferia/transferia/library/go/slices"
+	yslices "github.com/transferia/transferia/library/go/slices"
 	"github.com/transferia/transferia/pkg/abstract"
 	yt2 "github.com/transferia/transferia/pkg/providers/yt"
 	"github.com/transferia/transferia/pkg/stats"
@@ -148,7 +148,6 @@ ROWS:
 		row := map[string]interface{}{}
 		switch item.Kind {
 		case "update", "insert":
-			hasOnlyPKey := true
 			for idx, col := range item.ColumnNames {
 				if typeMap[col].DataType == "string" {
 					if s, ok := item.ColumnValues[idx].(string); ok && len(s) > 16777216 && t.config.LoseDataOnError() {
@@ -159,9 +158,7 @@ ROWS:
 				if len(item.ColumnValues) <= idx || !t.props[col] {
 					continue
 				}
-				if !t.keys[col] {
-					hasOnlyPKey = false
-				} else {
+				if t.keys[col] {
 					keys[col], err = Restore(typeMap[col], item.ColumnValues[idx])
 					if err != nil {
 						return xerrors.Errorf("unable to restore value for key column '%s': %w", col, err)
@@ -171,9 +168,6 @@ ROWS:
 				if err != nil {
 					return xerrors.Errorf("unable to restore value for column '%s': %w", col, err)
 				}
-			}
-			if hasOnlyPKey {
-				row["__dummy"] = nil
 			}
 			lookupKeys = append(lookupKeys, keys)
 			insertRows = append(insertRows, row)
@@ -221,10 +215,10 @@ ROWS:
 		if len(versions) > 0 {
 			skipped, newestRows = t.splitOldNewRows(insertRows, versions)
 		} else {
-			newestRows = xslices.Map(insertRows, func(t map[string]interface{}) interface{} { return t })
+			newestRows = yslices.Map(insertRows, func(t map[string]interface{}) interface{} { return t })
 		}
 	} else {
-		newestRows = xslices.Map(insertRows, func(t map[string]interface{}) interface{} { return t })
+		newestRows = yslices.Map(insertRows, func(t map[string]interface{}) interface{} { return t })
 	}
 
 	t.logger.Infof("Skipped %v from %v rows (%v will be inserted)", len(skipped), len(insertRows), len(newestRows))
@@ -278,7 +272,6 @@ func (t *VersionedTable) updateIndexes(ctx context.Context, tx yt.TabletTx, rows
 				}
 				idxRow := map[string]interface{}{}
 				idxRow[k] = r[k]
-				idxRow["_dummy"] = nil
 				for _, col := range t.schema {
 					if col.PrimaryKey {
 						idxRow[col.ColumnName] = r[col.ColumnName]

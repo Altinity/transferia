@@ -12,7 +12,7 @@ import (
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/library/go/core/xerrors"
-	"github.com/transferia/transferia/library/go/slices"
+	yslices "github.com/transferia/transferia/library/go/slices"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/stats"
@@ -66,7 +66,7 @@ func NewStorage(cfg *YdbStorageParams, mtrcs metrics.Registry) (*Storage, error)
 		return nil, xerrors.Errorf("Cannot create YDB credentials: %w", err)
 	}
 
-	ydbDriver, err := newYDBDriver(clientCtx, cfg.Database, cfg.Instance, ydbCreds, tlsConfig)
+	ydbDriver, err := newYDBDriver(clientCtx, cfg.Database, cfg.Instance, ydbCreds, tlsConfig, false)
 	if err != nil {
 		return nil, xerrors.Errorf("Cannot create YDB driver: %w", err)
 	}
@@ -165,7 +165,7 @@ func (s *Storage) listaAllTablesToTransfer(ctx context.Context) ([]string, error
 		}
 	}
 
-	allTables = slices.Map(allTables, func(from string) string {
+	allTables = yslices.Map(allTables, func(from string) string {
 		return strings.TrimLeft(from, "/")
 	})
 	return allTables, nil

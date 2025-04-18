@@ -14,7 +14,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
-	"github.com/transferia/transferia/library/go/slices"
+	yslices "github.com/transferia/transferia/library/go/slices"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/changeitem"
 	"github.com/transferia/transferia/pkg/providers/clickhouse/columntypes"
@@ -28,18 +28,17 @@ import (
 )
 
 type sinkTable struct {
-	server          *SinkServer
-	tableName       string
-	config          model.ChSinkServerParams
-	logger          log.Logger
-	colTypes        columntypes.TypeMapping
-	cols            *abstract.TableSchema // warn: schema can be changed inflight
-	metrics         *stats.ChStats
-	avgRowSize      int
-	cluster         *sinkCluster
-	timezoneFetched bool
-	timezone        *time.Location
-	version         semver.Version
+	server     *SinkServer
+	tableName  string
+	config     model.ChSinkServerParams
+	logger     log.Logger
+	colTypes   columntypes.TypeMapping
+	cols       *abstract.TableSchema // warn: schema can be changed inflight
+	metrics    *stats.ChStats
+	avgRowSize int
+	cluster    *sinkCluster
+	timezone   *time.Location
+	version    semver.Version
 }
 
 var (
@@ -162,7 +161,7 @@ func (t *sinkTable) generateDDL(cols []abstract.ColSchema, distributed bool) str
 	result.WriteString(fmt.Sprintf(" ENGINE=%s(%s)", engine, strings.Join(engineArgs, ", ")))
 
 	if keys := keys(cols); len(keys) > 0 {
-		escapedKeys := slices.Map(keys, func(col string) string {
+		escapedKeys := yslices.Map(keys, func(col string) string {
 			return fmt.Sprintf("`%s`", col)
 		})
 		result.WriteString(fmt.Sprintf(" ORDER BY (%s)", strings.Join(escapedKeys, ", ")))
@@ -685,28 +684,6 @@ func (t *sinkTable) checkExist() (bool, error) {
 		return exist, err
 	}
 	return exist, nil
-}
-
-func (t *sinkTable) resolveTimezone() error {
-	if !t.timezoneFetched {
-		row := t.server.db.QueryRow(`SELECT timezone();`)
-		var timezone string
-		err := row.Scan(&timezone)
-		if err != nil {
-			return xerrors.Errorf("failed to fetch CH timezone: %w", err)
-		}
-
-		t.logger.Infof("Fetched CH cluster timezone %s", timezone)
-
-		loc, err := time.LoadLocation(timezone)
-		if err != nil {
-			return xerrors.Errorf("failed to parse CH timezone %s: %w", timezone, err)
-		}
-		t.timezone = loc
-		t.timezoneFetched = true
-	}
-
-	return nil
 }
 
 func restoreVals(vals []interface{}, cols []abstract.ColSchema) []interface{} {
