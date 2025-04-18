@@ -378,7 +378,7 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 		},
 		Namespace:     "",
 		RestartPolicy: "Never",
-		PodName:       "",
+		PodName:       "transferia-runner",
 		Image:         a.config.DockerImage(),
 		LogDriver:     "local",
 		Network:       "host",
