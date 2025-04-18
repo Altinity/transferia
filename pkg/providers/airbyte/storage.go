@@ -446,6 +446,8 @@ func (a *Storage) runCommand(args ...string) ([]byte, error) {
 		opts := a.baseOpts()
 		opts.Command = args
 
+		a.logger.Error(cmdErr.Error())
+
 		a.logger.Errorf("command: %s stdout:\n%s", opts.String(), outBuf.String())
 		a.logger.Errorf("command: %s stderr:\n%s", opts.String(), errBuf.String())
 
