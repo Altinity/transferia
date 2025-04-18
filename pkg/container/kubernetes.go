@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -43,10 +44,25 @@ func (w *K8sWrapper) Pull(_ context.Context, _ string, _ types.ImagePullOptions)
 	return nil
 }
 
+func (w *K8sWrapper) getCurrentNamespace() (string, error) {
+	b, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
+}
+
 func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, error) {
+	ns, err := w.getCurrentNamespace()
+	if err != nil {
+		ns = "default"
+	}
+
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: opts.PodName,
+			Name:      opts.PodName,
+			Namespace: ns,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
