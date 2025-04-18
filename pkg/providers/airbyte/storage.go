@@ -82,7 +82,7 @@ func (a *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 		fmt.Sprintf("/data/%s", catalogFile),
 	}
 
-	stdout, stderr, err := a.runRawCommand(args...)
+	stdout, stderr, err := a.runRawCommand(nil, args...)
 	if err != nil {
 		return xerrors.Errorf("%s unable to start: %w", table.ID().String(), err)
 	}
@@ -323,6 +323,7 @@ func (a *Storage) check() error {
 	if err := a.writeFile("config.json", a.config.Config); err != nil {
 		return xerrors.Errorf("unable to write config: %w", err)
 	}
+
 	configResponse, err := a.runCommand("check", "--config", "/data/config.json")
 	if err != nil {
 		return err
@@ -331,6 +332,11 @@ func (a *Storage) check() error {
 	for _, row := range logs {
 		a.logger.Infof("config: %v", row)
 	}
+
+	if resp == nil {
+		return xerrors.New("empty response")
+	}
+
 	if resp.Type != MessageTypeConnectionStatus {
 		return xerrors.Errorf("unexpected response type: %v", resp.Type)
 	}
@@ -402,11 +408,12 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 	}
 }
 
-func (a *Storage) runRawCommand(args ...string) (io.Reader, io.Reader, error) {
+func (a *Storage) runRawCommand(cmd []string, args ...string) (io.Reader, io.Reader, error) {
 	ctx := context.Background()
 
 	opts := a.baseOpts()
-	opts.Command = args
+	opts.Command = cmd
+	opts.Args = args
 
 	a.logger.Info(opts.String())
 
@@ -432,7 +439,7 @@ func safeReadFrom(dst *bytes.Buffer, src io.Reader) (n int64, err error) {
 }
 
 func (a *Storage) runCommand(args ...string) ([]byte, error) {
-	outReader, errReader, cmdErr := a.runRawCommand(args...)
+	outReader, errReader, cmdErr := a.runRawCommand(nil, args...)
 
 	outBuf := new(bytes.Buffer)
 	errBuf := new(bytes.Buffer)

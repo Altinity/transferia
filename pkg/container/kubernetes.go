@@ -64,8 +64,8 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      opts.PodName,
-			Namespace: opts.Namespace,
+			GenerateName: opts.PodName,
+			Namespace:    opts.Namespace,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
