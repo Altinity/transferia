@@ -54,15 +54,18 @@ func (w *K8sWrapper) getCurrentNamespace() (string, error) {
 }
 
 func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, error) {
-	ns, err := w.getCurrentNamespace()
-	if err != nil {
-		ns = "default"
+	if opts.Namespace == "" {
+		ns, err := w.getCurrentNamespace()
+		if err != nil {
+			ns = "default"
+		}
+		opts.Namespace = ns
 	}
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      opts.PodName,
-			Namespace: ns,
+			Namespace: opts.Namespace,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
