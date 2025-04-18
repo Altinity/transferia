@@ -3,6 +3,7 @@ package container
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -64,7 +65,7 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: opts.PodName,
+			GenerateName: fmt.Sprintf("%s-", opts.PodName),
 			Namespace:    opts.Namespace,
 		},
 		Spec: corev1.PodSpec{
@@ -83,7 +84,7 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 		},
 	}
 
-	_, err := w.client.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
+	p, err := w.client.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create pod: %w", err)
 	}
@@ -97,10 +98,10 @@ waitLoop:
 		select {
 		case <-timeout:
 			// If timed out, clean up.
-			_ = w.client.CoreV1().Pods(opts.Namespace).Delete(ctx, opts.PodName, metav1.DeleteOptions{})
-			return nil, xerrors.Errorf("timeout waiting for pod %s to complete", opts.PodName)
+			_ = w.client.CoreV1().Pods(opts.Namespace).Delete(ctx, p.GetName(), metav1.DeleteOptions{})
+			return nil, xerrors.Errorf("timeout waiting for pod %s to complete", p.GetName())
 		case <-tick.C:
-			p, err := w.client.CoreV1().Pods(opts.Namespace).Get(ctx, opts.PodName, metav1.GetOptions{})
+			p, err := w.client.CoreV1().Pods(opts.Namespace).Get(ctx, p.GetName(), metav1.GetOptions{})
 			if err != nil {
 				return nil, xerrors.Errorf("failed to get pod info: %w", err)
 			}
@@ -112,9 +113,9 @@ waitLoop:
 	}
 
 	logOpts := &corev1.PodLogOptions{
-		Container: opts.PodName,
+		Container: p.GetName(),
 	}
-	rc := w.client.CoreV1().Pods(opts.Namespace).GetLogs(opts.PodName, logOpts)
+	rc := w.client.CoreV1().Pods(opts.Namespace).GetLogs(p.GetName(), logOpts)
 	stream, err := rc.Stream(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to stream pod logs: %w", err)
@@ -128,7 +129,7 @@ waitLoop:
 		return stdout, xerrors.Errorf("failed copying pod logs: %w", err)
 	}
 
-	_ = w.client.CoreV1().Pods(opts.Namespace).Delete(ctx, opts.PodName, metav1.DeleteOptions{})
+	_ = w.client.CoreV1().Pods(opts.Namespace).Delete(ctx, p.GetName(), metav1.DeleteOptions{})
 	return stdout, nil
 }
 

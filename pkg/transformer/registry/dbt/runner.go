@@ -82,7 +82,7 @@ func (r *runner) dockerImageTag() string {
 }
 
 func (r *runner) initializeConfiguration(ctx context.Context) error {
-	if err := os.MkdirAll(dataDirectory(), (os.ModeDir | 0700)); err != nil {
+	if err := os.MkdirAll(dataDirectory(), (os.ModeDir | 0o700)); err != nil {
 		return xerrors.Errorf("failed to create the DBT data directory %q: %w", dataDirectory(), err)
 	}
 
@@ -103,7 +103,7 @@ func (r *runner) initializeConfiguration(ctx context.Context) error {
 	if err != nil {
 		return xerrors.Errorf("failed to marshal the DBT configuration of the destination database into YAML: %w", err)
 	}
-	if err := os.WriteFile(pathProfiles(), marshalledDestinationConfiguration, 0644); err != nil {
+	if err := os.WriteFile(pathProfiles(), marshalledDestinationConfiguration, 0o644); err != nil {
 		return xerrors.Errorf("failed to write the profile file to '%s': %w", pathProfiles(), err)
 	}
 
@@ -192,10 +192,10 @@ func (r *runner) run(ctx context.Context) error {
 				ContainerPath: "/root/.dbt/profiles.yml",
 			},
 		},
-		Command: []string{
+		Command: nil,
+		Args: []string{
 			r.cfg.Operation,
 		},
-		Args:         nil,
 		Timeout:      0,
 		AttachStdout: true,
 		AttachStderr: true,
