@@ -80,7 +80,7 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 		},
 	}
 
-	_, err := w.client.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
+	_, err = w.client.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 	if err != nil {
 		return nil, xerrors.Errorf("failed to create pod: %w", err)
 	}
