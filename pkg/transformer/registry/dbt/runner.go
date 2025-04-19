@@ -173,11 +173,11 @@ func (r *runner) run(ctx context.Context) error {
 		},
 		Namespace:     "",
 		RestartPolicy: v1.RestartPolicyNever,
-		PodName:       "",
+		PodName:       "dbt-runner",
 		Image:         r.fullImageID(),
 		LogDriver:     "local",
 		Network:       "host",
-		ContainerName: "",
+		ContainerName: "runner",
 		Volumes: []container.Volume{
 			{
 				Name:          "project",

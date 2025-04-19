@@ -385,11 +385,11 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 		},
 		Namespace:     "",
 		RestartPolicy: "Never",
-		PodName:       "runner",
+		PodName:       "airbyte-runner",
 		Image:         a.config.DockerImage(),
 		LogDriver:     "local",
 		Network:       "host",
-		ContainerName: "transferia-runner",
+		ContainerName: "runner",
 		Volumes: []container.Volume{
 			{
 				Name:          "data",

@@ -63,6 +63,14 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 		opts.Namespace = ns
 	}
 
+	if opts.PodName == "" {
+		opts.PodName = "transferia-runner"
+	}
+
+	if opts.ContainerName == "" {
+		opts.ContainerName = "runner"
+	}
+
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", opts.PodName),
@@ -71,7 +79,7 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:         opts.PodName,
+					Name:         opts.ContainerName,
 					Image:        opts.Image,
 					Command:      opts.Command,
 					Args:         opts.Args,
@@ -113,7 +121,7 @@ waitLoop:
 	}
 
 	logOpts := &corev1.PodLogOptions{
-		Container: p.GetName(),
+		Container: opts.ContainerName,
 	}
 	rc := w.client.CoreV1().Pods(opts.Namespace).GetLogs(p.GetName(), logOpts)
 	stream, err := rc.Stream(ctx)
