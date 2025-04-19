@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/mount"
@@ -196,7 +197,8 @@ func (r *runner) run(ctx context.Context) error {
 		Args: []string{
 			r.cfg.Operation,
 		},
-		Timeout:      0,
+		// FIXME: make this configurable
+		Timeout:      12 * time.Hour,
 		AttachStdout: true,
 		AttachStderr: true,
 		AutoRemove:   true,

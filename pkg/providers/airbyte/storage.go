@@ -412,6 +412,7 @@ func (a *Storage) runRawCommand(cmd []string, args ...string) (io.Reader, io.Rea
 	ctx := context.Background()
 
 	opts := a.baseOpts()
+
 	opts.Command = cmd
 	opts.Args = args
 

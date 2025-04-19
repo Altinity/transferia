@@ -71,12 +71,22 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 		opts.ContainerName = "runner"
 	}
 
+	// Get the current node name from environment variable
+	nodeName := os.Getenv("NODE_NAME")
+	if nodeName == "" {
+		// Log a warning if NODE_NAME is not set
+		fmt.Println("Warning: NODE_NAME environment variable not set. Pod will be scheduled according to cluster rules.")
+	}
+
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", opts.PodName),
 			Namespace:    opts.Namespace,
 		},
 		Spec: corev1.PodSpec{
+			// FIXME: This is a temporary workaround to the issue of sharing the data volume between the main process and runner pod.
+			// Ideally, we should use a shared volume or a different approach to share data.
+			NodeName: nodeName,
 			Containers: []corev1.Container{
 				{
 					Name:         opts.ContainerName,
