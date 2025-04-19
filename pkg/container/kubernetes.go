@@ -72,10 +72,10 @@ func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, e
 	}
 
 	// Get the current node name from environment variable
-	nodeName := os.Getenv("NODE_NAME")
+	nodeName := os.Getenv("OPERATOR_POD_NODE_NAME")
 	if nodeName == "" {
 		// Log a warning if NODE_NAME is not set
-		fmt.Println("Warning: NODE_NAME environment variable not set. Pod will be scheduled according to cluster rules.")
+		fmt.Println("Warning: OPERATOR_POD_NODE_NAME environment variable not set. Pod will be scheduled according to cluster rules.")
 	}
 
 	pod := &corev1.Pod{
