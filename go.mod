@@ -28,7 +28,7 @@ require (
 	github.com/elastic/go-elasticsearch/v7 v7.17.1
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/go-mysql-org/go-mysql v1.8.0
-	github.com/go-sql-driver/mysql v1.7.1
+	github.com/go-sql-driver/mysql v1.9.1
 	github.com/goccy/go-json v0.10.3
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang/mock v1.7.0-rc.1
@@ -43,7 +43,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/jhump/protoreflect v1.15.6
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/klauspost/compress v1.17.9
+	github.com/klauspost/compress v1.17.11
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mitchellh/mapstructure v1.5.1-0.20220423185008-bf980b35cac4
 	github.com/montanaflynn/stats v0.7.1
@@ -53,7 +53,7 @@ require (
 	github.com/parquet-go/parquet-go v0.24.0
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/pingcap/parser v0.0.0-20210415081931-48e7f467fd74
-	github.com/prometheus/client_golang v1.20.5
+	github.com/prometheus/client_golang v1.21.1
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.62.0
 	github.com/prometheus/procfs v0.15.1
@@ -71,7 +71,7 @@ require (
 	github.com/valyala/fastjson v1.6.4
 	github.com/xitongsys/parquet-go v1.6.2
 	github.com/xitongsys/parquet-go-source v0.0.0-20220315005136-aec0fe3e777c
-	github.com/ydb-platform/ydb-go-sdk/v3 v3.104.6
+	github.com/ydb-platform/ydb-go-sdk/v3 v3.108.0
 	go.mongodb.org/mongo-driver v1.17.3
 	go.uber.org/atomic v1.11.0
 	go.uber.org/mock v0.5.0
@@ -107,6 +107,7 @@ require (
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/storage v1.49.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible // indirect
 	github.com/Azure/go-amqp v0.17.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -294,6 +295,8 @@ replace github.com/grpc-ecosystem/grpc-gateway/v2 => github.com/grpc-ecosystem/g
 
 replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.22.0
 
+replace go.temporal.io/server => go.temporal.io/server v1.25.2
+
 replace github.com/jackc/pgtype => github.com/jackc/pgtype v1.12.0
 
 replace github.com/aws/aws-sdk-go => github.com/aws/aws-sdk-go v1.46.7
@@ -346,11 +349,9 @@ replace github.com/temporalio/features/features => github.com/temporalio/feature
 
 replace github.com/temporalio/features/harness/go => github.com/temporalio/features/harness/go v0.0.0-20231218231852-27c681667dae
 
-replace github.com/temporalio/omes => github.com/temporalio/omes v0.0.0-20240429210145-5fa5c107b7a8
+replace github.com/temporalio/omes => github.com/temporalio/omes v0.0.0-20240701113332-211647aa9dae
 
 replace github.com/aleroyer/rsyslog_exporter => github.com/prometheus-community/rsyslog_exporter v1.1.0
-
-replace github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.20.5
 
 replace github.com/prometheus/client_model => github.com/prometheus/client_model v0.6.1
 
@@ -361,7 +362,5 @@ replace github.com/distribution/reference => github.com/distribution/reference v
 replace github.com/jackc/pgconn => github.com/jackc/pgconn v1.14.0
 
 replace github.com/jackc/pgproto3/v2 => github.com/jackc/pgproto3/v2 v2.3.2
-
-replace github.com/nexus-rpc/sdk-go => github.com/nexus-rpc/sdk-go v0.0.7
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.24
