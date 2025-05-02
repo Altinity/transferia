@@ -314,7 +314,21 @@ func (a *Storage) parse(data []byte) (*Message, []string) {
 }
 
 func (a *Storage) writeFile(fileName, fileData string) error {
-	fullPath := filepath.Join(a.config.DataDir(), fileName)
+	var fullPath string
+
+	// Check if running in Kubernetes by checking the container wrapper type
+	if a.cw.Type() == container.BackendKubernetes {
+		// Use temporary directory for Kubernetes
+		tempDir := "/tmp/airbyte-secrets"
+		if err := os.MkdirAll(tempDir, 0o755); err != nil {
+			return xerrors.Errorf("unable to create temp directory: %w", err)
+		}
+		fullPath = filepath.Join(tempDir, fileName)
+	} else {
+		// Use regular data directory for non-Kubernetes environments
+		fullPath = filepath.Join(a.config.DataDir(), fileName)
+	}
+
 	a.logger.Debugf("%s -> \n%s", fileName, fileData)
 	defer a.logger.Infof("file(%s) %s written", format.SizeInt(len(fileData)), fullPath)
 	return os.WriteFile(
@@ -381,7 +395,7 @@ func (a *Storage) discover() error {
 }
 
 func (a *Storage) baseOpts() container.ContainerOpts {
-	return container.ContainerOpts{
+	opts := container.ContainerOpts{
 		Env: map[string]string{
 			"AWS_EC2_METADATA_DISABLED": "true",
 		},
@@ -396,22 +410,82 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 		LogDriver:     "local",
 		Network:       "host",
 		ContainerName: "runner",
-		Volumes: []container.Volume{
-			{
-				Name:          "data",
-				HostPath:      a.config.DataDir(),
-				ContainerPath: "/data",
-				VolumeType:    "bind",
-			},
-		},
-		Command: nil,
-		Args:    nil,
+		Command:       nil,
+		Args:          nil,
 		// FIXME: make this configurable
 		Timeout:      12 * time.Hour,
 		AttachStdout: true,
 		AttachStderr: true,
 		AutoRemove:   true,
 	}
+
+	// Check if running in Kubernetes
+	if a.cw.Type() == container.BackendKubernetes {
+		// Check if temporary files exist
+		tempDir := "/tmp/airbyte-secrets"
+		if _, err := os.Stat(tempDir); err == nil {
+			// Create a unique secret name based on the transfer ID
+			secretName := fmt.Sprintf("airbyte-secret-%s", a.transfer.ID)
+
+			// Create a map to store file contents for the secret
+			secretData := make(map[string][]byte)
+
+			// Read all files from the temporary directory
+			files, err := os.ReadDir(tempDir)
+			if err == nil && len(files) > 0 {
+				for _, file := range files {
+					if !file.IsDir() {
+						filePath := filepath.Join(tempDir, file.Name())
+						data, err := os.ReadFile(filePath)
+						if err == nil {
+							secretData[file.Name()] = data
+						} else {
+							a.logger.Warnf("Failed to read file %s: %v", filePath, err)
+						}
+
+						// Clean up the temporary file
+						_ = os.Remove(filePath)
+					}
+				}
+
+				// Add the secret to the container options
+				opts.Secrets = []container.Secret{
+					{
+						Name: secretName,
+						Data: secretData,
+					},
+				}
+
+				// Mount the secret as a volume
+				opts.Volumes = []container.Volume{
+					{
+						Name:          "data",
+						SecretName:    secretName,
+						ContainerPath: "/data",
+						VolumeType:    "secret",
+					},
+				}
+
+				// Clean up the temporary directory
+				_ = os.RemoveAll(tempDir)
+
+				a.logger.Infof("Created Kubernetes secret %s with %d files", secretName, len(secretData))
+				return opts
+			}
+		}
+	}
+
+	// Default volume configuration for non-Kubernetes or when no temp files exist
+	opts.Volumes = []container.Volume{
+		{
+			Name:          "data",
+			HostPath:      a.config.DataDir(),
+			ContainerPath: "/data",
+			VolumeType:    "bind",
+		},
+	}
+
+	return opts
 }
 
 func (a *Storage) runCommand(cmd []string, args ...string) (io.ReadCloser, io.ReadCloser, error) {

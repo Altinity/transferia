@@ -20,6 +20,7 @@ type K8sOpts struct {
 	Env           []corev1.EnvVar
 	Volumes       []corev1.Volume
 	VolumeMounts  []corev1.VolumeMount
+	Secrets       []Secret // Kubernetes secrets to create
 	Timeout       time.Duration
 }
 
@@ -53,5 +54,67 @@ func (k K8sOpts) String() string {
 	if err != nil {
 		return fmt.Sprintf("error marshalling pod to YAML: %v", err)
 	}
+
 	return string(b)
+}
+
+func (c *ContainerOpts) ToK8sOpts() K8sOpts {
+	var envVars []corev1.EnvVar
+	for key, value := range c.Env {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	var k8sVolumes []corev1.Volume
+	var volumeMounts []corev1.VolumeMount
+
+	// Process regular volumes and secret volumes
+	for _, vol := range c.Volumes {
+		volumeName := vol.Name
+
+		// Create the appropriate volume source based on volume type
+		if vol.VolumeType == "secret" && vol.SecretName != "" {
+			// Secret volume
+			k8sVolumes = append(k8sVolumes, corev1.Volume{
+				Name: volumeName,
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: vol.SecretName,
+					},
+				},
+			})
+		} else {
+			// Default to host path volume
+			k8sVolumes = append(k8sVolumes, corev1.Volume{
+				Name: volumeName,
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: vol.HostPath,
+					},
+				},
+			})
+		}
+
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      volumeName,
+			MountPath: vol.ContainerPath,
+			ReadOnly:  vol.ReadOnly,
+		})
+	}
+
+	return K8sOpts{
+		Namespace:     c.Namespace,
+		PodName:       c.PodName,
+		ContainerName: c.ContainerName,
+		Image:         c.Image,
+		RestartPolicy: c.RestartPolicy,
+		Command:       c.Command,
+		Args:          c.Args,
+		Env:           envVars,
+		Volumes:       k8sVolumes,
+		VolumeMounts:  volumeMounts,
+		Timeout:       c.Timeout,
+	}
 }
