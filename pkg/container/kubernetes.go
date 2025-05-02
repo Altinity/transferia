@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/util/retry"
 )
 
 type K8sWrapper struct {
@@ -274,15 +275,27 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 		}
 	}
 
-	// Step 3: Unsuspend the job by setting .spec.suspend: false
 	w.logger.Infof("Unsuspending job %s to allow execution", job.Name)
-	suspend := false
-	job.Spec.Suspend = &suspend
 
-	updatedJob, err := w.client.BatchV1().Jobs(job.Namespace).Update(ctx, job, metav1.UpdateOptions{})
+	var updatedJob *batchv1.Job
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		// Get the latest version of the job in case it was modified
+		latestJob, err := w.client.BatchV1().Jobs(job.Namespace).Get(ctx, job.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		// Apply our change to the latest version
+		suspend := false
+		latestJob.Spec.Suspend = &suspend
+
+		// Try to update with the latest version
+		updatedJob, err = w.client.BatchV1().Jobs(latestJob.Namespace).Update(ctx, latestJob, metav1.UpdateOptions{})
+		return err
+	})
 	if err != nil {
-		w.logger.Errorf("Failed to unsuspend job %s: %v", job.Name, err)
-		return nil, nil, xerrors.Errorf("failed to unsuspend job: %w", err)
+		w.logger.Errorf("Failed to unsuspend job %s after retries: %v", job.Name, err)
+		return nil, nil, xerrors.Errorf("failed to unsuspend job after retries: %w", err)
 	}
 	w.logger.Infof("Successfully unsuspended job %s", updatedJob.Name)
 
@@ -301,9 +314,23 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	// Wait for pod to reach Running / Completed / Failed state before trying to stream logs
 	w.logger.Infof("Waiting for pod %s to be ready", pod.Name)
 	if err := w.waitForPodReady(ctx, pod.GetNamespace(), pod.GetName(), 30*time.Minute); err != nil {
-		// If pod can't get to running state, try to get logs anyway
-		// but log a warning
-		w.logger.Warnf("Warning: pod %s may not be ready: %v", pod.GetName(), err)
+		// If pod can't get to running state, delete the job and return the error
+		w.logger.Errorf("Pod %s failed to become ready after 30 minutes: %v", pod.GetName(), err)
+
+		// Delete the job
+		deletePolicy := metav1.DeletePropagationForeground
+		deleteOptions := metav1.DeleteOptions{
+			PropagationPolicy: &deletePolicy,
+		}
+
+		if deleteErr := w.client.BatchV1().Jobs(job.Namespace).Delete(ctx, job.Name, deleteOptions); deleteErr != nil {
+			w.logger.Errorf("Failed to delete job %s: %v", job.Name, deleteErr)
+			// Continue with the original error even if deletion fails
+		} else {
+			w.logger.Infof("Successfully deleted job %s", job.Name)
+		}
+
+		return nil, nil, xerrors.Errorf("pod failed to become ready: %w", err)
 	} else {
 		w.logger.Infof("Pod %s is ready for log streaming", pod.Name)
 	}
