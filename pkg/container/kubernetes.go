@@ -289,11 +289,9 @@ func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string
 			}
 
 			// If pod is running or succeeded/failed, it's ready for logs
-			fmt.Println("Pod status:", pod.Status.Phase)
 			if pod.Status.Phase == corev1.PodRunning ||
 				pod.Status.Phase == corev1.PodSucceeded ||
 				pod.Status.Phase == corev1.PodFailed {
-				fmt.Println("Pod is ready for logs")
 				return nil
 			}
 
