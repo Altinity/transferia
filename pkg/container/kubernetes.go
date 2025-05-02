@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -31,94 +32,6 @@ func NewK8sWrapper() (*K8sWrapper, error) {
 		return nil, xerrors.Errorf("failed to create k8s client: %w", err)
 	}
 	return &K8sWrapper{client: clientset}, nil
-}
-
-func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.ReadCloser, stderr io.ReadCloser, err error) {
-	// Convert options to K8s options
-	k8sOpts := opts.ToK8sOpts()
-
-	// Create the pod
-	pod, err := w.createPod(ctx, k8sOpts)
-	if err != nil {
-		return nil, nil, xerrors.Errorf("failed to create pod: %w", err)
-	}
-
-	// Launch a goroutine to monitor pod completion and cleanup
-	go func() {
-		watchPod := func() {
-			timeout := time.After(k8sOpts.Timeout)
-			tick := time.NewTicker(2 * time.Second)
-			defer tick.Stop()
-
-			for {
-				select {
-				case <-ctx.Done():
-					// Context cancelled, clean up the pod
-					_ = w.client.CoreV1().Pods(k8sOpts.Namespace).Delete(context.Background(), pod.GetName(), metav1.DeleteOptions{})
-					return
-				case <-timeout:
-					// Timeout reached, clean up the pod
-					_ = w.client.CoreV1().Pods(k8sOpts.Namespace).Delete(context.Background(), pod.GetName(), metav1.DeleteOptions{})
-					return
-				case <-tick.C:
-					p, err := w.client.CoreV1().Pods(k8sOpts.Namespace).Get(ctx, pod.GetName(), metav1.GetOptions{})
-					if err != nil {
-						// Error getting pod info, continue monitoring
-						continue
-					}
-
-					phase := p.Status.Phase
-					if phase == corev1.PodSucceeded || phase == corev1.PodFailed {
-						// Pod completed, clean up
-						_ = w.client.CoreV1().Pods(k8sOpts.Namespace).Delete(context.Background(), pod.GetName(), metav1.DeleteOptions{})
-						return
-					}
-				}
-			}
-		}
-
-		watchPod()
-	}()
-
-	// Set up log streaming options
-	logOpts := &corev1.PodLogOptions{
-		Container: k8sOpts.ContainerName,
-		Follow:    true, // Stream logs as they become available
-	}
-
-	// Get logs stream
-	req := w.client.CoreV1().Pods(k8sOpts.Namespace).GetLogs(pod.GetName(), logOpts)
-	stream, err := req.Stream(ctx)
-	if err != nil {
-		// Clean up the pod if we can't get logs
-		_ = w.client.CoreV1().Pods(k8sOpts.Namespace).Delete(ctx, pod.GetName(), metav1.DeleteOptions{})
-		return nil, nil, xerrors.Errorf("failed to stream pod logs: %w", err)
-	}
-
-	// Return the stream immediately (non-blocking)
-	// Note: stderr is nil for Kubernetes as GetLogs combines stdout and stderr
-	return stream, nil, nil
-}
-
-func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (stdoutBuf *bytes.Buffer, stderrBuf *bytes.Buffer, err error) {
-	// 1. Call Run to get the readers
-	stdoutReader, _, err := w.Run(ctx, opts)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer stdoutReader.Close()
-
-	// 2. Create buffers for output
-	stdoutBuf = new(bytes.Buffer)
-	stderrBuf = new(bytes.Buffer) // Empty buffer for stderr since K8s doesn't provide separate stderr
-
-	// 3. Copy from the reader to the buffer
-	_, err = io.Copy(stdoutBuf, stdoutReader)
-	if err != nil && err != io.EOF {
-		return stdoutBuf, stderrBuf, xerrors.Errorf("error copying pod logs: %w", err)
-	}
-
-	return stdoutBuf, stderrBuf, nil
 }
 
 func (w *K8sWrapper) Pull(_ context.Context, _ string, _ types.ImagePullOptions) error {
@@ -153,22 +66,12 @@ func (w *K8sWrapper) createPod(ctx context.Context, opts K8sOpts) (*corev1.Pod, 
 		opts.ContainerName = "runner"
 	}
 
-	// Get the current node name from environment variable
-	nodeName := os.Getenv("OPERATOR_POD_NODE_NAME")
-	if nodeName == "" {
-		// Log a warning if NODE_NAME is not set
-		fmt.Println("Warning: OPERATOR_POD_NODE_NAME environment variable not set. Pod will be scheduled according to cluster rules.")
-	}
-
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", opts.PodName),
 			Namespace:    opts.Namespace,
 		},
 		Spec: corev1.PodSpec{
-			// FIXME: This is a temporary workaround to the issue of sharing the data volume between the main process and runner pod.
-			// Ideally, we should use a shared volume or a different approach to share data.
-			NodeName: nodeName,
 			Containers: []corev1.Container{
 				{
 					Name:         opts.ContainerName,
@@ -225,4 +128,199 @@ func NewK8sWrapperFromKubeconfig(kubeconfigPath string) (*K8sWrapper, error) {
 		return nil, xerrors.Errorf("unable to connect to k8s: %w", err)
 	}
 	return &K8sWrapper{client: clientset}, nil
+}
+
+func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.ReadCloser, stderr io.ReadCloser, err error) {
+	// Convert options to K8s options
+	k8sOpts := opts.ToK8sOpts()
+
+	// Create the pod
+	pod, err := w.createPod(ctx, k8sOpts)
+	if err != nil {
+		return nil, nil, xerrors.Errorf("failed to create pod: %w", err)
+	}
+
+	// Channel to signal when log streaming is done
+	logStreamingDone := make(chan struct{})
+	podDeleted := make(chan struct{})
+
+	// Launch a goroutine to monitor pod completion and cleanup
+	go func() {
+		defer close(podDeleted)
+
+		watchPod := func() {
+			timeout := time.After(k8sOpts.Timeout)
+			tick := time.NewTicker(2 * time.Second)
+			defer tick.Stop()
+
+			for {
+				select {
+				case <-ctx.Done():
+					// Context cancelled, wait for log streaming to finish before cleanup
+					select {
+					case <-logStreamingDone:
+						// Log streaming is done
+					case <-time.After(10 * time.Second):
+						// Give log streaming 10 seconds to finish
+					}
+					_ = w.client.CoreV1().Pods(pod.GetNamespace()).Delete(
+						context.Background(), pod.GetName(), metav1.DeleteOptions{})
+					return
+
+				case <-timeout:
+					// Timeout reached, wait for log streaming to finish before cleanup
+					select {
+					case <-logStreamingDone:
+						// Log streaming is done
+					case <-time.After(10 * time.Second):
+						// Give log streaming 10 seconds to finish
+					}
+					_ = w.client.CoreV1().Pods(pod.GetNamespace()).Delete(
+						context.Background(), pod.GetName(), metav1.DeleteOptions{})
+					return
+
+				case <-tick.C:
+					p, err := w.client.CoreV1().Pods(pod.GetNamespace()).Get(
+						ctx, pod.GetName(), metav1.GetOptions{})
+					if err != nil {
+						// Pod might already be deleted or there's a connectivity issue
+						if apierrors.IsNotFound(err) {
+							return // Pod already deleted, nothing to do
+						}
+						continue // Other error, keep monitoring
+					}
+
+					phase := p.Status.Phase
+					if phase == corev1.PodSucceeded || phase == corev1.PodFailed {
+						// Pod completed
+						// Wait for log streaming to finish
+						select {
+						case <-logStreamingDone:
+							// Log streaming is done, safe to delete
+						case <-time.After(30 * time.Second):
+							// Give logger 30 seconds to finish reading logs
+						}
+						// Then clean up
+						_ = w.client.CoreV1().Pods(pod.GetNamespace()).Delete(
+							context.Background(), pod.GetName(), metav1.DeleteOptions{})
+						return
+					}
+				}
+			}
+		}
+		watchPod()
+	}()
+
+	// Wait for pod to reach Running state before trying to stream logs
+	if err := w.waitForPodReady(ctx, pod.GetNamespace(), pod.GetName(), 30*time.Second); err != nil {
+		// If pod can't get to running state, try to get logs anyway
+		// but log a warning
+		fmt.Printf("Warning: pod %s may not be ready: %v\n", pod.GetName(), err)
+	}
+
+	// Set up log streaming options
+	logOpts := &corev1.PodLogOptions{
+		Container: k8sOpts.ContainerName,
+		Follow:    true, // Stream logs as they become available
+	}
+
+	// Get logs stream
+	req := w.client.CoreV1().Pods(pod.GetNamespace()).GetLogs(pod.GetName(), logOpts)
+	stream, err := req.Stream(ctx)
+	if err != nil {
+		// If we can't get logs, close the logStreamingDone channel to allow pod cleanup
+		close(logStreamingDone)
+
+		// Wait for pod to be deleted
+		select {
+		case <-podDeleted:
+			// Pod was deleted
+		case <-time.After(5 * time.Second):
+			// Don't wait too long
+		}
+
+		return nil, nil, xerrors.Errorf("failed to stream pod logs: %w", err)
+	}
+
+	// Wrap the stream to signal when it's closed
+	wrappedStream := &streamWrapper{
+		ReadCloser: stream,
+		onClose: func() {
+			close(logStreamingDone)
+		},
+	}
+
+	// Return the wrapped stream
+	return wrappedStream, nil, nil
+}
+
+// streamWrapper signals when the stream is closed
+type streamWrapper struct {
+	io.ReadCloser
+	onClose func()
+	closed  bool
+}
+
+func (s *streamWrapper) Close() error {
+	if !s.closed {
+		s.closed = true
+		defer s.onClose()
+	}
+	return s.ReadCloser.Close()
+}
+
+// Helper to wait for pod to be ready
+func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string, timeout time.Duration) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-timeoutCtx.Done():
+			return xerrors.New("timeout waiting for pod to be ready")
+
+		case <-time.After(1 * time.Second):
+			pod, err := w.client.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+			if err != nil {
+				if apierrors.IsNotFound(err) {
+					continue // Pod might not be created yet
+				}
+				return xerrors.Errorf("error getting pod: %w", err)
+			}
+
+			// If pod is running or succeeded/failed, it's ready for logs
+			if pod.Status.Phase == corev1.PodRunning ||
+				pod.Status.Phase == corev1.PodSucceeded ||
+				pod.Status.Phase == corev1.PodFailed {
+				return nil
+			}
+
+			// If pod is in error state, return an error
+			if pod.Status.Phase == corev1.PodUnknown {
+				return xerrors.New("pod is in Unknown phase")
+			}
+		}
+	}
+}
+
+// RunAndWait reads all logs from a pod until completion
+func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes.Buffer, *bytes.Buffer, error) {
+	// 1. Call Run to get the readers
+	stdoutReader, _, err := w.Run(ctx, opts)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer stdoutReader.Close()
+
+	// 2. Create buffers for output
+	stdoutBuf := new(bytes.Buffer)
+	stderrBuf := new(bytes.Buffer) // Empty buffer for stderr since K8s doesn't provide separate stderr
+
+	// 3. Copy from the reader to the buffer
+	_, err = io.Copy(stdoutBuf, stdoutReader)
+	if err != nil && err != io.EOF {
+		return stdoutBuf, stderrBuf, xerrors.Errorf("error copying pod logs: %w", err)
+	}
+
+	return stdoutBuf, stderrBuf, nil
 }

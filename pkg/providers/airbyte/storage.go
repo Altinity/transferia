@@ -432,8 +432,6 @@ func (a *Storage) runCommand(args ...string) ([]byte, error) {
 	// 1. Call runRawCommand to get the readers
 	stdoutReader, stderrReader, cmdErr := a.runRawCommand(nil, args...)
 	if cmdErr != nil {
-		opts := a.baseOpts()
-		opts.Command = args
 		a.logger.Error(cmdErr.Error())
 		return nil, xerrors.Errorf("command failed: %w", cmdErr)
 	}
