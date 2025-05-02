@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/transferia/transferia/library/go/core/metrics"
@@ -331,7 +330,7 @@ func (a *Storage) check() error {
 		return xerrors.Errorf("unable to write config: %w", err)
 	}
 
-	configResponse, err := a.runSyncCommand("check", "--config", "/data/config.json")
+	configResponse, err := a.runSyncCommand(nil, "check", "--config", "/data/config.json")
 	if err != nil {
 		return err
 	}
@@ -360,7 +359,7 @@ func (a *Storage) discover() error {
 	if err := a.check(); err != nil {
 		return xerrors.Errorf("unable to check provider: %w", err)
 	}
-	response, err := a.runSyncCommand("discover", "--config", "/data/config.json")
+	response, err := a.runSyncCommand(nil, "discover", "--config", "/data/config.json")
 	if err != nil {
 		return xerrors.Errorf("exec error: %w", err)
 	}
@@ -428,94 +427,30 @@ func (a *Storage) runCommand(cmd []string, args ...string) (io.ReadCloser, io.Re
 	return a.cw.Run(ctx, opts)
 }
 
-func (a *Storage) runSyncCommand(args ...string) ([]byte, error) {
-	// 1. Call runCommand to get the readers
-	stdoutReader, stderrReader, cmdErr := a.runCommand(nil, args...)
+func (a *Storage) runSyncCommand(cmd []string, args ...string) ([]byte, error) {
+	ctx := context.Background()
+
+	opts := a.baseOpts()
+
+	opts.Command = cmd
+	opts.Args = args
+
+	a.logger.Info(opts.String())
+
+	stdoutBuf, stderrBuf, cmdErr := a.cw.RunAndWait(ctx, opts)
 	if cmdErr != nil {
 		a.logger.Error(cmdErr.Error())
 		return nil, xerrors.Errorf("command failed: %w", cmdErr)
 	}
-	defer stdoutReader.Close()
-	if stderrReader != nil {
-		defer stderrReader.Close()
-	}
 
-	// 2. Create buffers for output
-	stdoutBuf := new(bytes.Buffer)
-	stderrBuf := new(bytes.Buffer)
-
-	// 3. Use WaitGroup to wait for both streams to be copied
-	var wg sync.WaitGroup
-
-	// 4. Channel for collecting errors
-	errCh := make(chan error, 2)
-
-	// Read stdout line by line
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		scanner := bufio.NewScanner(stdoutReader)
+	if stderrBuf != nil {
+		scanner := bufio.NewScanner(bytes.NewReader(stderrBuf.Bytes()))
+		var stderrErrs util.Errors
 		for scanner.Scan() {
-			// Append each line with a newline character
-			stdoutBuf.Write(scanner.Bytes())
-			stdoutBuf.WriteByte('\n')
+			stderrErrs = append(stderrErrs, xerrors.New(scanner.Text()))
 		}
-		if err := scanner.Err(); err != nil {
-			errCh <- xerrors.Errorf("error scanning stdout: %w", err)
-		}
-	}()
-
-	if stderrReader != nil {
-		wg.Add(1)
-		// Read stderr line by line
-		go func() {
-			defer wg.Done()
-			scanner := bufio.NewScanner(stderrReader)
-			for scanner.Scan() {
-				// Append each line with a newline character
-				stderrBuf.Write(scanner.Bytes())
-				stderrBuf.WriteByte('\n')
-			}
-			if err := scanner.Err(); err != nil {
-				errCh <- xerrors.Errorf("error scanning stderr: %w", err)
-			}
-		}()
-	}
-
-	// 5. Wait for both copies to complete
-	wg.Wait()
-	close(errCh)
-
-	// 6. Collect any errors
-	var errs []error
-	for e := range errCh {
-		errs = append(errs, e)
-	}
-
-	// 7. Return combined error if any
-	if len(errs) > 0 {
-		var combinedErr error
-		for _, e := range errs {
-			if combinedErr == nil {
-				combinedErr = e
-			} else {
-				combinedErr = xerrors.Errorf("%v; %w", combinedErr, e)
-			}
-		}
-		return nil, combinedErr
-	}
-
-	if stderrReader != nil {
-		// Scan the captured stderrBuf for stderr messages
-		if stderrBuf.Len() > 0 {
-			scanner := bufio.NewScanner(bytes.NewReader(stderrBuf.Bytes()))
-			var stderrErrs util.Errors
-			for scanner.Scan() {
-				stderrErrs = append(stderrErrs, xerrors.New(scanner.Text()))
-			}
-			if len(stderrErrs) > 0 {
-				a.logger.Warnf("stderr: %v", log.Error(stderrErrs))
-			}
+		if len(stderrErrs) > 0 {
+			a.logger.Warnf("stderr: %v", log.Error(stderrErrs))
 		}
 	}
 

@@ -16,12 +16,15 @@ type ContainerImpl interface {
 	// Run executes the container/pod process in the background.
 	// It returns immediately with io.ReadCloser streams for stdout and stderr.
 	// The readers will return io.EOF when the underlying process completes.
-	// Implementations should ensure proper handling of context cancellation.
+	// The caller is responsible for closing the streams.
 	Run(ctx context.Context, options ContainerOpts) (stdout io.ReadCloser, stderr io.ReadCloser, err error)
 
-	// RunAndWait executes the container/pod process and blocks until completion.
-	// It captures the full stdout and stderr streams into buffers.
-	// Returns the captured output and any error encountered during execution or capture.
+	// It captures the entire stdout and stderr output in memory buffers, which can
+	// potentially consume significant memory for processes with large outputs.
+	// Callers should use this method only when output size is expected to be reasonable.
+	// For processes with large or unbounded output, consider using Run() with streaming
+	// instead to avoid memory exhaustion.
+	// Returns the captured output buffers and any error encountered during execution.
 	RunAndWait(ctx context.Context, options ContainerOpts) (stdout *bytes.Buffer, stderr *bytes.Buffer, err error)
 
 	// Pull pulls a container image
