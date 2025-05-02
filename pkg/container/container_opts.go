@@ -22,23 +22,24 @@ type Volume struct {
 }
 
 type ContainerOpts struct {
-	Env           map[string]string
-	LogOptions    map[string]string
-	Namespace     string
-	RestartPolicy corev1.RestartPolicy
-	PodName       string
-	Image         string
-	LogDriver     string
-	Network       string
-	ContainerName string
-	Volumes       []Volume
-	Secrets       []Secret // Kubernetes secrets to create
-	Command       []string
-	Args          []string
-	Timeout       time.Duration
-	AttachStdout  bool
-	AttachStderr  bool
-	AutoRemove    bool
+	Env                        map[string]string
+	LogOptions                 map[string]string
+	Namespace                  string
+	RestartPolicy              corev1.RestartPolicy
+	PodName                    string
+	Image                      string
+	LogDriver                  string
+	Network                    string
+	ContainerName              string
+	Volumes                    []Volume
+	Secrets                    []Secret // Kubernetes secrets to create
+	Command                    []string
+	Args                       []string
+	Timeout                    time.Duration
+	AttachStdout               bool
+	AttachStderr               bool
+	AutoRemove                 bool
+	JobTTLSecondsAfterFinished *int32 // TTL for Kubernetes Jobs after completion (in seconds)
 }
 
 func (c *ContainerOpts) String() string {

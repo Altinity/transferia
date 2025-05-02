@@ -11,9 +11,11 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"go.ytsaurus.tech/library/go/core/log"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -59,9 +61,9 @@ func (w *K8sWrapper) getCurrentNamespace() (string, error) {
 	return namespace, nil
 }
 
-// Helper method to create a pod
-func (w *K8sWrapper) createPod(ctx context.Context, opts K8sOpts) (*corev1.Pod, error) {
-	w.logger.Info("Creating pod with options")
+// Helper method to create a job
+func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts) (*batchv1.Job, error) {
+	w.logger.Info("Creating job with options")
 
 	if opts.Namespace == "" {
 		ns, err := w.getCurrentNamespace()
@@ -75,7 +77,7 @@ func (w *K8sWrapper) createPod(ctx context.Context, opts K8sOpts) (*corev1.Pod, 
 
 	if opts.PodName == "" {
 		opts.PodName = "transferia-runner"
-		w.logger.Info("Using default pod name: transferia-runner")
+		w.logger.Info("Using default job name: transferia-runner")
 	}
 
 	if opts.ContainerName == "" {
@@ -83,40 +85,93 @@ func (w *K8sWrapper) createPod(ctx context.Context, opts K8sOpts) (*corev1.Pod, 
 		w.logger.Info("Using default container name: runner")
 	}
 
-	w.logger.Infof("Creating pod %s in namespace %s with image %s",
+	w.logger.Infof("Creating job %s in namespace %s with image %s",
 		opts.PodName, opts.Namespace, opts.Image)
 
-	pod := &corev1.Pod{
+	// Set backoffLimit to 0 to prevent retries
+	backoffLimit := int32(0)
+
+	// Create a unique label selector to identify pods created by this job
+	jobName := fmt.Sprintf("%s-%s", opts.PodName, time.Now().Format("20060102-150405"))
+	labels := map[string]string{
+		"app":        "transferia",
+		"created-by": "transferia-runner",
+		"job-name":   jobName,
+	}
+
+	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("%s-", opts.PodName),
-			Namespace:    opts.Namespace,
+			Name:      jobName,
+			Namespace: opts.Namespace,
+			Labels:    labels,
 		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:         opts.ContainerName,
-					Image:        opts.Image,
-					Command:      opts.Command,
-					Args:         opts.Args,
-					Env:          opts.Env,
-					VolumeMounts: opts.VolumeMounts,
+		Spec: batchv1.JobSpec{
+			BackoffLimit:            &backoffLimit,
+			TTLSecondsAfterFinished: opts.JobTTLSecondsAfterFinished,
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:         opts.ContainerName,
+							Image:        opts.Image,
+							Command:      opts.Command,
+							Args:         opts.Args,
+							Env:          opts.Env,
+							VolumeMounts: opts.VolumeMounts,
+						},
+					},
+					Volumes:       opts.Volumes,
+					RestartPolicy: corev1.RestartPolicyNever,
 				},
 			},
-			Volumes:       opts.Volumes,
-			RestartPolicy: opts.RestartPolicy,
 		},
 	}
 
-	createdPod, err := w.client.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
+	createdJob, err := w.client.BatchV1().Jobs(opts.Namespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
-		w.logger.Errorf("Failed to create pod: %v", err)
+		w.logger.Errorf("Failed to create job: %v", err)
 		return nil, err
 	}
 
-	w.logger.Infof("Successfully created pod %s in namespace %s",
-		createdPod.Name, createdPod.Namespace)
+	w.logger.Infof("Successfully created job %s in namespace %s",
+		createdJob.Name, createdJob.Namespace)
 
-	return createdPod, nil
+	return createdJob, nil
+}
+
+// Helper method to find the pod created by a job
+func (w *K8sWrapper) findJobPod(ctx context.Context, job *batchv1.Job) (*corev1.Pod, error) {
+	w.logger.Infof("Finding pod for job %s", job.Name)
+
+	labelSelector := labels.SelectorFromSet(job.Spec.Template.Labels)
+	listOptions := metav1.ListOptions{
+		LabelSelector: labelSelector.String(),
+	}
+
+	// Wait for the pod to be created
+	var pod *corev1.Pod
+	maxRetries := 10
+	for range maxRetries {
+		pods, err := w.client.CoreV1().Pods(job.Namespace).List(ctx, listOptions)
+		if err != nil {
+			w.logger.Warnf("Error listing pods for job %s: %v", job.Name, err)
+			return nil, err
+		}
+
+		if len(pods.Items) > 0 {
+			pod = &pods.Items[0]
+			w.logger.Infof("Found pod %s for job %s", pod.Name, job.Name)
+			return pod, nil
+		}
+
+		w.logger.Infof("No pods found for job %s yet, waiting...", job.Name)
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil, xerrors.Errorf("no pods found for job %s after %d retries", job.Name, maxRetries)
 }
 
 func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret *corev1.Secret) error {
@@ -148,14 +203,14 @@ func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret 
 }
 
 func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.ReadCloser, stderr io.ReadCloser, err error) {
-	w.logger.Info("Running container in Kubernetes")
+	w.logger.Info("Running container in Kubernetes using Job")
 
 	// Convert options to K8s options
 	k8sOpts := opts.ToK8sOpts()
 
 	// Create secrets if needed
 	if len(k8sOpts.Secrets) > 0 {
-		w.logger.Infof("Creating %d secrets for pod %s", len(k8sOpts.Secrets), k8sOpts.PodName)
+		w.logger.Infof("Creating %d secrets for job %s", len(k8sOpts.Secrets), k8sOpts.PodName)
 		for _, secret := range k8sOpts.Secrets {
 			// Create the secret
 			k8sSecret := &corev1.Secret{
@@ -175,115 +230,25 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 		w.logger.Info("All secrets created successfully")
 	}
 
-	// Create the pod
-	w.logger.Infof("Creating pod %s in namespace %s", k8sOpts.PodName, k8sOpts.Namespace)
-	pod, err := w.createPod(ctx, k8sOpts)
+	// Create the job
+	w.logger.Infof("Creating job %s in namespace %s", k8sOpts.PodName, k8sOpts.Namespace)
+	job, err := w.createJob(ctx, k8sOpts)
 	if err != nil {
-		w.logger.Errorf("Failed to create pod %s: %v", k8sOpts.PodName, err)
-		return nil, nil, xerrors.Errorf("failed to create pod: %w", err)
+		w.logger.Errorf("Failed to create job %s: %v", k8sOpts.PodName, err)
+		return nil, nil, xerrors.Errorf("failed to create job: %w", err)
 	}
-	w.logger.Infof("Pod %s created successfully in namespace %s", pod.Name, pod.Namespace)
+	w.logger.Infof("Job %s created successfully in namespace %s", job.Name, job.Namespace)
+
+	// Find the pod created by the job
+	pod, err := w.findJobPod(ctx, job)
+	if err != nil {
+		w.logger.Errorf("Failed to find pod for job %s: %v", job.Name, err)
+		return nil, nil, xerrors.Errorf("failed to find pod for job: %w", err)
+	}
+	w.logger.Infof("Found pod %s for job %s", pod.Name, job.Name)
 
 	// Channel to signal when log streaming is done
 	logStreamingDone := make(chan struct{})
-	podDeleted := make(chan struct{})
-
-	// Launch a goroutine to monitor pod completion and cleanup
-	go func() {
-		defer close(podDeleted)
-		w.logger.Infof("Starting pod monitor for %s", pod.Name)
-
-		watchPod := func() {
-			timeout := time.After(k8sOpts.Timeout)
-			tick := time.NewTicker(2 * time.Second)
-			defer tick.Stop()
-
-			w.logger.Infof("Watching pod %s with timeout %v", pod.Name, k8sOpts.Timeout)
-
-			for {
-				select {
-				case <-ctx.Done():
-					// Context cancelled, wait for log streaming to finish before cleanup
-					w.logger.Infof("Context cancelled for pod %s, preparing for cleanup", pod.Name)
-					select {
-					case <-logStreamingDone:
-						w.logger.Info("Log streaming completed")
-					case <-time.After(10 * time.Second):
-						w.logger.Warn("Timed out waiting for log streaming to complete")
-					}
-					w.logger.Infof("Deleting pod %s after context cancellation", pod.Name)
-					err := w.client.CoreV1().Pods(pod.GetNamespace()).Delete(
-						context.Background(), pod.GetName(), metav1.DeleteOptions{})
-					if err != nil {
-						w.logger.Errorf("Failed to delete pod %s: %v", pod.Name, err)
-					} else {
-						w.logger.Infof("Successfully deleted pod %s", pod.Name)
-					}
-					return
-
-				case <-timeout:
-					// Timeout reached, wait for log streaming to finish before cleanup
-					w.logger.Warnf("Timeout reached for pod %s, preparing for cleanup", pod.Name)
-					select {
-					case <-logStreamingDone:
-						w.logger.Info("Log streaming completed")
-					case <-time.After(10 * time.Second):
-						w.logger.Warn("Timed out waiting for log streaming to complete")
-					}
-					w.logger.Infof("Deleting pod %s after timeout", pod.Name)
-					err := w.client.CoreV1().Pods(pod.GetNamespace()).Delete(
-						context.Background(), pod.GetName(), metav1.DeleteOptions{})
-					if err != nil {
-						w.logger.Errorf("Failed to delete pod %s: %v", pod.Name, err)
-					} else {
-						w.logger.Infof("Successfully deleted pod %s", pod.Name)
-					}
-					return
-
-				case <-tick.C:
-					p, err := w.client.CoreV1().Pods(pod.GetNamespace()).Get(
-						ctx, pod.GetName(), metav1.GetOptions{})
-					if err != nil {
-						if apierrors.IsNotFound(err) {
-							w.logger.Infof("Pod %s not found, assuming it was already deleted", pod.Name)
-							return // Pod already deleted, nothing to do
-						}
-						w.logger.Warnf("Error getting pod %s status: %v", pod.Name, err)
-						continue // Other error, keep monitoring
-					}
-
-					phase := p.Status.Phase
-					w.logger.Infof("Pod %s current phase: %s", pod.Name, phase)
-
-					if phase == corev1.PodSucceeded || phase == corev1.PodFailed {
-						// Pod completed
-						w.logger.Infof("Pod %s completed with status: %s", pod.Name, phase)
-
-						// Wait for log streaming to finish
-						w.logger.Info("Waiting for log streaming to complete before cleanup")
-						select {
-						case <-logStreamingDone:
-							w.logger.Info("Log streaming completed")
-						case <-time.After(30 * time.Second):
-							w.logger.Warn("Timed out waiting for log streaming to complete")
-						}
-
-						// Then clean up
-						w.logger.Infof("Deleting completed pod %s", pod.Name)
-						err := w.client.CoreV1().Pods(pod.GetNamespace()).Delete(
-							context.Background(), pod.GetName(), metav1.DeleteOptions{})
-						if err != nil {
-							w.logger.Errorf("Failed to delete pod %s: %v", pod.Name, err)
-						} else {
-							w.logger.Infof("Successfully deleted pod %s", pod.Name)
-						}
-						return
-					}
-				}
-			}
-		}
-		watchPod()
-	}()
 
 	// Wait for pod to reach Running state before trying to stream logs
 	w.logger.Infof("Waiting for pod %s to be ready", pod.Name)
@@ -307,18 +272,8 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	stream, err := req.Stream(ctx)
 	if err != nil {
 		w.logger.Errorf("Failed to stream logs from pod %s: %v", pod.Name, err)
-		// If we can't get logs, close the logStreamingDone channel to allow pod cleanup
+		// If we can't get logs, close the logStreamingDone channel
 		close(logStreamingDone)
-
-		// Wait for pod to be deleted
-		w.logger.Info("Waiting for pod deletion")
-		select {
-		case <-podDeleted:
-			w.logger.Infof("Pod %s was deleted", pod.Name)
-		case <-time.After(5 * time.Second):
-			w.logger.Warn("Timed out waiting for pod deletion")
-		}
-
 		return nil, nil, xerrors.Errorf("failed to stream pod logs: %w", err)
 	}
 	w.logger.Infof("Successfully established log stream for pod %s", pod.Name)
@@ -372,9 +327,9 @@ func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string
 	}
 }
 
-// RunAndWait reads all logs from a pod until completion
+// RunAndWait creates a job and waits for it to complete, collecting logs
 func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes.Buffer, *bytes.Buffer, error) {
-	w.logger.Info("Running container and waiting for completion")
+	w.logger.Info("Running container with job and waiting for completion")
 
 	stdoutReader, _, err := w.Run(ctx, opts)
 	if err != nil {
@@ -383,13 +338,68 @@ func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes
 	}
 	defer stdoutReader.Close()
 
+	// Convert options to K8s options to get job name
+	k8sOpts := opts.ToK8sOpts()
+	jobName := fmt.Sprintf("%s-%s", k8sOpts.PodName, time.Now().Format("20060102-150405"))
+
+	// Start a goroutine to watch the job status
+	jobDone := make(chan error)
+	go func() {
+		w.logger.Infof("Watching job %s for completion", jobName)
+		ticker := time.NewTicker(2 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				jobDone <- ctx.Err()
+				return
+			case <-ticker.C:
+				job, err := w.client.BatchV1().Jobs(k8sOpts.Namespace).Get(ctx, jobName, metav1.GetOptions{})
+				if err != nil {
+					if apierrors.IsNotFound(err) {
+						w.logger.Warnf("Job %s not found, assuming it was deleted", jobName)
+						jobDone <- nil
+						return
+					}
+					w.logger.Warnf("Error getting job %s status: %v", jobName, err)
+					continue
+				}
+
+				// Check if job is complete
+				if job.Status.Succeeded > 0 {
+					w.logger.Infof("Job %s completed successfully", jobName)
+					jobDone <- nil
+					return
+				} else if job.Status.Failed > 0 {
+					w.logger.Warnf("Job %s failed", jobName)
+					jobDone <- xerrors.New("job failed")
+					return
+				}
+			}
+		}
+	}()
+
 	w.logger.Info("Container started, collecting logs")
 	stdoutBuf := new(bytes.Buffer)
 
+	// Copy logs to buffer
 	bytesRead, err := io.Copy(stdoutBuf, stdoutReader)
 	if err != nil && err != io.EOF {
 		w.logger.Errorf("Error copying pod logs: %v", err)
 		return stdoutBuf, nil, xerrors.Errorf("error copying pod logs: %w", err)
+	}
+
+	// Wait for job to complete
+	select {
+	case err := <-jobDone:
+		if err != nil {
+			w.logger.Errorf("Job monitoring error: %v", err)
+			return stdoutBuf, nil, xerrors.Errorf("job monitoring error: %w", err)
+		}
+	case <-time.After(k8sOpts.Timeout):
+		w.logger.Warn("Timeout waiting for job to complete")
+		return stdoutBuf, nil, xerrors.New("timeout waiting for job to complete")
 	}
 
 	w.logger.Infof("Container execution completed, collected %d bytes of logs", bytesRead)

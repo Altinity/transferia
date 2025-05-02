@@ -10,18 +10,19 @@ import (
 )
 
 type K8sOpts struct {
-	Namespace     string
-	PodName       string
-	ContainerName string
-	Image         string
-	RestartPolicy corev1.RestartPolicy
-	Command       []string
-	Args          []string
-	Env           []corev1.EnvVar
-	Volumes       []corev1.Volume
-	VolumeMounts  []corev1.VolumeMount
-	Secrets       []Secret // Kubernetes secrets to create
-	Timeout       time.Duration
+	Namespace                  string
+	PodName                    string
+	ContainerName              string
+	Image                      string
+	RestartPolicy              corev1.RestartPolicy
+	Command                    []string
+	Args                       []string
+	Env                        []corev1.EnvVar
+	Volumes                    []corev1.Volume
+	VolumeMounts               []corev1.VolumeMount
+	Secrets                    []Secret // Kubernetes secrets to create
+	Timeout                    time.Duration
+	JobTTLSecondsAfterFinished *int32 // TTL for Kubernetes Jobs after completion (in seconds)
 }
 
 func (k K8sOpts) String() string {
@@ -104,17 +105,27 @@ func (c *ContainerOpts) ToK8sOpts() K8sOpts {
 		})
 	}
 
+	// Set default TTL for Jobs if not specified
+	var jobTTL *int32
+	if c.JobTTLSecondsAfterFinished != nil {
+		jobTTL = c.JobTTLSecondsAfterFinished
+	} else {
+		defaultTTL := int32(3600) // Default to 1 hour
+		jobTTL = &defaultTTL
+	}
+
 	return K8sOpts{
-		Namespace:     c.Namespace,
-		PodName:       c.PodName,
-		ContainerName: c.ContainerName,
-		Image:         c.Image,
-		RestartPolicy: c.RestartPolicy,
-		Command:       c.Command,
-		Args:          c.Args,
-		Env:           envVars,
-		Volumes:       k8sVolumes,
-		VolumeMounts:  volumeMounts,
-		Timeout:       c.Timeout,
+		Namespace:                  c.Namespace,
+		PodName:                    c.PodName,
+		ContainerName:              c.ContainerName,
+		Image:                      c.Image,
+		RestartPolicy:              c.RestartPolicy,
+		Command:                    c.Command,
+		Args:                       c.Args,
+		Env:                        envVars,
+		Volumes:                    k8sVolumes,
+		VolumeMounts:               volumeMounts,
+		Timeout:                    c.Timeout,
+		JobTTLSecondsAfterFinished: jobTTL,
 	}
 }
