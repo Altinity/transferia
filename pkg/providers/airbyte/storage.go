@@ -312,6 +312,13 @@ func (a *Storage) parse(data []byte) (*Message, []string) {
 	var res *Message
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 	buf := make([]byte, 1024*1024, math.Max(1024*1024, a.config.MaxRowSize))
+
+	// Force early GC
+	defer func() {
+		scanner = nil
+		buf = nil
+	}()
+
 	scanner.Buffer(buf, math.Max(1024*1024, a.config.MaxRowSize))
 	for scanner.Scan() {
 		row := scanner.Bytes()
