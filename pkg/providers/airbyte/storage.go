@@ -43,7 +43,14 @@ type Storage struct {
 	cw container.ContainerImpl
 }
 
-func (a *Storage) Close() {}
+func (a *Storage) Close() {
+	dir, err := a.getFilesDir()
+	if err == nil {
+		if err := os.RemoveAll(dir); err != nil {
+			a.logger.Warnf("unable to remove temp dir: %s", dir)
+		}
+	}
+}
 
 func (a *Storage) Ping() error {
 	return a.check()
@@ -313,21 +320,30 @@ func (a *Storage) parse(data []byte) (*Message, []string) {
 	return res, logs
 }
 
+func (a *Storage) getFilesDir() (string, error) {
+	switch a.cw.Type() {
+	case container.BackendDocker:
+		return a.config.DataDir(), nil
+	case container.BackendKubernetes:
+		tempDir := filepath.Join(os.TempDir(), "airbyte-secrets", a.transfer.ID)
+		if err := os.MkdirAll(tempDir, 0o755); err != nil && !os.IsExist(err) {
+			return "", xerrors.Errorf("unable to create temp directory: %w", err)
+		}
+		return tempDir, nil
+	}
+
+	return "", xerrors.New("unknown container backend")
+}
+
 func (a *Storage) writeFile(fileName, fileData string) error {
 	var fullPath string
 
-	// Check if running in Kubernetes by checking the container wrapper type
-	if a.cw.Type() == container.BackendKubernetes {
-		// Use temporary directory for Kubernetes
-		tempDir := "/tmp/airbyte-secrets"
-		if err := os.MkdirAll(tempDir, 0o755); err != nil {
-			return xerrors.Errorf("unable to create temp directory: %w", err)
-		}
-		fullPath = filepath.Join(tempDir, fileName)
-	} else {
-		// Use regular data directory for non-Kubernetes environments
-		fullPath = filepath.Join(a.config.DataDir(), fileName)
+	dir, err := a.getFilesDir()
+	if err != nil {
+		return xerrors.Errorf("unable to get files dir: %w", err)
 	}
+
+	fullPath = filepath.Join(dir, fileName)
 
 	a.logger.Debugf("%s -> \n%s", fileName, fileData)
 	defer a.logger.Infof("file(%s) %s written", format.SizeInt(len(fileData)), fullPath)
@@ -419,11 +435,23 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 		AutoRemove:   true,
 	}
 
-	// Check if running in Kubernetes
-	if a.cw.Type() == container.BackendKubernetes {
-		// Check if temporary files exist
-		tempDir := "/tmp/airbyte-secrets"
-		if _, err := os.Stat(tempDir); err == nil {
+	dir, err := a.getFilesDir()
+	if err != nil {
+		a.logger.Errorf("unable to specify data dir: %w", err)
+	}
+
+	switch a.cw.Type() {
+	case container.BackendDocker:
+		opts.Volumes = []container.Volume{
+			{
+				Name:          "data",
+				HostPath:      dir,
+				ContainerPath: "/data",
+				VolumeType:    "bind",
+			},
+		}
+	case container.BackendKubernetes:
+		if _, err := os.Stat(dir); err == nil {
 			// Create a unique secret name based on the transfer ID
 			secretName := fmt.Sprintf("airbyte-secret-%s", a.transfer.ID)
 
@@ -431,20 +459,17 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 			secretData := make(map[string][]byte)
 
 			// Read all files from the temporary directory
-			files, err := os.ReadDir(tempDir)
+			files, err := os.ReadDir(dir)
 			if err == nil && len(files) > 0 {
 				for _, file := range files {
 					if !file.IsDir() {
-						filePath := filepath.Join(tempDir, file.Name())
+						filePath := filepath.Join(dir, file.Name())
 						data, err := os.ReadFile(filePath)
 						if err == nil {
 							secretData[file.Name()] = data
 						} else {
 							a.logger.Warnf("Failed to read file %s: %v", filePath, err)
 						}
-
-						// Clean up the temporary file
-						_ = os.Remove(filePath)
 					}
 				}
 
@@ -466,23 +491,9 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 					},
 				}
 
-				// Clean up the temporary directory
-				_ = os.RemoveAll(tempDir)
-
-				a.logger.Infof("Created Kubernetes secret %s with %d files", secretName, len(secretData))
 				return opts
 			}
 		}
-	}
-
-	// Default volume configuration for non-Kubernetes or when no temp files exist
-	opts.Volumes = []container.Volume{
-		{
-			Name:          "data",
-			HostPath:      a.config.DataDir(),
-			ContainerPath: "/data",
-			VolumeType:    "bind",
-		},
 	}
 
 	return opts

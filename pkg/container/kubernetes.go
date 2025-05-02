@@ -50,31 +50,17 @@ func (w *K8sWrapper) Pull(_ context.Context, _ string, _ types.ImagePullOptions)
 }
 
 func (w *K8sWrapper) getCurrentNamespace() (string, error) {
-	w.logger.Info("Getting current namespace from service account")
 	b, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
 	if err != nil {
 		w.logger.Warnf("Failed to read namespace from service account: %v", err)
 		return "", err
 	}
 	namespace := string(b)
-	w.logger.Infof("Current namespace: %s", namespace)
 	return namespace, nil
 }
 
 // Helper method to create a job
 func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts) (*batchv1.Job, error) {
-	w.logger.Info("Creating job with options")
-
-	if opts.Namespace == "" {
-		ns, err := w.getCurrentNamespace()
-		if err != nil {
-			ns = "default"
-			w.logger.Infof("Using default namespace due to error: %v", err)
-		}
-		opts.Namespace = ns
-		w.logger.Infof("Using namespace: %s", opts.Namespace)
-	}
-
 	if opts.PodName == "" {
 		opts.PodName = "transferia-runner"
 		w.logger.Info("Using default job name: transferia-runner")
@@ -203,10 +189,16 @@ func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret 
 }
 
 func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.ReadCloser, stderr io.ReadCloser, err error) {
-	w.logger.Info("Running container in Kubernetes using Job")
-
 	// Convert options to K8s options
 	k8sOpts := opts.ToK8sOpts()
+
+	if k8sOpts.Namespace == "" {
+		ns, err := w.getCurrentNamespace()
+		if err != nil {
+			ns = "default"
+		}
+		k8sOpts.Namespace = ns
+	}
 
 	// Create secrets if needed
 	if len(k8sOpts.Secrets) > 0 {
@@ -231,13 +223,11 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	}
 
 	// Create the job
-	w.logger.Infof("Creating job %s in namespace %s", k8sOpts.PodName, k8sOpts.Namespace)
 	job, err := w.createJob(ctx, k8sOpts)
 	if err != nil {
 		w.logger.Errorf("Failed to create job %s: %v", k8sOpts.PodName, err)
 		return nil, nil, xerrors.Errorf("failed to create job: %w", err)
 	}
-	w.logger.Infof("Job %s created successfully in namespace %s", job.Name, job.Namespace)
 
 	// Find the pod created by the job
 	pod, err := w.findJobPod(ctx, job)
@@ -245,14 +235,13 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 		w.logger.Errorf("Failed to find pod for job %s: %v", job.Name, err)
 		return nil, nil, xerrors.Errorf("failed to find pod for job: %w", err)
 	}
-	w.logger.Infof("Found pod %s for job %s", pod.Name, job.Name)
 
 	// Channel to signal when log streaming is done
 	logStreamingDone := make(chan struct{})
 
 	// Wait for pod to reach Running state before trying to stream logs
 	w.logger.Infof("Waiting for pod %s to be ready", pod.Name)
-	if err := w.waitForPodReady(ctx, pod.GetNamespace(), pod.GetName(), 30*time.Second); err != nil {
+	if err := w.waitForPodReady(ctx, pod.GetNamespace(), pod.GetName(), 30*time.Minute); err != nil {
 		// If pod can't get to running state, try to get logs anyway
 		// but log a warning
 		w.logger.Warnf("Warning: pod %s may not be ready: %v", pod.GetName(), err)
@@ -329,8 +318,6 @@ func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string
 
 // RunAndWait creates a job and waits for it to complete, collecting logs
 func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes.Buffer, *bytes.Buffer, error) {
-	w.logger.Info("Running container with job and waiting for completion")
-
 	stdoutReader, _, err := w.Run(ctx, opts)
 	if err != nil {
 		w.logger.Errorf("Failed to run container: %v", err)
