@@ -59,7 +59,7 @@ func (k K8sOpts) String() string {
 	return string(b)
 }
 
-func (c *ContainerOpts) ToK8sOpts() K8sOpts {
+func (c *ContainerOpts) ToK8sOpts(w *K8sWrapper) K8sOpts {
 	var envVars []corev1.EnvVar
 	for key, value := range c.Env {
 		envVars = append(envVars, corev1.EnvVar{
@@ -114,8 +114,21 @@ func (c *ContainerOpts) ToK8sOpts() K8sOpts {
 		jobTTL = &defaultTTL
 	}
 
+	namespace := c.Namespace
+	if namespace == "" && w == nil {
+		namespace = "default"
+	}
+
+	if namespace == "" && w != nil {
+		ns, err := w.getCurrentNamespace()
+		if err != nil {
+			ns = "default"
+		}
+		namespace = ns
+	}
+
 	return K8sOpts{
-		Namespace:                  c.Namespace,
+		Namespace:                  namespace,
 		PodName:                    c.PodName,
 		ContainerName:              c.ContainerName,
 		Image:                      c.Image,

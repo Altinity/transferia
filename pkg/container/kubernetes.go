@@ -211,15 +211,7 @@ func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret 
 
 func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.ReadCloser, stderr io.ReadCloser, err error) {
 	// Convert options to K8s options
-	k8sOpts := opts.ToK8sOpts()
-
-	if k8sOpts.Namespace == "" {
-		ns, err := w.getCurrentNamespace()
-		if err != nil {
-			ns = "default"
-		}
-		k8sOpts.Namespace = ns
-	}
+	k8sOpts := opts.ToK8sOpts(w)
 
 	// Store secrets for later creation with owner reference
 	var secretsToCreate []struct {
@@ -331,8 +323,6 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 		}
 
 		return nil, nil, xerrors.Errorf("pod failed to become ready: %w", err)
-	} else {
-		w.logger.Infof("Pod %s is ready for log streaming", pod.Name)
 	}
 
 	// Set up log streaming options
@@ -346,7 +336,6 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	req := w.client.CoreV1().Pods(pod.GetNamespace()).GetLogs(pod.GetName(), logOpts)
 	stream, err := req.Stream(ctx)
 	if err != nil {
-		w.logger.Errorf("Failed to stream logs from pod %s: %v", pod.Name, err)
 		// If we can't get logs, close the logStreamingDone channel
 		close(logStreamingDone)
 		return nil, nil, xerrors.Errorf("failed to stream pod logs: %w", err)
@@ -390,7 +379,6 @@ func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string
 				pod.Status.Phase == corev1.PodSucceeded ||
 				pod.Status.Phase == corev1.PodFailed {
 				// Ready to collect logs
-				w.logger.Infof("Pod %s is ready for log collection", pod.Name)
 				return nil
 			}
 
@@ -406,13 +394,13 @@ func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string
 func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes.Buffer, *bytes.Buffer, error) {
 	stdoutReader, _, err := w.Run(ctx, opts)
 	if err != nil {
-		w.logger.Errorf("Failed to run container: %v", err)
+		w.logger.Errorf("Failed to run job: %v", err)
 		return nil, nil, err
 	}
 	defer stdoutReader.Close()
 
 	// Convert options to K8s options
-	k8sOpts := opts.ToK8sOpts()
+	k8sOpts := opts.ToK8sOpts(w)
 	// Note: We can't predict the job name here as it's generated in createJob
 	// So we need to use labels to find the job
 	jobLabels := map[string]string{
@@ -427,7 +415,6 @@ func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes
 	// Find the most recent job
 	jobs, err := w.client.BatchV1().Jobs(k8sOpts.Namespace).List(ctx, listOptions)
 	if err != nil || len(jobs.Items) == 0 {
-		w.logger.Errorf("Failed to find job: %v", err)
 		return nil, nil, xerrors.Errorf("failed to find job: %w", err)
 	}
 
@@ -459,17 +446,15 @@ func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes
 						jobDone <- nil
 						return
 					}
-					w.logger.Warnf("Error getting job %s status: %v", jobName, err)
-					continue
+					jobDone <- xerrors.New(fmt.Sprintf("error getting job %s status: %v", jobName, err))
+					return
 				}
 
 				// Check if job is complete
 				if job.Status.Succeeded > 0 {
-					w.logger.Infof("Job %s completed successfully", jobName)
 					jobDone <- nil
 					return
 				} else if job.Status.Failed > 0 {
-					w.logger.Warnf("Job %s failed", jobName)
 					jobDone <- xerrors.New("job failed")
 					return
 				}
@@ -499,7 +484,7 @@ func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes
 		return stdoutBuf, nil, xerrors.New("timeout waiting for job to complete")
 	}
 
-	w.logger.Infof("Container execution completed, collected %d bytes of logs", bytesRead)
+	w.logger.Infof("Job execution completed, collected %d bytes of logs", bytesRead)
 	return stdoutBuf, nil, nil
 }
 

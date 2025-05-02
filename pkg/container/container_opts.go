@@ -44,7 +44,7 @@ type ContainerOpts struct {
 
 func (c *ContainerOpts) String() string {
 	if isRunningInKubernetes() {
-		return c.ToK8sOpts().String()
+		return c.ToK8sOpts(nil).String()
 	}
 
 	return c.ToDockerOpts().String()
