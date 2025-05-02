@@ -124,8 +124,7 @@ func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts, suspend bool) 
 		return nil, err
 	}
 
-	w.logger.Infof("Successfully created job %s in namespace %s (suspended: %v)",
-		createdJob.Name, createdJob.Namespace, suspend)
+	w.logger.Infof("Successfully created job %s", createdJob.Name)
 
 	return createdJob, nil
 }
@@ -188,7 +187,6 @@ func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret 
 	_, err := w.client.CoreV1().Secrets(namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	if err != nil {
 		// Secret doesn't exist, create it
-		w.logger.Infof("Secret %s not found, creating it", secret.Name)
 		_, err = w.client.CoreV1().Secrets(namespace).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
 			w.logger.Errorf("Failed to create secret %s: %v", secret.Name, err)
@@ -197,7 +195,6 @@ func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret 
 		w.logger.Infof("Successfully created secret %s", secret.Name)
 	} else {
 		// Secret exists, update it
-		w.logger.Infof("Secret %s exists, updating it", secret.Name)
 		_, err = w.client.CoreV1().Secrets(namespace).Update(ctx, secret, metav1.UpdateOptions{})
 		if err != nil {
 			w.logger.Errorf("Failed to update secret %s: %v", secret.Name, err)
@@ -220,7 +217,6 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	}
 
 	if len(k8sOpts.Secrets) > 0 {
-		w.logger.Infof("Preparing %d secrets for job %s", len(k8sOpts.Secrets), k8sOpts.PodName)
 		for _, secret := range k8sOpts.Secrets {
 			k8sSecret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
@@ -248,8 +244,6 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	}
 
 	if len(secretsToCreate) > 0 {
-		w.logger.Infof("Creating %d secrets with owner job %s", len(secretsToCreate), job.Name)
-
 		// Create owner reference
 		ownerRef := &metav1.OwnerReference{
 			APIVersion: "batch/v1",
@@ -304,7 +298,7 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	logStreamingDone := make(chan struct{})
 
 	// Wait for pod to reach Running / Completed / Failed state before trying to stream logs
-	w.logger.Infof("Waiting for pod %s to be ready", pod.Name)
+	w.logger.Infof("Waiting for pod %s to be ready...", pod.Name)
 	if err := w.waitForPodReady(ctx, pod.GetNamespace(), pod.GetName(), 30*time.Minute); err != nil {
 		// If pod can't get to running state, delete the job and return the error
 		w.logger.Errorf("Pod %s failed to become ready after 30 minutes: %v", pod.GetName(), err)
@@ -462,7 +456,6 @@ func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes
 		}
 	}()
 
-	w.logger.Info("Container started, collecting logs")
 	stdoutBuf := new(bytes.Buffer)
 
 	// Copy logs to buffer

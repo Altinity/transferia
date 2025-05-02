@@ -95,7 +95,9 @@ func (a *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 		return xerrors.Errorf("%s unable to start: %w", table.ID().String(), err)
 	}
 	defer stdoutReader.Close()
-	defer stderrReader.Close()
+	if stderrReader != nil {
+		defer stderrReader.Close()
+	}
 
 	var batch *RecordBatch
 	cntr := 0
@@ -172,14 +174,16 @@ func (a *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 		return xerrors.Errorf("unable to store incremental state: %w", err)
 	}
 
-	// Read stderr to completion to ensure the container process is waited upon
-	stderrBuf := new(bytes.Buffer)
-	_, err = io.Copy(stderrBuf, stderrReader)
-	if err != nil {
-		return xerrors.Errorf("%s stderr read failed: %w", table.ID().String(), err)
-	}
-	if stderrBuf.Len() > 0 {
-		a.logger.Warnf("stderr: %v\nlast error:%v", stderrBuf.String(), lastAirbyteError)
+	if stderrReader != nil {
+		// Read stderr to completion to ensure the container process is waited upon
+		stderrBuf := new(bytes.Buffer)
+		_, err = io.Copy(stderrBuf, stderrReader)
+		if err != nil {
+			return xerrors.Errorf("%s stderr read failed: %w", table.ID().String(), err)
+		}
+		if stderrBuf.Len() > 0 {
+			a.logger.Warnf("stderr: %v\nlast error:%v", stderrBuf.String(), lastAirbyteError)
+		}
 	}
 
 	return nil
