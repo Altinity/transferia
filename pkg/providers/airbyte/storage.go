@@ -84,7 +84,7 @@ func (a *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 		fmt.Sprintf("/data/%s", catalogFile),
 	}
 
-	stdoutReader, stderrReader, err := a.runRawCommand(nil, args...)
+	stdoutReader, stderrReader, err := a.runCommand(nil, args...)
 	if err != nil {
 		return xerrors.Errorf("%s unable to start: %w", table.ID().String(), err)
 	}
@@ -331,7 +331,7 @@ func (a *Storage) check() error {
 		return xerrors.Errorf("unable to write config: %w", err)
 	}
 
-	configResponse, err := a.runCommand("check", "--config", "/data/config.json")
+	configResponse, err := a.runSyncCommand("check", "--config", "/data/config.json")
 	if err != nil {
 		return err
 	}
@@ -360,7 +360,7 @@ func (a *Storage) discover() error {
 	if err := a.check(); err != nil {
 		return xerrors.Errorf("unable to check provider: %w", err)
 	}
-	response, err := a.runCommand("discover", "--config", "/data/config.json")
+	response, err := a.runSyncCommand("discover", "--config", "/data/config.json")
 	if err != nil {
 		return xerrors.Errorf("exec error: %w", err)
 	}
@@ -415,7 +415,7 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 	}
 }
 
-func (a *Storage) runRawCommand(cmd []string, args ...string) (io.ReadCloser, io.ReadCloser, error) {
+func (a *Storage) runCommand(cmd []string, args ...string) (io.ReadCloser, io.ReadCloser, error) {
 	ctx := context.Background()
 
 	opts := a.baseOpts()
@@ -428,9 +428,9 @@ func (a *Storage) runRawCommand(cmd []string, args ...string) (io.ReadCloser, io
 	return a.cw.Run(ctx, opts)
 }
 
-func (a *Storage) runCommand(args ...string) ([]byte, error) {
-	// 1. Call runRawCommand to get the readers
-	stdoutReader, stderrReader, cmdErr := a.runRawCommand(nil, args...)
+func (a *Storage) runSyncCommand(args ...string) ([]byte, error) {
+	// 1. Call runCommand to get the readers
+	stdoutReader, stderrReader, cmdErr := a.runCommand(nil, args...)
 	if cmdErr != nil {
 		a.logger.Error(cmdErr.Error())
 		return nil, xerrors.Errorf("command failed: %w", cmdErr)
@@ -446,12 +446,12 @@ func (a *Storage) runCommand(args ...string) ([]byte, error) {
 
 	// 3. Use WaitGroup to wait for both streams to be copied
 	var wg sync.WaitGroup
-	wg.Add(2)
 
 	// 4. Channel for collecting errors
 	errCh := make(chan error, 2)
 
 	// Read stdout line by line
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		scanner := bufio.NewScanner(stdoutReader)
@@ -466,6 +466,7 @@ func (a *Storage) runCommand(args ...string) ([]byte, error) {
 	}()
 
 	if stderrReader != nil {
+		wg.Add(1)
 		// Read stderr line by line
 		go func() {
 			defer wg.Done()
