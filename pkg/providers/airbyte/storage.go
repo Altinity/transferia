@@ -436,7 +436,9 @@ func (a *Storage) runCommand(args ...string) ([]byte, error) {
 		return nil, xerrors.Errorf("command failed: %w", cmdErr)
 	}
 	defer stdoutReader.Close()
-	defer stderrReader.Close()
+	if stderrReader != nil {
+		defer stderrReader.Close()
+	}
 
 	// 2. Create buffers for output
 	stdoutBuf := new(bytes.Buffer)
@@ -463,19 +465,21 @@ func (a *Storage) runCommand(args ...string) ([]byte, error) {
 		}
 	}()
 
-	// Read stderr line by line
-	go func() {
-		defer wg.Done()
-		scanner := bufio.NewScanner(stderrReader)
-		for scanner.Scan() {
-			// Append each line with a newline character
-			stderrBuf.Write(scanner.Bytes())
-			stderrBuf.WriteByte('\n')
-		}
-		if err := scanner.Err(); err != nil {
-			errCh <- xerrors.Errorf("error scanning stderr: %w", err)
-		}
-	}()
+	if stderrReader != nil {
+		// Read stderr line by line
+		go func() {
+			defer wg.Done()
+			scanner := bufio.NewScanner(stderrReader)
+			for scanner.Scan() {
+				// Append each line with a newline character
+				stderrBuf.Write(scanner.Bytes())
+				stderrBuf.WriteByte('\n')
+			}
+			if err := scanner.Err(); err != nil {
+				errCh <- xerrors.Errorf("error scanning stderr: %w", err)
+			}
+		}()
+	}
 
 	// 5. Wait for both copies to complete
 	wg.Wait()
@@ -500,15 +504,17 @@ func (a *Storage) runCommand(args ...string) ([]byte, error) {
 		return nil, combinedErr
 	}
 
-	// Scan the captured stderrBuf for stderr messages
-	if stderrBuf.Len() > 0 {
-		scanner := bufio.NewScanner(bytes.NewReader(stderrBuf.Bytes()))
-		var stderrErrs util.Errors
-		for scanner.Scan() {
-			stderrErrs = append(stderrErrs, xerrors.New(scanner.Text()))
-		}
-		if len(stderrErrs) > 0 {
-			a.logger.Warnf("stderr: %v", log.Error(stderrErrs))
+	if stderrReader != nil {
+		// Scan the captured stderrBuf for stderr messages
+		if stderrBuf.Len() > 0 {
+			scanner := bufio.NewScanner(bytes.NewReader(stderrBuf.Bytes()))
+			var stderrErrs util.Errors
+			for scanner.Scan() {
+				stderrErrs = append(stderrErrs, xerrors.New(scanner.Text()))
+			}
+			if len(stderrErrs) > 0 {
+				a.logger.Warnf("stderr: %v", log.Error(stderrErrs))
+			}
 		}
 	}
 
