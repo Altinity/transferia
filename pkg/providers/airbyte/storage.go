@@ -105,6 +105,14 @@ func (a *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 
 	reader := bufio.NewScanner(stdoutReader)
 	buf := make([]byte, 1024*1024, math.Max(a.config.MaxRowSize, 1024*1024))
+
+	// Force early GC
+	defer func() {
+		reader = nil
+		buf = nil
+		batch = nil
+	}()
+
 	reader.Buffer(buf, a.config.MaxRowSize)
 	for reader.Scan() {
 		select {

@@ -40,6 +40,8 @@ func (s *Source) Run(sink abstract.AsyncSink) error {
 	backoffTimer.Reset()
 	nextWaitDuration := backoffTimer.NextBackOff()
 	storage, _ := NewStorage(s.logger, s.registry, s.cp, s.config, s.transfer)
+	defer storage.Close()
+
 	tables, err := storage.TableList(s.transfer)
 	if err != nil {
 		return xerrors.Errorf("unable to list object: %w", err)
