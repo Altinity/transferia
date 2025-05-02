@@ -15,7 +15,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 type K8sWrapper struct {
@@ -90,46 +89,6 @@ func (w *K8sWrapper) createPod(ctx context.Context, opts K8sOpts) (*corev1.Pod, 
 	return w.client.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 }
 
-// Legacy method for backward compatibility
-func (w *K8sWrapper) RunPod(ctx context.Context, opts K8sOpts) (*bytes.Buffer, error) {
-	// Create a ContainerOpts that will convert to the provided K8sOpts
-	containerOpts := ContainerOpts{
-		Namespace:     opts.Namespace,
-		PodName:       opts.PodName,
-		ContainerName: opts.ContainerName,
-		Image:         opts.Image,
-		RestartPolicy: opts.RestartPolicy,
-		Command:       opts.Command,
-		Args:          opts.Args,
-		Timeout:       opts.Timeout,
-	}
-
-	// Convert environment variables
-	containerOpts.Env = make(map[string]string)
-	for _, env := range opts.Env {
-		containerOpts.Env[env.Name] = env.Value
-	}
-
-	// Run and wait for completion
-	stdoutBuf, _, err := w.RunAndWait(ctx, containerOpts)
-	if err != nil {
-		return nil, err
-	}
-	return stdoutBuf, nil
-}
-
-func NewK8sWrapperFromKubeconfig(kubeconfigPath string) (*K8sWrapper, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to build kubeconfig: %w", err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to connect to k8s: %w", err)
-	}
-	return &K8sWrapper{client: clientset}, nil
-}
-
 func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.ReadCloser, stderr io.ReadCloser, err error) {
 	// Convert options to K8s options
 	k8sOpts := opts.ToK8sOpts()
@@ -183,7 +142,6 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 					p, err := w.client.CoreV1().Pods(pod.GetNamespace()).Get(
 						ctx, pod.GetName(), metav1.GetOptions{})
 					if err != nil {
-						// Pod might already be deleted or there's a connectivity issue
 						if apierrors.IsNotFound(err) {
 							return // Pod already deleted, nothing to do
 						}
@@ -221,7 +179,7 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	// Set up log streaming options
 	logOpts := &corev1.PodLogOptions{
 		Container: k8sOpts.ContainerName,
-		Follow:    true, // Stream logs as they become available
+		Follow:    true,
 	}
 
 	// Get logs stream
@@ -252,21 +210,6 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 
 	// Return the wrapped stream
 	return wrappedStream, nil, nil
-}
-
-// streamWrapper signals when the stream is closed
-type streamWrapper struct {
-	io.ReadCloser
-	onClose func()
-	closed  bool
-}
-
-func (s *streamWrapper) Close() error {
-	if !s.closed {
-		s.closed = true
-		defer s.onClose()
-	}
-	return s.ReadCloser.Close()
 }
 
 // Helper to wait for pod to be ready
@@ -305,22 +248,18 @@ func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string
 
 // RunAndWait reads all logs from a pod until completion
 func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes.Buffer, *bytes.Buffer, error) {
-	// 1. Call Run to get the readers
 	stdoutReader, _, err := w.Run(ctx, opts)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer stdoutReader.Close()
 
-	// 2. Create buffers for output
 	stdoutBuf := new(bytes.Buffer)
-	stderrBuf := new(bytes.Buffer) // Empty buffer for stderr since K8s doesn't provide separate stderr
 
-	// 3. Copy from the reader to the buffer
 	_, err = io.Copy(stdoutBuf, stdoutReader)
 	if err != nil && err != io.EOF {
-		return stdoutBuf, stderrBuf, xerrors.Errorf("error copying pod logs: %w", err)
+		return stdoutBuf, nil, xerrors.Errorf("error copying pod logs: %w", err)
 	}
 
-	return stdoutBuf, stderrBuf, nil
+	return stdoutBuf, nil, nil
 }
