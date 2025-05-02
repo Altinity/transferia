@@ -60,7 +60,7 @@ func (w *K8sWrapper) getCurrentNamespace() (string, error) {
 }
 
 // Helper method to create a job
-func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts) (*batchv1.Job, error) {
+func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts, suspend bool) (*batchv1.Job, error) {
 	if opts.PodName == "" {
 		opts.PodName = "transferia-runner"
 		w.logger.Info("Using default job name: transferia-runner")
@@ -71,8 +71,8 @@ func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts) (*batchv1.Job,
 		w.logger.Info("Using default container name: runner")
 	}
 
-	w.logger.Infof("Creating job %s in namespace %s with image %s",
-		opts.PodName, opts.Namespace, opts.Image)
+	w.logger.Infof("Creating job %s in namespace %s with image %s (suspended: %v)",
+		opts.PodName, opts.Namespace, opts.Image, suspend)
 
 	// Set backoffLimit to 0 to prevent retries
 	backoffLimit := int32(0)
@@ -94,6 +94,7 @@ func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts) (*batchv1.Job,
 		Spec: batchv1.JobSpec{
 			BackoffLimit:            &backoffLimit,
 			TTLSecondsAfterFinished: opts.JobTTLSecondsAfterFinished,
+			Suspend:                 &suspend,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -122,8 +123,8 @@ func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts) (*batchv1.Job,
 		return nil, err
 	}
 
-	w.logger.Infof("Successfully created job %s in namespace %s",
-		createdJob.Name, createdJob.Namespace)
+	w.logger.Infof("Successfully created job %s in namespace %s (suspended: %v)",
+		createdJob.Name, createdJob.Namespace, suspend)
 
 	return createdJob, nil
 }
@@ -160,8 +161,27 @@ func (w *K8sWrapper) findJobPod(ctx context.Context, job *batchv1.Job) (*corev1.
 	return nil, xerrors.Errorf("no pods found for job %s after %d retries", job.Name, maxRetries)
 }
 
-func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret *corev1.Secret) error {
+func (w *K8sWrapper) ensureSecret(ctx context.Context, namespace string, secret *corev1.Secret, ownerRef *metav1.OwnerReference) error {
 	w.logger.Infof("Ensuring secret %s exists in namespace %s", secret.Name, namespace)
+
+	// Add owner reference if provided
+	if ownerRef != nil {
+		if secret.OwnerReferences == nil {
+			secret.OwnerReferences = []metav1.OwnerReference{*ownerRef}
+		} else {
+			// Check if owner reference already exists
+			exists := false
+			for _, ref := range secret.OwnerReferences {
+				if ref.UID == ownerRef.UID {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				secret.OwnerReferences = append(secret.OwnerReferences, *ownerRef)
+			}
+		}
+	}
 
 	// Check if secret already exists
 	_, err := w.client.CoreV1().Secrets(namespace).Get(ctx, secret.Name, metav1.GetOptions{})
@@ -200,11 +220,15 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 		k8sOpts.Namespace = ns
 	}
 
-	// Create secrets if needed
+	// Store secrets for later creation with owner reference
+	var secretsToCreate []struct {
+		secret *corev1.Secret
+		name   string
+	}
+
 	if len(k8sOpts.Secrets) > 0 {
-		w.logger.Infof("Creating %d secrets for job %s", len(k8sOpts.Secrets), k8sOpts.PodName)
+		w.logger.Infof("Preparing %d secrets for job %s", len(k8sOpts.Secrets), k8sOpts.PodName)
 		for _, secret := range k8sOpts.Secrets {
-			// Create the secret
 			k8sSecret := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      secret.Name,
@@ -214,20 +238,56 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 				Type: corev1.SecretTypeOpaque,
 			}
 
-			if err := w.ensureSecret(ctx, k8sOpts.Namespace, k8sSecret); err != nil {
-				w.logger.Errorf("Failed to ensure secret %s: %v", secret.Name, err)
+			secretsToCreate = append(secretsToCreate, struct {
+				secret *corev1.Secret
+				name   string
+			}{
+				secret: k8sSecret,
+				name:   secret.Name,
+			})
+		}
+	}
+
+	job, err := w.createJob(ctx, k8sOpts, true)
+	if err != nil {
+		w.logger.Errorf("Failed to create suspended job %s: %v", k8sOpts.PodName, err)
+		return nil, nil, xerrors.Errorf("failed to create suspended job: %w", err)
+	}
+
+	if len(secretsToCreate) > 0 {
+		w.logger.Infof("Creating %d secrets with owner job %s", len(secretsToCreate), job.Name)
+
+		// Create owner reference
+		ownerRef := &metav1.OwnerReference{
+			APIVersion: "batch/v1",
+			Kind:       "Job",
+			Name:       job.Name,
+			UID:        job.UID,
+			Controller: &[]bool{true}[0],
+		}
+
+		for _, s := range secretsToCreate {
+			if err := w.ensureSecret(ctx, k8sOpts.Namespace, s.secret, ownerRef); err != nil {
+				w.logger.Errorf("Failed to ensure secret %s: %v", s.name, err)
 				return nil, nil, err
 			}
 		}
-		w.logger.Info("All secrets created successfully")
 	}
 
-	// Create the job
-	job, err := w.createJob(ctx, k8sOpts)
+	// Step 3: Unsuspend the job by setting .spec.suspend: false
+	w.logger.Infof("Unsuspending job %s to allow execution", job.Name)
+	suspend := false
+	job.Spec.Suspend = &suspend
+
+	updatedJob, err := w.client.BatchV1().Jobs(job.Namespace).Update(ctx, job, metav1.UpdateOptions{})
 	if err != nil {
-		w.logger.Errorf("Failed to create job %s: %v", k8sOpts.PodName, err)
-		return nil, nil, xerrors.Errorf("failed to create job: %w", err)
+		w.logger.Errorf("Failed to unsuspend job %s: %v", job.Name, err)
+		return nil, nil, xerrors.Errorf("failed to unsuspend job: %w", err)
 	}
+	w.logger.Infof("Successfully unsuspended job %s", updatedJob.Name)
+
+	// Use the updated job for further operations
+	job = updatedJob
 
 	// Find the pod created by the job
 	pod, err := w.findJobPod(ctx, job)
@@ -236,10 +296,9 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 		return nil, nil, xerrors.Errorf("failed to find pod for job: %w", err)
 	}
 
-	// Channel to signal when log streaming is done
 	logStreamingDone := make(chan struct{})
 
-	// Wait for pod to reach Running state before trying to stream logs
+	// Wait for pod to reach Running / Completed / Failed state before trying to stream logs
 	w.logger.Infof("Waiting for pod %s to be ready", pod.Name)
 	if err := w.waitForPodReady(ctx, pod.GetNamespace(), pod.GetName(), 30*time.Minute); err != nil {
 		// If pod can't get to running state, try to get logs anyway
@@ -325,9 +384,33 @@ func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes
 	}
 	defer stdoutReader.Close()
 
-	// Convert options to K8s options to get job name
+	// Convert options to K8s options
 	k8sOpts := opts.ToK8sOpts()
-	jobName := fmt.Sprintf("%s-%s", k8sOpts.PodName, time.Now().Format("20060102-150405"))
+	// Note: We can't predict the job name here as it's generated in createJob
+	// So we need to use labels to find the job
+	jobLabels := map[string]string{
+		"app":        "transferia",
+		"created-by": "transferia-runner",
+	}
+	labelSelector := labels.SelectorFromSet(jobLabels)
+	listOptions := metav1.ListOptions{
+		LabelSelector: labelSelector.String(),
+	}
+
+	// Find the most recent job
+	jobs, err := w.client.BatchV1().Jobs(k8sOpts.Namespace).List(ctx, listOptions)
+	if err != nil || len(jobs.Items) == 0 {
+		w.logger.Errorf("Failed to find job: %v", err)
+		return nil, nil, xerrors.Errorf("failed to find job: %w", err)
+	}
+
+	// Use the most recent job (should be the one we just created)
+	jobName := jobs.Items[0].Name
+	for _, job := range jobs.Items {
+		if job.CreationTimestamp.After(jobs.Items[0].CreationTimestamp.Time) {
+			jobName = job.Name
+		}
+	}
 
 	// Start a goroutine to watch the job status
 	jobDone := make(chan error)

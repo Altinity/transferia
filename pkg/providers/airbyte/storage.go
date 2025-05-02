@@ -453,7 +453,7 @@ func (a *Storage) baseOpts() container.ContainerOpts {
 	case container.BackendKubernetes:
 		if _, err := os.Stat(dir); err == nil {
 			// Create a unique secret name based on the transfer ID
-			secretName := fmt.Sprintf("airbyte-secret-%s", a.transfer.ID)
+			secretName := fmt.Sprintf("airbyte-secret-%s-%s", a.transfer.ID, time.Now().Format("20060102-150405"))
 
 			// Create a map to store file contents for the secret
 			secretData := make(map[string][]byte)

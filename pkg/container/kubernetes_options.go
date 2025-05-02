@@ -123,6 +123,7 @@ func (c *ContainerOpts) ToK8sOpts() K8sOpts {
 		Command:                    c.Command,
 		Args:                       c.Args,
 		Env:                        envVars,
+		Secrets:                    c.Secrets,
 		Volumes:                    k8sVolumes,
 		VolumeMounts:               volumeMounts,
 		Timeout:                    c.Timeout,
