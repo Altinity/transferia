@@ -27,8 +27,8 @@ import (
 )
 
 var (
-	_ Reader     = (*LineReader)(nil)
-	_ RowCounter = (*LineReader)(nil)
+	_ Reader             = (*LineReader)(nil)
+	_ RowsCountEstimator = (*LineReader)(nil)
 )
 
 type LineReader struct {
@@ -48,7 +48,7 @@ type LineReader struct {
 	hideSystemCols bool
 }
 
-func (r *LineReader) TotalRowCount(ctx context.Context) (uint64, error) {
+func (r *LineReader) EstimateRowsCountAllObjects(ctx context.Context) (uint64, error) {
 	files, err := ListFiles(r.bucket, r.pathPrefix, r.pathPattern, r.client, r.logger, nil, r.ObjectsFilter())
 	if err != nil {
 		return 0, xerrors.Errorf("unable to load file list: %w", err)
@@ -62,7 +62,7 @@ func (r *LineReader) TotalRowCount(ctx context.Context) (uint64, error) {
 	return res, nil
 }
 
-func (r *LineReader) RowCount(ctx context.Context, obj *aws_s3.Object) (uint64, error) {
+func (r *LineReader) EstimateRowsCountOneObject(ctx context.Context, obj *aws_s3.Object) (uint64, error) {
 	res, err := r.estimateRows(ctx, []*aws_s3.Object{obj})
 	if err != nil {
 		return 0, xerrors.Errorf("failed to estimate rows of file: %s : %w", *obj.Key, err)
@@ -167,7 +167,7 @@ func (r *LineReader) Read(ctx context.Context, filePath string, pusher chunk_pus
 					Items:     buff,
 					FilePath:  filePath,
 					Offset:    lineCounter,
-					Completed: lastRound,
+					Completed: false,
 					Size:      currentSize,
 				}); err != nil {
 					return xerrors.Errorf("unable to push: %w", err)
@@ -182,7 +182,7 @@ func (r *LineReader) Read(ctx context.Context, filePath string, pusher chunk_pus
 				Items:     buff,
 				FilePath:  filePath,
 				Offset:    lineCounter,
-				Completed: lastRound,
+				Completed: false,
 				Size:      currentSize,
 			}); err != nil {
 				return xerrors.Errorf("unable to push: %w", err)
@@ -241,8 +241,8 @@ func (r *LineReader) constructCI(line string, fname string, lastModified time.Ti
 }
 
 func readLines(content []byte) ([]string, int, error) {
-	scanner := scanner.NewLineBreakScanner(content)
-	scannedLines, err := scanner.ScanAll()
+	currScanner := scanner.NewLineBreakScanner(content)
+	scannedLines, err := currScanner.ScanAll()
 	if err != nil {
 		return nil, 0, xerrors.Errorf("failed to split all read lines: %w", err)
 	}

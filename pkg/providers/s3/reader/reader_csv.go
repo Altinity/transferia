@@ -32,8 +32,8 @@ import (
 )
 
 var (
-	_ Reader     = (*CSVReader)(nil)
-	_ RowCounter = (*CSVReader)(nil)
+	_ Reader             = (*CSVReader)(nil)
+	_ RowsCountEstimator = (*CSVReader)(nil)
 )
 
 type CSVReader struct {
@@ -109,7 +109,7 @@ func (r *CSVReader) estimateRows(ctx context.Context, files []*aws_s3.Object) (u
 	return uint64(totalRows), nil
 }
 
-func (r *CSVReader) RowCount(ctx context.Context, obj *aws_s3.Object) (uint64, error) {
+func (r *CSVReader) EstimateRowsCountOneObject(ctx context.Context, obj *aws_s3.Object) (uint64, error) {
 	res, err := r.estimateRows(ctx, []*aws_s3.Object{obj})
 	if err != nil {
 		return 0, xerrors.Errorf("failed to estimate rows of file: %s : %w", *obj.Key, err)
@@ -117,7 +117,7 @@ func (r *CSVReader) RowCount(ctx context.Context, obj *aws_s3.Object) (uint64, e
 	return res, nil
 }
 
-func (r *CSVReader) TotalRowCount(ctx context.Context) (uint64, error) {
+func (r *CSVReader) EstimateRowsCountAllObjects(ctx context.Context) (uint64, error) {
 	files, err := ListFiles(r.bucket, r.pathPrefix, r.pathPattern, r.client, r.logger, nil, r.ObjectsFilter())
 	if err != nil {
 		return 0, xerrors.Errorf("unable to load file list: %w", err)
@@ -179,7 +179,7 @@ func (r *CSVReader) Read(ctx context.Context, filePath string, pusher chunk_push
 
 			chunk := chunk_pusher.Chunk{
 				FilePath:  filePath,
-				Completed: endOfFileReached,
+				Completed: false,
 				Offset:    rowsCounter,
 				Size:      parsedSize,
 				Items:     changeItems,
@@ -237,10 +237,6 @@ func (r *CSVReader) parseCSVRows(csvReader *csv.Reader, filePath string, lastMod
 		if err != nil {
 			return nil, xerrors.Errorf("failed to read row form csv: %w", err)
 		}
-
-		// DEBUG
-		fmt.Println("timmyb32rQQQ", strings.Join(line, ""))
-		// DEBUG
 
 		changeItem, err := r.doParse(line, filePath, lastModified, *rowNumber)
 		if err != nil {
@@ -385,12 +381,12 @@ func (r *CSVReader) resolveSchema(ctx context.Context, key string) (*abstract.Ta
 		return nil, xerrors.Errorf("failed to filter column names based on additional reader options: %w", err)
 	}
 
-	schema, err := r.getColumnTypes(filteredColNames, csvReader)
+	currSchema, err := r.getColumnTypes(filteredColNames, csvReader)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to deduce column types based on sample read: %w", err)
 	}
 
-	return abstract.NewTableSchema(schema), nil
+	return abstract.NewTableSchema(currSchema), nil
 }
 
 // getColumnTypes deduces the column types for the provided columns.

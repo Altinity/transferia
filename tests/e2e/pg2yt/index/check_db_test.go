@@ -17,6 +17,7 @@ import (
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/providers/postgres"
 	yt_provider "github.com/transferia/transferia/pkg/providers/yt"
+	yt_sink "github.com/transferia/transferia/pkg/providers/yt/sink"
 	"github.com/transferia/transferia/pkg/runtime/local"
 	"github.com/transferia/transferia/pkg/util"
 	"github.com/transferia/transferia/pkg/worker/tasks"
@@ -46,11 +47,6 @@ var markerIdx = fmt.Sprintf("%d", markerID*10)
 
 func init() {
 	_ = os.Setenv("YC", "1") // to not go to vanga
-}
-
-func TestMain(m *testing.M) {
-	yt_provider.InitExe()
-	os.Exit(m.Run())
 }
 
 func makeSource() model.Source {
@@ -361,7 +357,7 @@ func TestIndexPrimaryKey(t *testing.T) {
 
 func TestSkipLongStrings(t *testing.T) {
 	fixture := setup(t, map[string]interface{}{"id": markerID})
-	fixture.transfer.Dst.(*yt_provider.YtDestinationWrapper).Model.LoseDataOnError = true
+	fixture.transfer.Dst.(*yt_provider.YtDestinationWrapper).Model.DiscardBigValues = true
 
 	sourcePort, targetPort, err := srcAndDstPorts(fixture)
 	require.NoError(t, err)
@@ -394,6 +390,7 @@ func TestSkipLongStrings(t *testing.T) {
 			{IdxCol: "one", ID: 1, Value: "The one"},
 			{IdxCol: "two", ID: 2, Value: "The two"},
 			{IdxCol: "three", ID: 3, Value: "The three"},
+			{IdxCol: "four", ID: 4, Value: yt_sink.MagicString},
 			{IdxCol: markerIdx, ID: markerID, Value: markerValue},
 		},
 		fixture.readAll(),

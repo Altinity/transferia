@@ -38,6 +38,7 @@ type YtDestinationModel interface {
 	TTL() int64
 	OptimizeFor() string
 	CanAlter() bool
+	IsSchemaMigrationDisabled() bool
 	TimeShardCount() int
 	Index() []string
 	HashColumn() string
@@ -92,28 +93,26 @@ type YtDestinationModel interface {
 	// with the priority to the latter one
 	// It guarantees to keep unchanged both the argument and custom attributes map in the model
 	MergeAttributes(tableSettings map[string]any) map[string]any
-
-	// If is true, creates empty tables
-	CreateEmptyTables() bool
 }
 
 type YtDestination struct {
-	Path           string
-	Cluster        string
-	Token          string
-	PushWal        bool
-	NeedArchive    bool
-	CellBundle     string
-	TTL            int64 // it's in milliseconds
-	OptimizeFor    string
-	CanAlter       bool
-	TimeShardCount int
-	Index          []string
-	HashColumn     string
-	PrimaryMedium  string
-	Pool           string       // pool for running merge and sort operations for static tables
-	Strict         bool         // DEPRECATED, UNUSED IN NEW DATA PLANE - use LoseDataOnError and Atomicity
-	Atomicity      yt.Atomicity // Atomicity for the dynamic tables being created in YT. See https://yt.yandex-team.ru/docs/description/dynamic_tables/sorted_dynamic_tables#atomarnost
+	Path                      string
+	Cluster                   string
+	Token                     string
+	PushWal                   bool
+	NeedArchive               bool
+	CellBundle                string
+	TTL                       int64 // it's in milliseconds
+	OptimizeFor               string
+	CanAlter                  bool
+	IsSchemaMigrationDisabled bool
+	TimeShardCount            int
+	Index                     []string
+	HashColumn                string
+	PrimaryMedium             string
+	Pool                      string       // pool for running merge and sort operations for static tables
+	Strict                    bool         // DEPRECATED, UNUSED IN NEW DATA PLANE - use LoseDataOnError and Atomicity
+	Atomicity                 yt.Atomicity // Atomicity for the dynamic tables being created in YT. See https://yt.yandex-team.ru/docs/description/dynamic_tables/sorted_dynamic_tables#atomarnost
 
 	// If true, some errors on data insertion to YT will be skipped, and a warning will be written to the log.
 	// Among such errors are:
@@ -129,7 +128,6 @@ type YtDestination struct {
 	Ordered                  bool
 	TransformerConfig        map[string]string
 	UseStaticTableOnSnapshot bool // optional.Optional[bool] breaks compatibility
-	CreateEmptyTables        bool
 	AltNames                 map[string]string
 	Cleanup                  dp_model.CleanupType
 	Spec                     YTSpec
@@ -228,6 +226,7 @@ func (d *YtDestinationWrapper) SetStaticTable() {
 
 func (d *YtDestinationWrapper) AllowAlter() {
 	d.Model.CanAlter = true
+	d.Model.IsSchemaMigrationDisabled = false
 }
 
 func (d *YtDestinationWrapper) PreSnapshotHacks() {
@@ -281,6 +280,10 @@ func (d *YtDestinationWrapper) OptimizeFor() string {
 
 func (d *YtDestinationWrapper) CanAlter() bool {
 	return d.Model.CanAlter
+}
+
+func (d *YtDestinationWrapper) IsSchemaMigrationDisabled() bool {
+	return d.Model.IsSchemaMigrationDisabled
 }
 
 func (d *YtDestinationWrapper) TimeShardCount() int {
@@ -509,10 +512,6 @@ func (d *YtDestinationWrapper) SupportSharding() bool {
 // this is kusok govna, it here for purpose - backward compatibility and no reuse without backward compatibility
 func (d *YtDestinationWrapper) LegacyModel() interface{} {
 	return d.Model
-}
-
-func (d *YtDestinationWrapper) CreateEmptyTables() bool {
-	return d.Model.UseStaticTableOnSnapshot && d.Model.CreateEmptyTables && d.Model.Rotation == nil
 }
 
 func NewYtDestinationV1(model YtDestination) YtDestinationModel {

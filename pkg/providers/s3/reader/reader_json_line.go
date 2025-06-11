@@ -32,9 +32,10 @@ import (
 )
 
 var (
-	_              Reader     = (*JSONLineReader)(nil)
-	_              RowCounter = (*JSONLineReader)(nil)
-	RestColumnName            = "rest"
+	_ Reader             = (*JSONLineReader)(nil)
+	_ RowsCountEstimator = (*JSONLineReader)(nil)
+
+	RestColumnName = "rest"
 )
 
 type JSONLineReader struct {
@@ -89,7 +90,7 @@ func (r *JSONLineReader) estimateRows(ctx context.Context, files []*aws_s3.Objec
 	return res, nil
 }
 
-func (r *JSONLineReader) RowCount(ctx context.Context, obj *aws_s3.Object) (uint64, error) {
+func (r *JSONLineReader) EstimateRowsCountOneObject(ctx context.Context, obj *aws_s3.Object) (uint64, error) {
 	res, err := r.estimateRows(ctx, []*aws_s3.Object{obj})
 	if err != nil {
 		return 0, xerrors.Errorf("failed to estimate rows of file: %s : %w", *obj.Key, err)
@@ -97,7 +98,7 @@ func (r *JSONLineReader) RowCount(ctx context.Context, obj *aws_s3.Object) (uint
 	return res, nil
 }
 
-func (r *JSONLineReader) TotalRowCount(ctx context.Context) (uint64, error) {
+func (r *JSONLineReader) EstimateRowsCountAllObjects(ctx context.Context) (uint64, error) {
 	files, err := ListFiles(r.bucket, r.pathPrefix, r.pathPattern, r.client, r.logger, nil, r.ObjectsFilter())
 	if err != nil {
 		return 0, xerrors.Errorf("unable to load file list: %w", err)
@@ -169,7 +170,7 @@ func (r *JSONLineReader) Read(ctx context.Context, filePath string, pusher chunk
 					Items:     buff,
 					FilePath:  filePath,
 					Offset:    lineCounter,
-					Completed: lastRound,
+					Completed: false,
 					Size:      currentSize,
 				}); err != nil {
 					return xerrors.Errorf("unable to push: %w", err)
@@ -183,7 +184,7 @@ func (r *JSONLineReader) Read(ctx context.Context, filePath string, pusher chunk
 				Items:     buff,
 				FilePath:  filePath,
 				Offset:    lineCounter,
-				Completed: lastRound,
+				Completed: false,
 				Size:      currentSize,
 			}); err != nil {
 				return xerrors.Errorf("unable to push: %w", err)
@@ -399,8 +400,8 @@ func guessType(value interface{}) (schema.Type, string, error) {
 }
 
 func readAllLines(content []byte) ([]string, int, error) {
-	scanner := scanner.NewLineBreakScanner(content)
-	scannedLines, err := scanner.ScanAll()
+	currScanner := scanner.NewLineBreakScanner(content)
+	scannedLines, err := currScanner.ScanAll()
 	if err != nil {
 		return nil, 0, xerrors.Errorf("failed to split all read lines: %w", err)
 	}
@@ -411,11 +412,11 @@ func readAllLines(content []byte) ([]string, int, error) {
 	for index, line := range scannedLines {
 		if index == len(scannedLines)-1 {
 			// check if last line is complete
-			if err := fastjson.Validate(string(line)); err != nil {
+			if err := fastjson.Validate(line); err != nil {
 				break
 			}
 		}
-		lines = append(lines, string(line))
+		lines = append(lines, line)
 		bytesRead += (len(line) + len("\n"))
 	}
 	return lines, bytesRead, nil
@@ -424,7 +425,7 @@ func readAllLines(content []byte) ([]string, int, error) {
 // In order to comply with the POSIX standard definition of line https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_206
 func readAllMultilineLines(content []byte) ([]string, int) {
 	var lines []string
-	extractedLine := []rune{}
+	extractedLine := make([]rune, 0)
 	foundStart := false
 	countCurlyBrackets := 0
 	bytesRead := 0
@@ -458,7 +459,7 @@ func readSingleJSONObject(reader *bufio.Reader) (string, error) {
 		return "", xerrors.Errorf("failed to read sample content for schema deduction: %w", err)
 	}
 
-	extractedLine := []rune{}
+	extractedLine := make([]rune, 0)
 	foundStart := false
 	countCurlyBrackets := 0
 	for _, char := range string(content) {

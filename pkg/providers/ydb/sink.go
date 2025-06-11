@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/library/go/core/xerrors"
@@ -271,6 +271,9 @@ func (s *sinker) isClosed() bool {
 }
 
 func (s *sinker) checkTable(tablePath ydbPath, schema *abstract.TableSchema) error {
+	if s.config.IsSchemaMigrationDisabled {
+		return nil
+	}
 	if existingSchema, ok := s.cache[tablePath]; ok && existingSchema.Equal(schema) {
 		return nil
 	}
@@ -601,6 +604,8 @@ func (s *sinker) Push(input []abstract.ChangeItem) error {
 				tablePath = ydbPath(path.Join(s.config.Path, string(tablePath)))
 			}
 			batches[tablePath] = append(batches[tablePath], item)
+		case abstract.SynchronizeKind:
+			// do nothing
 		default:
 			s.logger.Infof("kind: %v not supported", item.Kind)
 		}
@@ -943,6 +948,20 @@ func (s *sinker) ydbVal(dataType, originalType string, val interface{}) (types.V
 		default:
 			return nil, true, xerrors.Errorf("Unable to marshal timestamp value: %v with type: %T", vv, vv)
 		}
+	case "ydb:Uuid":
+		switch vv := val.(type) {
+		case string:
+			if s.config.IsTableColumnOriented {
+				return types.UTF8Value(vv), false, nil
+			}
+			uuidVal, err := uuid.Parse(vv)
+			if err != nil {
+				return nil, true, xerrors.Errorf("Unable to parse UUID value: %w", err)
+			}
+			return types.UuidValue(uuidVal), false, nil
+		default:
+			return nil, true, xerrors.Errorf("unknown ydb:Uuid type: %T, val=%s", val, val)
+		}
 	}
 	if !s.config.IsTableColumnOriented {
 		switch originalType {
@@ -1235,6 +1254,9 @@ func (s *sinker) ydbType(dataType, originalType string) types.Type {
 		case "Json":
 			return types.TypeJSON
 		case "Uuid":
+			if s.config.IsTableColumnOriented {
+				return types.TypeUTF8
+			}
 			return types.TypeUUID
 		case "JsonDocument":
 			return types.TypeJSONDocument

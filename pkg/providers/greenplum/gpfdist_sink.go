@@ -117,7 +117,8 @@ func (s *GpfdistSink) Push(items []abstract.ChangeItem) error {
 			if err := s.processInitTableLoad(systemKindCtx, &item); err != nil {
 				return xerrors.Errorf("sinker failed to initialize table load for table %s: %w", item.PgName(), err)
 			}
-		case abstract.DoneShardedTableLoad:
+		case abstract.DoneShardedTableLoad, abstract.SynchronizeKind:
+			// do nothing
 		default:
 			return xerrors.Errorf("item kind %s is not supported", item.Kind)
 		}

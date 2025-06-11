@@ -233,7 +233,7 @@ func (s *sinker) prepareInputPerTables(input []abstract.ChangeItem) (map[abstrac
 			} else {
 				s.logger.Infof("Done DDL:\n%v", util.Sample(ddlQ, maxSampleLen))
 			}
-		case abstract.InitShardedTableLoad:
+		case abstract.InitShardedTableLoad, abstract.SynchronizeKind:
 			// not needed for now
 		case abstract.InitTableLoad:
 			initQ := s.progress.BuildLSNQuery(tableID.Fqtn(), row.LSN, SnapshotWait)
@@ -359,7 +359,7 @@ func (s *sinker) perTransactionPush(input []abstract.ChangeItem) error {
 				ddlQ := DisableFKQuery
 				ddlQ += fmt.Sprintf("TRUNCATE TABLE `%v`.`%v`", db, row.Table)
 				queries = append(queries, ddlQ)
-			case abstract.InitShardedTableLoad:
+			case abstract.InitShardedTableLoad, abstract.DoneShardedTableLoad, abstract.SynchronizeKind:
 				// not needed for now
 			case abstract.InitTableLoad:
 				initQ := s.progress.BuildLSNQuery(tableID.Fqtn(), row.LSN, SnapshotWait)
@@ -369,8 +369,6 @@ func (s *sinker) perTransactionPush(input []abstract.ChangeItem) error {
 				doneQ := s.progress.BuildLSNQuery(tableID.Fqtn(), row.LSN, SyncWait)
 				s.logger.Infof("done table load: %v", doneQ)
 				queries = append(queries, doneQ)
-			case abstract.DoneShardedTableLoad:
-				// not needed for now
 			default:
 				return xerrors.Errorf("not implemented change kind: %v", row.Kind)
 			}
@@ -740,8 +738,9 @@ func (s *sinker) Close() error {
 func (s *sinker) checkTable(tableID abstract.TableID, tableSchema *abstract.TableSchema) error {
 	s.rw.Lock()
 	defer s.rw.Unlock()
-	// keep it for backward compatibility. keep it as is until TM-8571
-	if s.config.MaintainTables {
+	// MaintainTables historically was used incorrectly. Have to keep it for backward compatibility until we move to
+	// GetIsSchemaMigrationDisabled flag completely
+	if s.config.IsSchemaMigrationDisabled || s.config.MaintainTables {
 		return nil
 	}
 	if err := s.ensureTableSchema(tableID, tableSchema); err != nil {
