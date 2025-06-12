@@ -1,6 +1,6 @@
 module github.com/transferia/transferia
 
-go 1.23.8
+go 1.24.4
 
 require (
 	cloud.google.com/go v0.121.0
@@ -375,9 +375,11 @@ replace github.com/prometheus/common => github.com/prometheus/common v0.62.0
 
 replace github.com/distribution/reference => github.com/distribution/reference v0.5.0
 
-replace github.com/jackc/pgconn => github.com/jackc/pgconn v1.14.0
+replace github.com/jackc/pgconn => github.com/jackc/pgconn v1.14.2
 
-replace github.com/jackc/pgproto3/v2 => github.com/jackc/pgproto3/v2 v2.3.2
+replace github.com/jackc/pgproto3/v2 => github.com/jackc/pgproto3/v2 v2.3.3
+
+replace github.com/jackc/pglogrepl => github.com/Altinity/pglogrepl v0.0.0-20250612163008-95bb70c06110
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.24
 
