@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened]
 
 env:
-  GO_VERSION: "1.23.8"
+  GO_VERSION: "1.24.4"
 
 jobs:
   SAST:
