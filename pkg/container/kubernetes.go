@@ -1,3 +1,5 @@
+//go:build !disable_kubernetes
+
 package container
 
 import (
@@ -26,7 +28,7 @@ type K8sWrapper struct {
 	logger log.Logger
 }
 
-func NewK8sWrapper(logger log.Logger) (*K8sWrapper, error) {
+func NewK8sWrapper(logger log.Logger) (ContainerImpl, error) {
 	logger.Info("Initializing Kubernetes wrapper")
 	config, err := rest.InClusterConfig()
 	if err != nil {

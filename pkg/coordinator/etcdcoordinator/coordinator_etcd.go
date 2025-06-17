@@ -1,3 +1,5 @@
+//go:build !disable_etcd_coordinator
+
 package etcdcoordinator
 
 import (

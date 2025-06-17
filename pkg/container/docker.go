@@ -1,3 +1,5 @@
+//go:build !disable_docker
+
 package container
 
 import (
@@ -23,7 +25,7 @@ type DockerWrapper struct {
 	logger log.Logger
 }
 
-func NewDockerWrapper(logger log.Logger) (*DockerWrapper, error) {
+func NewDockerWrapper(logger log.Logger) (ContainerImpl, error) {
 	d := &DockerWrapper{
 		cli:    nil,
 		logger: logger,

@@ -62,6 +62,7 @@ func main() {
 		Short:        "Transferia cli",
 		Example:      "./trcli help",
 		SilenceUsage: true,
+		Version:      getVersionString(),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := context.Background()
 			cmd.SetContext(ctx)
