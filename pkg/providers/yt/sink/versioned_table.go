@@ -141,7 +141,7 @@ func (t *VersionedTable) Write(input []abstract.ChangeItem) error {
 				}
 			}
 			if t.hasOnlyPKey() {
-				row["__dummy"] = nil
+				row[DummyMainTable] = nil
 			}
 			lookupKeys = append(lookupKeys, keys)
 			insertRows = append(insertRows, row)
@@ -232,9 +232,6 @@ func (t *VersionedTable) updateIndexes(ctx context.Context, tx yt.TabletTx, rows
 			continue
 		}
 
-		if strings.HasSuffix(t.path.String(), "/_ping") {
-			continue
-		}
 		wg.Add(1)
 		go func(k string, n int) {
 			defer wg.Done()
@@ -246,7 +243,7 @@ func (t *VersionedTable) updateIndexes(ctx context.Context, tx yt.TabletTx, rows
 				}
 				idxRow := map[string]interface{}{}
 				idxRow[k] = r[k]
-				idxRow["_dummy"] = nil
+				idxRow[DummyIndexTable] = nil
 				for _, col := range t.schema {
 					if col.PrimaryKey {
 						idxRow[col.ColumnName] = r[col.ColumnName]
@@ -255,7 +252,7 @@ func (t *VersionedTable) updateIndexes(ctx context.Context, tx yt.TabletTx, rows
 				idxRows = append(idxRows, idxRow)
 			}
 
-			idxPath := ypath.Path(fmt.Sprintf("%v__idx_%v", string(t.path), k))
+			idxPath := ypath.Path(MakeIndexTableName(string(t.path), k))
 			t.metrics.Table(string(idxPath), "rows", len(idxRows))
 			t.logger.Infof("prepare idx %v %v rows", idxPath, len(idxRows))
 			if err := tx.InsertRows(ctx, idxPath, idxRows, nil); err != nil {

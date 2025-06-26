@@ -62,7 +62,7 @@ func (di *dataItemView) makeRow() (ytRow, error) {
 		}
 	}
 	if di.columns.hasOnlyPKey() {
-		row["__dummy"] = nil
+		row[DummyMainTable] = nil
 	}
 	return row, nil
 }
@@ -138,7 +138,7 @@ func (ii *indexItemView) makeRow() (ytRow, error) {
 	}
 	row := ytRow{
 		ii.indexColumnName: value,
-		"_dummy":           nil,
+		DummyIndexTable:    nil,
 	}
 
 	for i, colName := range ii.change.ColumnNames {

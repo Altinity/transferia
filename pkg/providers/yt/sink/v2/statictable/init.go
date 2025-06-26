@@ -41,7 +41,6 @@ func initTable(client yt.Client, opts *InitOptions) error {
 	scheme := makeYtSchema(opts.Schema)
 	for i := range scheme.Columns {
 		scheme.Columns[i].SortOrder = ""
-		scheme.Columns[i].Expression = ""
 	}
 
 	createOptions := createNodeOptions(scheme, opts.OptimizeFor, opts.CustomAttributes)

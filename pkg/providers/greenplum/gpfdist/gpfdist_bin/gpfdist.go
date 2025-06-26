@@ -4,7 +4,6 @@ package gpfdistbin
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io"
 	"net"
@@ -12,10 +11,10 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/library/go/core/xerrors/multierr"
@@ -38,6 +37,16 @@ const (
 	ImportTable = GpfdistMode("import-table")
 )
 
+func (m GpfdistMode) ToExternalTableMode() externalTableMode {
+	switch m {
+	case ExportTable:
+		return modeWritable
+	case ImportTable:
+		return modeReadable
+	}
+	return ""
+}
+
 type Gpfdist struct {
 	cmd           *exec.Cmd // cmd is a command to run gpfdist executable.
 	localAddr     net.IP
@@ -45,7 +54,6 @@ type Gpfdist struct {
 	workingDir    string
 	serviceSchema string
 	pipeName      string
-	ddlExecutor   *GpfdistDDLExecutor
 	mode          GpfdistMode
 }
 
@@ -62,17 +70,6 @@ func (g *Gpfdist) Stop() error {
 		logger.Log.Warnf("Gpfdist process is nil, won't be killed")
 	}
 	return multierr.Combine(errors...)
-}
-
-func (g *Gpfdist) RunExternalTableTransaction(ctx context.Context, table abstract.TableID, schema *abstract.TableSchema) (int64, error) {
-	return g.ddlExecutor.createExternalTableAndInsertRows(ctx, g.externalTableMode(), table, schema, g.serviceSchema, g.locations())
-}
-
-func (g *Gpfdist) externalTableMode() externalTableMode {
-	if g.mode == ExportTable {
-		return modeWritable
-	}
-	return modeReadable
 }
 
 func (g *Gpfdist) pipeOpenFlag() int {
@@ -120,8 +117,8 @@ func (g *Gpfdist) fullPath(relativePath string) string {
 	return fmt.Sprintf("%s/%s", g.workingDir, relativePath)
 }
 
-func (g *Gpfdist) locations() []string {
-	return []string{fmt.Sprintf("gpfdist://%s:%d/%s", g.localAddr.String(), g.port, g.pipeName)}
+func (g *Gpfdist) Location() string {
+	return fmt.Sprintf("gpfdist://%s:%d/%s", g.localAddr.String(), g.port, g.pipeName)
 }
 
 func (g *Gpfdist) removePipe() error {
@@ -134,7 +131,7 @@ func (g *Gpfdist) initPipe() error {
 	return syscall.Mkfifo(g.fullPath(g.pipeName), defaultPipeMode)
 }
 
-func InitGpfdist(params GpfdistParams, localAddr net.IP, mode GpfdistMode, conn *pgxpool.Pool) (*Gpfdist, error) {
+func InitGpfdist(params GpfdistParams, localAddr net.IP, mode GpfdistMode, id int) (*Gpfdist, error) {
 	switch mode {
 	case ExportTable, ImportTable:
 	default:
@@ -150,7 +147,6 @@ func InitGpfdist(params GpfdistParams, localAddr net.IP, mode GpfdistMode, conn 
 		localAddr:     localAddr,
 		workingDir:    tmpDir,
 		serviceSchema: params.ServiceSchema,
-		ddlExecutor:   NewGpfdistDDLExecutor(conn),
 		pipeName:      fmt.Sprintf("pipe-%s", terryid.GenerateSuffix()),
 		mode:          mode,
 		port:          0,
@@ -159,25 +155,25 @@ func InitGpfdist(params GpfdistParams, localAddr net.IP, mode GpfdistMode, conn 
 		return nil, xerrors.Errorf("unable to init pipe: %w", err)
 	}
 
-	if err := gpfdist.startCmd(); err != nil {
+	if err := gpfdist.startCmd(id); err != nil {
 		return nil, xerrors.Errorf("unable to start gpfdist: %w", err)
 	}
 	return gpfdist, nil
 }
 
-func (g *Gpfdist) startCmd() error {
+func (g *Gpfdist) startCmd(id int) error {
 	portChannel := make(chan int, 1)
 	stderr, err := g.cmd.StderrPipe()
 	if err != nil {
 		return xerrors.Errorf("unable to get stderr pipe: %w", err)
 	}
-	go processLog(stderr, log.ErrorLevel, nil)
+	go processLog(stderr, log.ErrorLevel, strconv.Itoa(id), nil)
 
 	stdout, err := g.cmd.StdoutPipe()
 	if err != nil {
 		return xerrors.Errorf("unable to get stdout pipe: %w", err)
 	}
-	go processLog(stdout, log.InfoLevel, portChannel)
+	go processLog(stdout, log.InfoLevel, strconv.Itoa(id), portChannel)
 
 	logger.Log.Debugf("Will start gpfdist command")
 	if err = g.cmd.Start(); err != nil {
@@ -198,7 +194,7 @@ func (g *Gpfdist) startCmd() error {
 	}
 }
 
-func processLog(pipe io.ReadCloser, level log.Level, portChannel chan<- int) {
+func processLog(pipe io.ReadCloser, level log.Level, prefix string, portChannel chan<- int) {
 	var r *regexp.Regexp
 	if portChannel != nil {
 		r = regexp.MustCompile("^Serving HTTP on port ([0-9]+)[^0-9]+")
@@ -226,10 +222,16 @@ func processLog(pipe io.ReadCloser, level log.Level, portChannel chan<- int) {
 			}
 		}
 		switch level {
-		case log.InfoLevel:
-			logger.Log.Infof("Gpfdist: %s", line)
+		case log.ErrorLevel:
+			logger.Log.Errorf("gpfdist-%s: %s", prefix, line)
 		default:
-			logger.Log.Errorf("Gpfdist: %s", line)
+			if strings.Contains(line, " INFO ") {
+				logger.Log.Debugf("gpfdist-%s: %s", prefix, line)
+			} else if strings.Contains(line, " ERROR ") {
+				logger.Log.Errorf("gpfdist-%s: %s", prefix, line)
+			} else {
+				logger.Log.Warnf("gpfdist-%s: %s", prefix, line)
+			}
 		}
 	}
 	if scanner.Err() != nil {

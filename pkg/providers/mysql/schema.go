@@ -26,6 +26,7 @@ const (
 			on c.table_schema = t.table_schema
 			and c.table_name = t.table_name
 			and t.table_type in %s
+			%s
 		where c.table_schema not in ('sys', 'mysql', 'information_schema', 'performance_schema')
 		order by c.table_name, c.column_name;
 	`
@@ -48,6 +49,7 @@ const (
 				select table_name from information_schema.tables
 				where table_schema not in ('sys', 'mysql', 'information_schema', 'performance_schema')
 				and table_type in ('BASE TABLE', 'VIEW')
+				%s
 			)
 		order by
 			table_schema,
@@ -93,6 +95,7 @@ const (
 				select table_name from information_schema.tables
 				where table_schema not in ('sys', 'mysql', 'information_schema', 'performance_schema')
 				and table_type in ('BASE TABLE', 'VIEW')
+				%s
 			)
 			and generation_expression is not null and generation_expression != ''
 		;
@@ -103,12 +106,16 @@ type queryExecutor interface {
 	Query(sql string, args ...interface{}) (*sql.Rows, error)
 }
 
-func LoadSchema(tx queryExecutor, useFakePrimaryKey bool, includeViews bool) (abstract.DBSchema, error) {
+func LoadSchema(tx queryExecutor, useFakePrimaryKey bool, includeViews bool, database string) (abstract.DBSchema, error) {
 	includeViewsSQL := baseTablesAndViews
 	if !includeViews {
 		includeViewsSQL = baseTablesOnly
 	}
-	rows, err := tx.Query(fmt.Sprintf(columnList, includeViewsSQL))
+	query := fmt.Sprintf(columnList, includeViewsSQL, "")
+	if database != "" {
+		query = fmt.Sprintf(columnList, includeViewsSQL, fmt.Sprintf("and c.table_schema = '%s'", database))
+	}
+	rows, err := tx.Query(query)
 	if err != nil {
 		msg := "unable to select column list"
 		logger.Log.Error(msg, log.Error(err))
@@ -140,7 +147,11 @@ func LoadSchema(tx queryExecutor, useFakePrimaryKey bool, includeViews bool) (ab
 	}
 	pKeys := make(map[abstract.TableID][]string)
 	uKeys := make(map[abstract.TableID][]string)
-	keyRows, err := tx.Query(constraintList)
+	query = fmt.Sprintf(constraintList, "")
+	if database != "" {
+		query = fmt.Sprintf(constraintList, fmt.Sprintf("and table_schema = '%s'", database))
+	}
+	keyRows, err := tx.Query(query)
 	if err != nil {
 		msg := "unable to select constraints"
 		logger.Log.Error(msg, log.Error(err))
@@ -184,7 +195,7 @@ func LoadSchema(tx queryExecutor, useFakePrimaryKey bool, includeViews bool) (ab
 		tableCols[tID] = tableSchema
 	}
 	dbSchema := make(abstract.DBSchema)
-	for tableID, columns := range enrichExpressions(tx, tableCols) {
+	for tableID, columns := range enrichExpressions(tx, tableCols, database) {
 		dbSchema[tableID] = abstract.NewTableSchema(columns)
 	}
 	return dbSchema, nil
@@ -222,8 +233,12 @@ func LoadTableConstraints(tx queryExecutor, table abstract.TableID) (map[string]
 	return constraints, nil
 }
 
-func enrichExpressions(tx queryExecutor, schema map[abstract.TableID]abstract.TableColumns) map[abstract.TableID]abstract.TableColumns {
-	rows, err := tx.Query(expressionList)
+func enrichExpressions(tx queryExecutor, schema map[abstract.TableID]abstract.TableColumns, database string) map[abstract.TableID]abstract.TableColumns {
+	query := fmt.Sprintf(expressionList, "")
+	if database != "" {
+		query = fmt.Sprintf(expressionList, fmt.Sprintf("and table_schema = '%s'", database))
+	}
+	rows, err := tx.Query(query)
 	if err != nil {
 		logger.Log.Warnf("Unable to enrich expressions: %v", err)
 		return schema

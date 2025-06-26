@@ -13,7 +13,7 @@ import (
 )
 
 type DDLLoaders interface {
-	LoadTablesDDL(tables []abstract.TableID) ([]TableDDL, error)
+	LoadTablesDDL(tables []abstract.TableID) ([]*TableDDL, error)
 }
 
 type DDLSource struct {
