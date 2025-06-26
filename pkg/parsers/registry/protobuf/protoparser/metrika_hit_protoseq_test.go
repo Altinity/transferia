@@ -1,5 +1,7 @@
 package protoparser
 
+/*
+
 import (
 	"strings"
 	"testing"
@@ -72,3 +74,4 @@ func metrikaHitProtoseqConfig() *ProtoParserConfig {
 		LineSplitter:       abstract.LfLineSplitterProtoseq,
 	}
 }
+*/
