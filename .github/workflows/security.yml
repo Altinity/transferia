@@ -55,7 +55,7 @@ jobs:
             linter=$(echo "$line_no_tags" | cut -d':' -f1)
             description=$(echo "$line_no_tags" | cut -d':' -f2- | sed 's/^ *//')
             # Append the formatted row to the table
-            MD_TABLE+=$"| \`$linter\` | $description |\n"
+            MD_TABLE+=$"| $linter | $description |\n"
           done <<< "$ENABLED_BLOCK"
 
           # Use a heredoc to pass the multiline Markdown table to the job output
