@@ -207,6 +207,75 @@ trcli replicate --coordinator s3 --coordinator-s3-bucket bucket_name --log-level
 ps ax -ww  # to see actual generated command line for trcli
 ```
 
+### Network Policy Configuration
+
+This Helm chart includes an optional Kubernetes Network Policy that can be enabled to control network traffic to and from the Transferia pods.
+
+#### Configuration
+
+The network policy is disabled by default. To enable it, set the following in your `values.yaml`:
+
+```yaml
+networkPolicy:
+  enabled: true
+```
+
+#### Default Configuration
+
+When enabled, the network policy will:
+
+##### Ingress Rules
+- Allow health check traffic on port 3000 from any pod in the same namespace
+- Allow Prometheus metrics scraping on port 9091 from pods in the "monitoring" namespace
+
+##### Egress Rules
+- Allow DNS resolution on port 53
+- Allow outbound connections to the following ports:
+  - 5432 (PostgreSQL)
+  - 8123, 8443, 9000, 9005, 9011, 9440 (Application ports)
+
+#### Customization
+
+You can customize the network policy by modifying the following values:
+
+```yaml
+networkPolicy:
+  enabled: true
+  ingress:
+    healthCheckPort: 3000  # Change health check port
+    prometheus:
+      enabled: true  # Disable Prometheus ingress if not needed
+      port: 9091  # Change Prometheus metrics port
+      namespaceLabel: "monitoring"  # Change monitoring namespace label
+  egress:
+    dnsPort: 53  # Change DNS port
+    allowedPorts:  # Modify allowed egress ports
+      - port: 5432
+        protocol: TCP
+      # Add or remove ports as needed
+```
+
+#### Security Considerations
+
+- The network policy uses the pod selector `app.kubernetes.io/name: {{ .Release.Name }}` to target Transferia pods
+- Ingress rules are restrictive and only allow necessary traffic
+- Egress rules allow specific ports required for database and service communication
+- DNS resolution is allowed for service discovery
+
+#### Testing
+
+To verify the network policy is working:
+
+1. Deploy with `networkPolicy.enabled: true`
+2. Check that the NetworkPolicy resource is created:
+
+```bash
+kubectl get networkpolicy -n <namespace>
+```
+
+3. Test that health checks and metrics endpoints are accessible
+4. Verify that unauthorized traffic is blocked
+
 ### Monitoring
 
 The transfer service exposes Prometheus metrics on port 9091. You can access the metrics by port-forwarding the service to your local machine:

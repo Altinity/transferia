@@ -77,3 +77,32 @@ transfers:
   - name: test3
     src: postgresdb
     dst:  clickhouse
+
+# Network Policy Configuration
+networkPolicy:
+  enabled: false  # Set to true to enable network policy
+  ingress:
+    healthCheckPort: 3000  # Port for health checks
+    prometheus:
+      enabled: true  # Enable Prometheus metrics ingress
+      port: 9091  # Port for Prometheus metrics
+      namespaceLabel: "monitoring"  # Namespace label for Prometheus
+  egress:
+    dnsPort: 53  # Port for DNS resolution
+    allowedPorts:
+      # PostgreSQL ports
+      - port: 5432
+        protocol: TCP
+      # ClickHouse ports
+      - port: 8123
+        protocol: TCP
+      - port: 8443
+        protocol: TCP
+      - port: 9000
+        protocol: TCP
+      - port: 9005
+        protocol: TCP
+      - port: 9011
+        protocol: TCP
+      - port: 9440
+        protocol: TCP

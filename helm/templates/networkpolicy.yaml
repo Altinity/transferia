@@ -1,0 +1,55 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-network-policy
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: network-policy
+spec:
+  # This policy applies to pods with the label 'app.kubernetes.io/name: {{ .Release.Name }}'
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}
+  policyTypes:
+  - Ingress
+  - Egress
+
+  ingress:
+  # Allow Ingress for health checks on port 3000
+  # This allows traffic from any pod in the same namespace.
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.networkPolicy.ingress.healthCheckPort | default 3000 }}
+
+  {{- if .Values.networkPolicy.ingress.prometheus.enabled }}
+  # Allow Ingress for Prometheus metrics on port 9091
+  # This rule allows traffic from any pod in a namespace with the label 'name: monitoring'.
+  # Adjust the selector to match the namespace where your Prometheus is running.
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ .Values.networkPolicy.ingress.prometheus.namespaceLabel | default "monitoring" }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.networkPolicy.ingress.prometheus.port | default 9091 }}
+  {{- end }}
+
+  egress:
+  # Allow Egress for DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: {{ .Values.networkPolicy.egress.dnsPort | default 53 }}
+
+  # Allow Egress to other required services
+  - to: []
+    ports:
+    {{- range .Values.networkPolicy.egress.allowedPorts }}
+    - protocol: {{ .protocol | default "TCP" }}
+      port: {{ .port }}
+    {{- end }}
+{{- end }}
