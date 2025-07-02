@@ -54,7 +54,7 @@ func (m *ConcurrentMap[K, V]) ListKeys() []K {
 }
 
 // Clear clears the map and calls the function with the map
-// If argument is nil, the map will be cleared without calling the function
+// If argument is nil, the map will be cleared without calling the function.
 func (m *ConcurrentMap[K, V]) Clear(f func(map[K]V)) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
