@@ -154,7 +154,6 @@ jobs:
             { group: "pkg", name: "predicate", path: "predicate" },
             { group: "pkg", name: "dblog", path: "dblog" },
             { group: "pkg", name: "functions", path: "functions" },
-            { group: "pkg", name: "maplock", path: "maplock" },
             { group: "pkg", name: "middlewares", path: "middlewares" },
             { group: "pkg", name: "parsequeue", path: "parsequeue" },
             { group: "pkg", name: "util", path: "util" },
