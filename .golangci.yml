@@ -12,7 +12,6 @@ linters:
     - mirror
     - nosprintfhostport
     - staticcheck
-    #- unconvert
     #- unused
     - usestdlibvars
   settings:

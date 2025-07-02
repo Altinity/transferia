@@ -13,6 +13,8 @@ jobs:
   SAST:
     name: Perform SAST analysis (golangci-lint)
     runs-on: ubuntu-latest
+    outputs:
+      linters_table: ${{ steps.get_linters.outputs.linters_table }}
 
     steps:
       - name: Checkout code
@@ -33,6 +35,33 @@ jobs:
           only-new-issues: true
           args: --timeout=10m
           skip-cache: true
+
+      - name: Get enabled linters as a table
+        id: get_linters
+        if: success()
+        run: |
+          LINTERS_OUTPUT=$(golangci-lint linters)
+          # Isolate the enabled linters block, remove the header, and remove the final blank line
+          ENABLED_BLOCK=$(echo "$LINTERS_OUTPUT" | awk '/^Enabled by your configuration linters:/,/^$/' | sed '1d;$d')
+
+          # Prepare the Markdown table header
+          MD_TABLE="| Linter | Description |\n|---|---|\n"
+
+          # Process each line to build the table rows
+          while IFS= read -r line; do
+            # Remove the trailing [...] tags, e.g., [fast], [auto-fix]
+            line_no_tags=$(echo "$line" | sed 's/ \[[^]]*\]$//')
+            # Split the line into linter and description at the first colon
+            linter=$(echo "$line_no_tags" | cut -d':' -f1)
+            description=$(echo "$line_no_tags" | cut -d':' -f2- | sed 's/^ *//')
+            # Append the formatted row to the table
+            MD_TABLE+=$"| \`$linter\` | $description |\n"
+          done <<< "$ENABLED_BLOCK"
+
+          # Use a heredoc to pass the multiline Markdown table to the job output
+          echo "linters_table<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$MD_TABLE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   SCA:
     name: Perform SCA analysis (govulncheck)
@@ -56,3 +85,26 @@ jobs:
           go-version-input: ${{ env.GO_VERSION }}
           go-package: ./...
           cache: false
+
+  Summary:
+    name: Workflow Summary
+    runs-on: ubuntu-latest
+    if: success()
+    needs: [SAST, SCA]
+    steps:
+      - name: Create Success Summary
+        run: |
+          echo "## ✅ Security Scans Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All security checks passed. No new issues were found." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### SAST (golangci-lint)" >> $GITHUB_STEP_SUMMARY
+          echo "The following linters were enabled for the scan:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          # Print the pre-formatted Markdown table from the SAST job's output
+          echo "${{ needs.SAST.outputs.linters_table }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### SCA (govulncheck)" >> $GITHUB_STEP_SUMMARY
+          echo "No vulnerabilities were found." >> $GITHUB_STEP_SUMMARY
