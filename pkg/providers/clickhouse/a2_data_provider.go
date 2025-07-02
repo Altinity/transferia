@@ -27,7 +27,7 @@ type DataProvider struct {
 	storage    ClickhouseStorage
 }
 
-// To verify providers contract implementation
+// To verify providers contract implementation.
 var (
 	_ base.SnapshotProvider = (*DataProvider)(nil)
 )

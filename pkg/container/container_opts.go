@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// Secret represents a Kubernetes secret to be created
+// Secret represents a Kubernetes secret to be created.
 type Secret struct {
 	Name string
 	Data map[string][]byte

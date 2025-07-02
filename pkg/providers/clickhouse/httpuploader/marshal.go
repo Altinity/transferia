@@ -122,7 +122,7 @@ func MarshalCItoJSON(row abstract.ChangeItem, rules *MarshallingRules, buf *byte
 				break
 			}
 			buf.WriteString(`"`)
-			if bytes.ContainsRune([]byte(v), rune('"')) || bytes.ContainsRune([]byte(v), rune('\\')) {
+			if strings.ContainsRune(v, rune('"')) || strings.ContainsRune(v, rune('\\')) {
 				// We  have a " symbol in value, so we must quote string before submit it
 				// we want to preserve bytes as is since, clickhouse can accept them and store properly
 				// that's why we use this custom quote func
@@ -206,7 +206,7 @@ func MarshalCItoJSON(row abstract.ChangeItem, rules *MarshallingRules, buf *byte
 			}
 		case []byte:
 			if columntypes.LegacyIsDecimal(colSchema.OriginalType) || colType.IsDecimal {
-				buf.WriteString(string(v))
+				buf.Write(v)
 				break
 			}
 			if colType.IsArray {
@@ -217,11 +217,11 @@ func MarshalCItoJSON(row abstract.ChangeItem, rules *MarshallingRules, buf *byte
 				// We  have a " symbol in value, so we must quote string before submit it
 				// we want to preserve bytes as is since, clickhouse can accept them and store properly
 				// that's why we use this custom quote func
-				buf.WriteString(fmt.Sprintf(`"%s"`, questionableQuoter(string(v))))
+				fmt.Fprintf(buf, `"%s"`, questionableQuoter(string(v)))
 				break
 			}
 			// ClickHouse supports non-UTF-8 sequences in JSON at INSERT. This is (currently?) and undocumented feature
-			buf.WriteString(fmt.Sprintf(`"%s"`, string(v)))
+			fmt.Fprintf(buf, `"%s"`, string(v))
 		default:
 			r, err := json.Marshal(v)
 			if err != nil {
@@ -258,7 +258,7 @@ func isNilValue(v interface{}) bool {
 	return vv.Kind() == reflect.Pointer && vv.IsNil()
 }
 
-// questionableQuoter is like strconv.Quote, but do not try to escape non-utf8 chars
+// questionableQuoter is like strconv.Quote, but do not try to escape non-utf8 chars.
 func questionableQuoter(v string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(v, `\`, `\\`), `"`, `\"`)
 }

@@ -144,7 +144,7 @@ func GetIntFromEnv(varName string) int {
 	return val
 }
 
-// PostgresContainer represents the postgres container type used in the module
+// PostgresContainer represents the postgres container type used in the module.
 type MongoContainer struct {
 	testcontainers.Container
 	user        string
@@ -174,7 +174,7 @@ func StartMongoContainer(ctx context.Context, opts ...testcontainers.ContainerCu
 	for _, opt := range opts {
 		_ = opt.Customize(&genericContainerReq)
 	}
-	if req.FromDockerfile.Dockerfile != "" {
+	if req.Dockerfile != "" {
 		req.Image = ""
 	}
 

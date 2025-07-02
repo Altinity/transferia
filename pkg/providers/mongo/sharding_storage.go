@@ -90,7 +90,7 @@ func filterFromTable(table abstract.TableDescription) (ShardingFilter, error) {
 	return filter, nil
 }
 
-// getRepresentativeFromEveryTypeBracket acquires representative from every type bracket
+// getRepresentativeFromEveryTypeBracket acquires representative from every type bracket.
 func getRepresentativeFromEveryTypeBracket(ctx context.Context, collection *mongo.Collection, isDocDB bool) ([]delimiter, error) {
 	identifiers := []delimiter{}
 	// user primitive.JavaScript instances and etc. instead of $type query like this:
@@ -146,7 +146,7 @@ func getRepresentativeFromEveryTypeBracket(ctx context.Context, collection *mong
 	return identifiers, nil
 }
 
-// getRandomIdentifiers returns desired amount of random document identifiers
+// getRandomIdentifiers returns desired amount of random document identifiers.
 func getRandomIdentifiers(ctx context.Context, collection *mongo.Collection, amount uint64) ([]delimiter, error) {
 	// db.coll.aggregate([{ $sample: { size: 3 } }, { $sort : { _id : 1 }}])
 	// if delimiter count is larger than collection, all documents will be returned in order
@@ -176,7 +176,7 @@ func getRandomIdentifiers(ctx context.Context, collection *mongo.Collection, amo
 }
 
 // getDelimiters acquires delimiters that has representative in every type bracket
-// and has desired amount of parts if it is possible
+// and has desired amount of parts if it is possible.
 func getDelimiters(ctx context.Context, collection *mongo.Collection, amountOfDelimiters uint64, isDocDB bool) ([]delimiter, error) {
 	typeBracketDelimiters, err := getRepresentativeFromEveryTypeBracket(ctx, collection, isDocDB)
 	if err != nil {

@@ -62,7 +62,7 @@ func (d *PgDestination) GetConnectionID() string {
 
 func (d *PgDestination) IsAlterable() {}
 
-// AllHosts - function to move from legacy 'Host' into modern 'Hosts'
+// AllHosts - function to move from legacy 'Host' into modern 'Hosts'.
 func (d *PgDestination) AllHosts() []string {
 	return utils.HandleHostAndHosts(d.Host, d.Hosts)
 }

@@ -32,7 +32,7 @@ func (gp *Connection) HostNames() []string {
 }
 
 // connection resolver should validate connection before resolving master host
-// if no master host is found, we should return first unspecified host and it should be single host in connection
+// if no master host is found, we should return first unspecified host and it should be single host in connection.
 func (gp *Connection) ResolveMasterHost() *Host {
 	for _, host := range gp.CoordinatorHosts {
 		if host.Role == RoleMaster {
@@ -47,7 +47,7 @@ func (gp *Connection) ResolveMasterHost() *Host {
 	return nil
 }
 
-// return first replica host or nil if no replica host
+// return first replica host or nil if no replica host.
 func (gp *Connection) ResolveReplicaHost() *Host {
 	for _, host := range gp.CoordinatorHosts {
 		if host.Role == RoleReplica {

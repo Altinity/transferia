@@ -204,10 +204,10 @@ func (c *ChangeItem) MakeMapKeys() map[string]bool {
 	return keyCols
 }
 
-// ColumnName is an explicitly declared column name
+// ColumnName is an explicitly declared column name.
 type ColumnName string
 
-// FastTableSchema is a mapping from column name to its schema
+// FastTableSchema is a mapping from column name to its schema.
 type FastTableSchema map[ColumnName]ColSchema
 
 // MakeFastTableSchema produces a fast table schema from an array of schemas of each column. Column names are taken from these schemas.
@@ -220,7 +220,7 @@ func MakeFastTableSchema(slowTableSchema []ColSchema) FastTableSchema {
 }
 
 // KeysChanged - checks if update changes primary keys
-// NOTE: this method is quite inefficient
+// NOTE: this method is quite inefficient.
 func (c *ChangeItem) KeysChanged() bool {
 	if c.Kind != UpdateKind {
 		return false
@@ -297,7 +297,7 @@ func (c *ChangeItem) IsToasted() bool {
 	return false
 }
 
-// OldOrCurrentKeys returns a string representing the values of the columns from the given set of columns, extracted from OldKeys or ColumnValues, if OldKeys are absent
+// OldOrCurrentKeys returns a string representing the values of the columns from the given set of columns, extracted from OldKeys or ColumnValues, if OldKeys are absent.
 func (c *ChangeItem) OldOrCurrentKeysString(keyColumns map[string]bool) string {
 	if (c.Kind == UpdateKind || c.Kind == DeleteKind) && len(c.OldKeys.KeyValues) > 0 {
 		keys := make(map[string]interface{})
@@ -353,7 +353,7 @@ func ContainsNonRowItem(s []ChangeItem) bool {
 	return false
 }
 
-// FindItemOfKind returns an item in the slice whose kind is among the given ones, or nil if there is no such item in it
+// FindItemOfKind returns an item in the slice whose kind is among the given ones, or nil if there is no such item in it.
 func FindItemOfKind(s []ChangeItem, kinds ...Kind) *ChangeItem {
 	wanted := make(map[Kind]bool)
 	for _, k := range kinds {
@@ -368,7 +368,7 @@ func FindItemOfKind(s []ChangeItem, kinds ...Kind) *ChangeItem {
 }
 
 // IsMirror
-// mirror - it's special format with hardcoded schema - used for "mirroring" (queue->queue) - transfer messages between queues without changes
+// mirror - it's special format with hardcoded schema - used for "mirroring" (queue->queue) - transfer messages between queues without changes.
 func (c *ChangeItem) IsMirror() bool {
 	if len(c.ColumnNames) != len(RawDataColumns) {
 		return false
@@ -663,7 +663,7 @@ func (c *ChangeItem) SetTableSchema(tableSchema *TableSchema) {
 }
 
 // RemoveColumns mutate change item to skip some columns from it.
-// it remove it from column names and column values
+// it remove it from column names and column values.
 func (c *ChangeItem) RemoveColumns(cols ...string) {
 	toDelete := map[string]struct{}{}
 	for _, col := range cols {

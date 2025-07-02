@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	//"github.com/transferia/transferia/cloud/dataplatform/lib/debugtools"
+	//"github.com/transferia/transferia/cloud/dataplatform/lib/debugtools".
 	"github.com/transferia/transferia/internal/logger"
 	"go.ytsaurus.tech/library/go/core/log"
 )
@@ -29,7 +29,15 @@ func RunHealthCheckOnPort(port int) {
 	rootMux := http.NewServeMux()
 	rootMux.HandleFunc("/ping", PingFunc)
 	logger.Log.Infof("healthcheck is upraising on port 80")
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), rootMux); err != nil { // it must be on 80 port - bcs of dataplane instance-group
+
+	server := &http.Server{
+		Addr:         fmt.Sprintf(":%d", port),
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
+		Handler:      rootMux,
+	}
+
+	if err := server.ListenAndServe(); err != nil { // it must be on 80 port - bcs of dataplane instance-group
 		logger.Log.Error("failed to serve health check", log.Error(err))
 	}
 }

@@ -29,7 +29,6 @@ func getVersionString() string {
 				if setting.Value != "" {
 					buildTags = setting.Value
 				}
-				break
 			case "vcs.revision":
 				if commit == "" {
 					commit = setting.Value

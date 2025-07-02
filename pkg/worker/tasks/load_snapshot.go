@@ -146,7 +146,7 @@ func (l *SnapshotLoader) CheckIncludeDirectives(tables []abstract.TableDescripti
 	return nil
 }
 
-// TODO Remove, legacy hacks
+// TODO Remove, legacy hacks.
 func (l *SnapshotLoader) endpointsPreSnapshotActions(sourceStorage abstract.Storage) {
 	switch specificStorage := sourceStorage.(type) {
 	case *greenplum.Storage:
@@ -161,7 +161,7 @@ func (l *SnapshotLoader) endpointsPreSnapshotActions(sourceStorage abstract.Stor
 	}
 }
 
-// TODO Remove, legacy hacks
+// TODO Remove, legacy hacks.
 func (l *SnapshotLoader) endpointsPostSnapshotActions() {
 	switch dst := l.transfer.Dst.(type) {
 	case model.HackableTarget:
@@ -433,7 +433,7 @@ func (l *SnapshotLoader) uploadMain(ctx context.Context, inTables []abstract.Tab
 		return errors.CategorizedErrorf(categories.Internal, "unable to prepare sharded state for operation '%v': %w", l.operationID, err)
 	}
 	if isAsyncParts {
-		newState, err := addKeyToJson(shardedState, abstract.IsAsyncPartsUploadedStateKey, false)
+		newState, err := addKeyToJSON(shardedState, abstract.IsAsyncPartsUploadedStateKey, false)
 		if err != nil {
 			return errors.CategorizedErrorf(categories.Internal, "unable to add key to state: %w", err)
 		}
@@ -469,7 +469,7 @@ func (l *SnapshotLoader) uploadMain(ctx context.Context, inTables []abstract.Tab
 		if err := l.asyncLoadParts(asyncProviderCtx, asyncPartsStorage, tables, nil); err != nil {
 			return errors.CategorizedErrorf(categories.Internal, "unable to async load parts: %w", err)
 		}
-		newState, err := addKeyToJson(shardedState, abstract.IsAsyncPartsUploadedStateKey, true)
+		newState, err := addKeyToJSON(shardedState, abstract.IsAsyncPartsUploadedStateKey, true)
 		if err != nil {
 			return errors.CategorizedErrorf(categories.Internal, "unable to add key to state: %w", err)
 		}
@@ -914,8 +914,8 @@ func (l *SnapshotLoader) removePartFilterFromTransferState(part *model.Operation
 	return l.cp.RemoveTransferState(l.transfer.ID, []string{part.Filter})
 }
 
-// addKeyToJson unmarshals jsonStr to map[string]any, adds key with value and returns marshalled json.
-func addKeyToJson(jsonStr, key string, value any) ([]byte, error) {
+// addKeyToJSON unmarshals jsonStr to map[string]any, adds key with value and returns marshalled json.
+func addKeyToJSON(jsonStr, key string, value any) ([]byte, error) {
 	dict := make(map[string]any)
 	if jsonStr != "" {
 		if err := jsonx.Unmarshal([]byte(jsonStr), &dict); err != nil {

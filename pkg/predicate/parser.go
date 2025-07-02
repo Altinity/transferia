@@ -40,7 +40,7 @@ func NewParser(r io.Reader) *Parser {
 
 // Parse starts scanning & parsing process (main entry point).
 // It returns an expression (AST) which you can use for the final evaluation
-// of the conditions/statements
+// of the conditions/statements.
 func (p *Parser) Parse() (Expr, error) {
 	return p.parseExpr()
 }
@@ -135,21 +135,22 @@ func (p *Parser) scanWithMapping() (Token, string) {
 	case scanner.Ident:
 		ttU := strings.ToUpper(tt)
 
-		if ttU == "AND" {
+		switch ttU {
+		case "AND":
 			tok = AND
-		} else if ttU == "OR" {
+		case "OR":
 			tok = OR
-		} else if ttU == "NOT" {
+		case "NOT":
 			_, tmp := p.scan()
 			if tmp == "(" {
 				p.unscan()
 				tok = NOT
 			}
-		} else if ttU == "TRUE" {
+		case "TRUE":
 			tok = TRUE
-		} else if ttU == "FALSE" {
+		case "FALSE":
 			tok = FALSE
-		} else {
+		default:
 			tok = ILLEGAL
 		}
 	}
@@ -162,7 +163,7 @@ func (p *Parser) unscan() {
 	p.buf.buffSize = 1
 }
 
-// parseExpr is an entry point to parsing
+// parseExpr is an entry point to parsing.
 func (p *Parser) parseExpr() (Expr, error) {
 	// Parse a non-binary expression type to start.
 	// This variable will always be the root of the expression tree.
@@ -208,7 +209,8 @@ func (p *Parser) parseExpr() (Expr, error) {
 func (p *Parser) parseUnaryExpr() (Expr, error) {
 	// If the first token is a LPAREN then parse it as its own grouped expression.
 	tok, lit := p.scanWithMapping()
-	if tok == NOT {
+	switch tok {
+	case NOT:
 		tok, _ = p.scanWithMapping()
 		if tok != LPAREN {
 			return nil, xerrors.Errorf("missing (")
@@ -224,7 +226,7 @@ func (p *Parser) parseUnaryExpr() (Expr, error) {
 		}
 
 		return &ParenExpr{Expr: expr, Inverted: true}, nil
-	} else if tok == LPAREN {
+	case LPAREN:
 		expr, err := p.parseExpr()
 		if err != nil {
 			return nil, xerrors.Errorf("unable to parse expr: %w", err)

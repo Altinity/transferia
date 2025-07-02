@@ -15,7 +15,7 @@ import (
 	"github.com/transferia/transferia/pkg/providers/s3/reader/s3raw"
 )
 
-// Reader function to return dummy S3RawReader with specified sizes
+// Reader function to return dummy S3RawReader with specified sizes.
 func dummyReaderF(sizes map[string]int64) readerCtorF {
 	return func(ctx context.Context, filePath string) (s3raw.AbstractS3RawReader, error) {
 		fileSize, exists := sizes[filePath]

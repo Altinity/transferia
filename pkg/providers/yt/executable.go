@@ -24,7 +24,7 @@ var (
 	exeVersion string
 )
 
-// InitExe uploads exe and initializes related variables
+// InitExe uploads exe and initializes related variables.
 func InitExe() {
 	if !env.IsTest() {
 		return

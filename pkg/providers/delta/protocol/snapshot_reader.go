@@ -148,7 +148,7 @@ func (r *SnapshotReader) logSegmentForVersion(startCheckpoint int64, versionToLo
 		if err != nil {
 			return nil, xerrors.Errorf("unable to load row: %w", err)
 		}
-		if !(IsCheckpointFile(f.Path()) || IsDeltaFile(f.Path())) {
+		if !IsCheckpointFile(f.Path()) && !IsDeltaFile(f.Path()) {
 			continue
 		}
 		if IsCheckpointFile(f.Path()) && f.Size() == 0 {
@@ -218,7 +218,7 @@ func (r *SnapshotReader) logSegmentForVersion(startCheckpoint int64, versionToLo
 }
 
 // emptySegment means there is no starting checkpoint found. This means that we should definitely have version 0, or the
-// last checkpoint we thought should exist (the `_last_checkpoint` file) no longer exists
+// last checkpoint we thought should exist (the `_last_checkpoint` file) no longer exists.
 func (r *SnapshotReader) emptySegment(startCheckpoint int64, deltas []*store.FileMeta) (*LogSegment, error) {
 	if startCheckpoint > 0 {
 		return nil, xerrors.Errorf("missing file part: %v", startCheckpoint)

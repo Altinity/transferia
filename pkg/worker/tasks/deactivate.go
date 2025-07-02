@@ -12,7 +12,7 @@ import (
 	"github.com/transferia/transferia/pkg/providers/postgres"
 )
 
-// fast check whether deactivate may be skipped
+// fast check whether deactivate may be skipped.
 func DeactivateNeeded(transfer model.Transfer) bool {
 	if !providers.SourceIs[providers.Deactivator](&transfer) {
 		return false

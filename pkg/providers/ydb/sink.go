@@ -138,7 +138,7 @@ const (
 // based on
 // https://ydb.tech/ru/docs/yql/reference/types/primitive
 // https://ydb.tech/ru/docs/concepts/column-table#olap-data-types
-// unmentioned types can't be primary keys
+// unmentioned types can't be primary keys.
 var primaryIsAllowedFor = map[types.Type]AllowedIn{
 	// we cast bool to uint8 for OLAP tables
 	types.TypeBool: BOTH,
@@ -279,10 +279,8 @@ func (s *sinker) checkTable(tablePath ydbPath, schema *abstract.TableSchema) err
 	if existingSchema, ok := s.cache[tablePath]; ok && existingSchema.Equal(schema) {
 		return nil
 	}
-	for {
-		if s.locks.TryLock(tablePath) {
-			break
-		}
+	for !s.locks.TryLock(tablePath) {
+
 	}
 	defer s.locks.Unlock(tablePath)
 

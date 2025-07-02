@@ -83,7 +83,7 @@ func (b *bigRow) toValues() []interface{} {
 	}
 }
 
-// initializes YT client and sinker config
+// initializes YT client and sinker config.
 func initYt(t *testing.T, path string) (testCfg yt2.YtDestinationModel, client yt.Client) {
 	cfg := yt2.NewYtDestinationV1(yt2.YtDestination{
 		Path:          path,

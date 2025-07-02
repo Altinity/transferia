@@ -4,7 +4,7 @@ package container
 
 import "io"
 
-// streamWrapper signals when the stream is closed
+// streamWrapper signals when the stream is closed.
 type streamWrapper struct {
 	io.ReadCloser
 	onClose func()

@@ -154,12 +154,12 @@ func (s *Snapshot) Metadata() (*action.Metadata, error) {
 	return s.metadata, nil
 }
 
-// Version returns the version of this Snapshot
+// Version returns the version of this Snapshot.
 func (s *Snapshot) Version() int64 {
 	return s.version
 }
 
-// CommitTS returns the time of commit for this Snapshot
+// CommitTS returns the time of commit for this Snapshot.
 func (s *Snapshot) CommitTS() time.Time {
 	return time.Unix(0, s.commitTS*int64(time.Millisecond)).UTC()
 }

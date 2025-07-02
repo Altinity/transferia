@@ -25,12 +25,12 @@ func Doc(typ abstract.ProviderType, title string) string {
 func BuildSourceDoc(typ abstract.ProviderType, title string) string {
 	rules := RuleFor(typ)
 	buf := &bytes.Buffer{}
-	buf.WriteString(fmt.Sprintf(`
+	fmt.Fprintf(buf, `
 ### %[1]s Source Type Mapping
 
 | %[1]s TYPES | TRANSFER TYPE |
 | --- | ----------- |
-`, title))
+`, title)
 	for _, typ := range SupportedTypes() {
 		var row []string
 
@@ -46,7 +46,7 @@ func BuildSourceDoc(typ abstract.ProviderType, title string) string {
 		} else {
 			row = []string{"—", string(typ)}
 		}
-		buf.WriteString(fmt.Sprintf("|%s|\n", strings.Join(row, "|")))
+		fmt.Fprintf(buf, "|%s|\n", strings.Join(row, "|"))
 	}
 	return buf.String()
 }
@@ -58,12 +58,12 @@ func BuildTargetDoc(typ abstract.ProviderType, title string) string {
 `, title)
 	}
 	buf := &bytes.Buffer{}
-	buf.WriteString(fmt.Sprintf(`
+	fmt.Fprintf(buf, `
 ### %[1]s Target Type Mapping
 
 | TRANSFER TYPE | %[1]s TYPES |
 | --- | ----------- |
-`, title))
+`, title)
 	for _, typ := range SupportedTypes() {
 		var row []string
 		if targetType, ok := rules.Target[typ]; ok && len(targetType) > 0 {
@@ -72,7 +72,7 @@ func BuildTargetDoc(typ abstract.ProviderType, title string) string {
 		} else {
 			row = []string{string(typ), "—"}
 		}
-		buf.WriteString(fmt.Sprintf("|%s|\n", strings.Join(row, "|")))
+		fmt.Fprintf(buf, "|%s|\n", strings.Join(row, "|"))
 	}
 	return buf.String()
 }

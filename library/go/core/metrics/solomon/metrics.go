@@ -202,7 +202,7 @@ func (s *Metrics) SetTimestamp(timestamp time.Time) {
 	s.timestamp = &timestamp
 }
 
-// List return list of metrics
+// List return list of metrics.
 func (s Metrics) List() []Metric {
 	return slices.Clone(s.metrics)
 }

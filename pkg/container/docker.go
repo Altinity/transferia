@@ -331,7 +331,7 @@ func (d *DockerWrapper) ensureDocker(supervisorConfigPath string, timeout time.D
 	}
 }
 
-// Type returns the container backend type
+// Type returns the container backend type.
 func (d *DockerWrapper) Type() ContainerBackend {
 	return BackendDocker
 }

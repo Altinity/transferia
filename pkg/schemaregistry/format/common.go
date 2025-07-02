@@ -6,7 +6,7 @@ import (
 	"github.com/transferia/transferia/library/go/core/xerrors"
 )
 
-// KafkaJSONSchemaFromArr convert KafkaJSONSchema as []byte to struct KafkaJSONSchema
+// KafkaJSONSchemaFromArr convert KafkaJSONSchema as []byte to struct KafkaJSONSchema.
 func KafkaJSONSchemaFromArr(rawJSONSchema []byte) (*KafkaJSONSchema, error) {
 	var kafkaSchema KafkaJSONSchema
 	if err := json.Unmarshal(rawJSONSchema, &kafkaSchema); err != nil {

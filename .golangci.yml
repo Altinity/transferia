@@ -1,0 +1,68 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - decorder
+    - godot
+    - gosec
+    - govet
+    - mirror
+    - nosprintfhostport
+    - staticcheck
+    #- unconvert
+    #- unused
+    - usestdlibvars
+  settings:
+    gosec:
+      excludes:
+        - "G602" # Too many false positives
+        - "G102" # Doesn't apply, runs inside a container
+        - "G401" # Invalid
+        - "G115" # Doesn't apply
+        - "G501" # Weak hashes aren't used in a sensitive context
+        - "G505" # Weak hashes aren't used in a sensitive context
+        - "G402" # TLS checks were all confirmed to be false positives
+        - "G306" # File permissions are not relevant in a container
+        - "G404" # Weak RNGs are not used in a sensitive context
+        - "G101" # False positive
+        - "G204" # False positive
+        - "G109" # Invalid
+    staticcheck:
+      checks:
+        - "all"
+        - "-SA1019" # Don't check deprecated functions
+        - "-QF1003" # Irrelevant
+        - "-ST1003" # Upstream style choice
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - funlen
+          - goconst
+          - gocritic
+          - gosec
+          - ineffassign
+          - staticcheck
+          - unused
+        path: (.+)_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - tests/
+      - recipe/
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

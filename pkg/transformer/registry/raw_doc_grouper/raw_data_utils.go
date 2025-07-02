@@ -68,7 +68,7 @@ func CollectFieldsForTransformer(fields []string, columns abstract.TableColumns,
 	return result
 }
 
-// CollectAdditionalKeysForTransformer collecting additional keys that are not keys in the original table schema
+// CollectAdditionalKeysForTransformer collecting additional keys that are not keys in the original table schema.
 func CollectAdditionalKeysForTransformer(newKeys []string, originalKeyColumns []string) []string {
 	additionalKeys := make([]string, 0)
 	for _, newKey := range newKeys {

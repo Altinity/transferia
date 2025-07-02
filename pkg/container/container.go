@@ -11,17 +11,17 @@ import (
 	"go.ytsaurus.tech/library/go/core/log"
 )
 
-// ContainerBackend represents the type of container backend
+// ContainerBackend represents the type of container backend.
 type ContainerBackend string
 
 const (
-	// BackendDocker represents Docker container backend
+	// BackendDocker represents Docker container backend.
 	BackendDocker ContainerBackend = "docker"
-	// BackendKubernetes represents Kubernetes container backend
+	// BackendKubernetes represents Kubernetes container backend.
 	BackendKubernetes ContainerBackend = "kubernetes"
 )
 
-// Container defines container operations
+// Container defines container operations.
 type ContainerImpl interface {
 	// Run executes the container/pod process in the background.
 	// It returns immediately with io.ReadCloser streams for stdout and stderr.
@@ -60,7 +60,7 @@ func NewContainerImpl(l log.Logger) (ContainerImpl, error) {
 }
 
 // isRunningInKubernetes checks if the code is running in a Kubernetes environment
-// by looking for the KUBERNETES_SERVICE_HOST environment variable
+// by looking for the KUBERNETES_SERVICE_HOST environment variable.
 func isRunningInKubernetes() bool {
 	_, exists := os.LookupEnv("KUBERNETES_SERVICE_HOST")
 	return exists

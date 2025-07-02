@@ -521,15 +521,13 @@ func (s *Storage) ExactTableRowsCount(table abstract.TableID) (uint64, error) {
 }
 
 func (s *Storage) TableExists(table abstract.TableID) (bool, error) {
-	query := fmt.Sprintf(`
-		SELECT COUNT(*)
+	query := `SELECT COUNT(*)
 		FROM information_schema.tables
-		WHERE table_schema = '%s'
-			AND table_name = '%s'
-		LIMIT 1;
-	`, table.Namespace, table.Name)
+		WHERE table_schema = $1
+			AND table_name = $2
+		LIMIT 1;`
 
-	row := s.DB.QueryRow(query)
+	row := s.DB.QueryRow(query, table.Namespace, table.Name)
 
 	var rowsCount uint64
 	if err := row.Scan(&rowsCount); err != nil {

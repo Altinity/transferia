@@ -125,7 +125,7 @@ func (c *httpClientImpl) Exec(ctx context.Context, lgr log.Logger, host *chconn.
 }
 
 // error string ex.: "Code: 170. DB::Exception: Requested cluster 'test' not found. (BAD_GET) (version 22.3.12.19 (official build))"
-// may contain code name or not. Punctuation may vary among CH versions
+// may contain code name or not. Punctuation may vary among CH versions.
 var (
 	httpExcBaseRe    = regexp.MustCompile(`^.*Code: (?P<code>\d+)\W+(?P<message>.*)`)
 	httpExcVersionRe = regexp.MustCompile(`(?P<message>.*)\s+\(version.*`)

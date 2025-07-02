@@ -63,7 +63,7 @@ func (r *MatchedPath) CapturingGroups() *CapturingGroupResults {
 
 // NewMatchedPathEmpty - ctor for empty_match
 //
-// empty_match means 'op' matched by zero tokens. It's useful for ops: '?', '*' - then can match zero tokens
+// empty_match means 'op' matched by zero tokens. It's useful for ops: '?', '*' - then can match zero tokens.
 func NewMatchedPathEmpty() *MatchedPath {
 	return &MatchedPath{
 		path:         nil,
@@ -73,7 +73,7 @@ func NewMatchedPathEmpty() *MatchedPath {
 
 // NewMatchedPathPrimitive - ctor for 'ConsumePrimitive'
 //
-// 'ConsumePrimitive' matches 'op' to some amount of tokens
+// 'ConsumePrimitive' matches 'op' to some amount of tokens.
 func NewMatchedPathPrimitive(matchedOp *MatchedOp) *MatchedPath {
 	return &MatchedPath{
 		path:         []*MatchedOp{matchedOp},
@@ -83,7 +83,7 @@ func NewMatchedPathPrimitive(matchedOp *MatchedOp) *MatchedPath {
 
 // NewMatchedPathParentOpChildPath - ctor for 'AddLocal'
 //
-// 'AddLocal' usually used after ConsumeComplex, to consume its results
+// 'AddLocal' usually used after ConsumeComplex, to consume its results.
 func NewMatchedPathParentOpChildPath(parentOp *MatchedOp, childPath *MatchedPath) *MatchedPath {
 	currPath := make([]*MatchedOp, 0, len(childPath.path)+1)
 	currPath = append(currPath, parentOp)

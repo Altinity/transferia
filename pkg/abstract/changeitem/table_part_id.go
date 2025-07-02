@@ -14,7 +14,7 @@ type TablePartID struct {
 
 func (t *TablePartID) FqtnWithPartID() string {
 	if t.PartID == "" {
-		return t.TableID.Fqtn()
+		return t.Fqtn()
 	}
-	return fmt.Sprintf("%s.%s", t.TableID.Fqtn(), t.PartID)
+	return fmt.Sprintf("%s.%s", t.Fqtn(), t.PartID)
 }

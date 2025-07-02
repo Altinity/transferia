@@ -16,7 +16,7 @@ import (
 	"github.com/transferia/transferia/pkg/providers/s3/reader"
 )
 
-// To verify providers contract implementation
+// To verify providers contract implementation.
 var (
 	_ abstract.IncrementalStorage = (*Storage)(nil)
 )

@@ -38,7 +38,7 @@ func (s *Storage) Close() {
 }
 
 func (s *Storage) Ping() error {
-	res, err := s.Client.API.Ping()
+	res, err := s.Client.Ping()
 	if err != nil {
 		return xerrors.Errorf("unable to ping cluster: %w", err)
 	}

@@ -230,7 +230,7 @@ func (p *replication) reloadSchema() error {
 
 const FakeParentPKeyStatusMessageCategory string = "fake_primary_key_parent"
 
-// tableMapToDBSchemaForTables converts one type of schema to another ONLY for tables (dropping VIEWs)
+// tableMapToDBSchemaForTables converts one type of schema to another ONLY for tables (dropping VIEWs).
 func tableMapToDBSchemaForTables(tableMap abstract.TableMap) abstract.DBSchema {
 	result := make(abstract.DBSchema)
 	for id, info := range tableMap {

@@ -328,7 +328,7 @@ func resolveServerTimezone(db *sql.DB) (*time.Location, error) {
 	return loc, nil
 }
 
-// separate "shalow" constructor needed for tests only
+// separate "shalow" constructor needed for tests only.
 func NewSinkServerImpl(
 	cfg model.ChSinkServerParams,
 	db *sql.DB,

@@ -8,7 +8,7 @@ import (
 	"github.com/transferia/transferia/pkg/abstract"
 )
 
-// test runner
+// test runner.
 func TestRotatorConfig(t *testing.T) {
 	t.Run("ScenarioTesting", scenarioTesting)
 	t.Run("NilWorkaround", nilWorkaround) // temporary test
@@ -24,7 +24,7 @@ func TestRotatorConfig(t *testing.T) {
 	t.Run("TestTimeParsing", testTimeParsing)
 }
 
-// some month utility
+// some month utility.
 var monthIds = map[time.Month]int{
 	time.January: 0, time.February: 1, time.March: 2, time.April: 3, time.May: 4,
 	time.June: 5, time.July: 6, time.August: 7, time.September: 8, time.October: 9, time.November: 10, time.December: 11,
@@ -35,7 +35,7 @@ var monthList = []time.Month{
 	time.June, time.July, time.August, time.September, time.October, time.November, time.December,
 }
 
-// scenario tests
+// scenario tests.
 func scenarioTesting(t *testing.T) {
 	// this tests based on real user scenarios
 	t.Parallel()
@@ -88,7 +88,7 @@ func scenarioTestingDTSUPPORT693(t *testing.T) {
 
 }
 
-// tests
+// tests.
 func nilWorkaround(t *testing.T) {
 	// TODO delete this test when workaround is not necessary anymore
 	t.Parallel()

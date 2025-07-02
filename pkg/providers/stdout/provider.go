@@ -35,7 +35,7 @@ func sourceModelFactory() model.Source {
 const ProviderTypeStdout = abstract.ProviderType("stdout")
 const ProviderType = abstract.ProviderType("empty")
 
-// To verify providers contract implementation
+// To verify providers contract implementation.
 var (
 	_ providers.Sinker = (*Provider)(nil)
 )

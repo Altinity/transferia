@@ -157,7 +157,7 @@ func (p *AuditTrailsV1ParserImpl) Do(msg parsers.Message, partition abstract.Par
 			Counter:      0,
 			Kind:         abstract.InsertKind,
 			Schema:       "",
-			Table:        strings.Replace(partition.Topic, "/", "_", -1),
+			Table:        strings.ReplaceAll(partition.Topic, "/", "_"),
 			PartID:       "",
 			ColumnNames:  make([]string, 0, len(dict)),
 			ColumnValues: make([]any, 0, len(dict)),
@@ -240,7 +240,7 @@ func getNotElasticFields() []abstract.ColSchema {
 	}
 }
 
-// there are a lot of unused columns, which appear after renaming in `ingest_pipeline.json`
+// there are a lot of unused columns, which appear after renaming in `ingest_pipeline.json`.
 func getElasticFields() *abstract.TableSchema {
 	return abstract.NewTableSchema([]abstract.ColSchema{
 		makeColSchemaPK("event_id", "", "string"),

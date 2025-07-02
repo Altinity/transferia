@@ -14,7 +14,7 @@ func CreateReplicationSlot(src *PgSource, tracker ...*Tracker) error {
 	return err
 }
 
-// CreateReplicationSlotIfNotExists - returns 'true' if already exists
+// CreateReplicationSlotIfNotExists - returns 'true' if already exists.
 func CreateReplicationSlotIfNotExists(src *PgSource, tracker ...*Tracker) (bool, error) {
 	return createReplicationSlot(src, false, tracker...)
 }

@@ -61,7 +61,7 @@ func NewUnmarshaller(castData *UnmarshallerData, connInfo *pgtype.ConnInfo, sche
 	return result, nil
 }
 
-// Cast consumes raw SELECT output and produces a valid ChangeItem.Value
+// Cast consumes raw SELECT output and produces a valid ChangeItem.Value.
 func (c *Unmarshaller) Cast(input []byte) (any, error) {
 	if c.decoder == nil {
 		if err := c.reconstructDecoder(); err != nil {

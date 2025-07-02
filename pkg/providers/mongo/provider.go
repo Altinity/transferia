@@ -48,7 +48,7 @@ const (
 
 const ProviderType = abstract.ProviderType("mongo")
 
-// To verify providers contract implementation
+// To verify providers contract implementation.
 var (
 	_ providers.Sinker      = (*Provider)(nil)
 	_ providers.Replication = (*Provider)(nil)

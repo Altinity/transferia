@@ -48,7 +48,7 @@ func NewRuntime(runtime RuntimeType, runtimeSpec string) (Runtime, error) {
 
 // used in:
 // * cloud/doublecloud/transfer/internal/model
-// * taxi/atlas/saas/data-transfer/transfer/internal/model
+// * taxi/atlas/saas/data-transfer/transfer/internal/model.
 func RegisterRuntime(r RuntimeType, f func(spec string) (Runtime, error)) {
 	knownRuntimes[r] = f
 }
@@ -58,7 +58,7 @@ func KnownRuntime(r RuntimeType) bool {
 	return ok
 }
 
-// Parallelism params
+// Parallelism params.
 type ShardUploadParams struct {
 	JobCount     int //Workers count
 	ProcessCount int //Threads count, meaningful only for snapshots. For now, replication parallels only by workers

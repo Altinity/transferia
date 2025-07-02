@@ -564,7 +564,7 @@ func doTextConversion(val interface{}, ytType string) (string, error) {
 	return "", xerrors.Errorf("unaccepted value %v for yt type %v", val, ytType)
 }
 
-// TODO: Completely remove this legacy hack
+// TODO: Completely remove this legacy hack.
 func fixDatetime(c *abstract.ColSchema) schema.Type {
 	return schema.Type(strings.ToLower(c.DataType))
 }

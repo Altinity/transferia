@@ -289,7 +289,7 @@ func fromParsed(f grammar.Term) (Term, error) {
 	}, nil
 }
 
-// Parse filter string and returns list of Term
+// Parse filter string and returns list of Term.
 func Parse(filtersString string) ([]Term, error) {
 	parsed, err := grammar.Parse(filtersString)
 	if err != nil {

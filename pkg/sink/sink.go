@@ -23,7 +23,7 @@ import (
 	"go.ytsaurus.tech/library/go/core/log"
 )
 
-// NoAsyncSinkErr error which indicate that we should try to create sinker from SyncSink
+// NoAsyncSinkErr error which indicate that we should try to create sinker from SyncSink.
 var NoAsyncSinkErr = xerrors.NewSentinel("no applicable AsyncSink for this transfer")
 
 // MakeAsyncSink creates a ready-to-use complete sink pipeline, topped with an asynchronous sink wrapper.
@@ -88,7 +88,7 @@ func syncMiddleware(transfer *model.Transfer, lgr log.Logger, mtrcs metrics.Regi
 	}, nil
 }
 
-// ConstructBaseSink creates a sink of proper type
+// ConstructBaseSink creates a sink of proper type.
 func ConstructBaseSink(transfer *model.Transfer, lgr log.Logger, mtrcs metrics.Registry, cp coordinator.Coordinator, config middlewares.Config) (abstract.Sinker, error) {
 	switch dst := transfer.Dst.(type) {
 	case *model.MockDestination:

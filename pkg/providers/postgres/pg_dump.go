@@ -207,7 +207,7 @@ func pgDumpSchemaArgs(src *PgSource, seqsIncluded []abstract.TableID, seqsExclud
 	return args, nil
 }
 
-// dumpSequenceValues produces SEQUENCE SET pg_dump events which transmit the current state of all sequences in the given list from the source database
+// dumpSequenceValues produces SEQUENCE SET pg_dump events which transmit the current state of all sequences in the given list from the source database.
 func dumpSequenceValues(ctx context.Context, conn *pgx.Conn, sequences []abstract.TableID) ([]*pgDumpItem, error) {
 	result := make([]*pgDumpItem, 0)
 	for _, seq := range sequences {
@@ -227,20 +227,20 @@ func dumpSequenceValues(ctx context.Context, conn *pgx.Conn, sequences []abstrac
 	return result, nil
 }
 
-// sourceInPgPg returns a non-nil object only for homogenous PG-PG transfers
+// sourceInPgPg returns a non-nil object only for homogenous PG-PG transfers.
 func sourceInPgPg(transfer *model.Transfer) *PgSource {
 	var src *PgSource
 	var srcIsPG bool
 	var dstIsPG bool
 	src, srcIsPG = transfer.Src.(*PgSource)
 	_, dstIsPG = transfer.Dst.(*PgDestination)
-	if !(srcIsPG && dstIsPG) {
+	if !srcIsPG || !dstIsPG {
 		return nil
 	}
 	return src
 }
 
-// ExtractPgDumpSchema returns the dump ONLY for homogenous PG-PG transfers. It also logs its actions
+// ExtractPgDumpSchema returns the dump ONLY for homogenous PG-PG transfers. It also logs its actions.
 func ExtractPgDumpSchema(transfer *model.Transfer) ([]*pgDumpItem, error) {
 	src := sourceInPgPg(transfer)
 	if src == nil {
@@ -256,7 +256,7 @@ func ExtractPgDumpSchema(transfer *model.Transfer) ([]*pgDumpItem, error) {
 	return pgdump, nil
 }
 
-// ApplyPgDumpPreSteps takes the given dump and applies pre-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions
+// ApplyPgDumpPreSteps takes the given dump and applies pre-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions.
 func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registry metrics.Registry) error {
 	if len(pgdump) == 0 {
 		return nil
@@ -273,7 +273,7 @@ func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registr
 	return nil
 }
 
-// ApplyPgDumpPostSteps takes the given dump and applies post-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions
+// ApplyPgDumpPostSteps takes the given dump and applies post-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions.
 func ApplyPgDumpPostSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registry metrics.Registry) error {
 	if len(pgdump) == 0 {
 		return nil
@@ -320,7 +320,7 @@ func determineExcludedTypes(allTypes []*pgDumpItem, allowedTypes []*pgDumpItem) 
 	return excludedTypes
 }
 
-// loadPgDumpSchema actually loads the schema from PostgreSQL source using a storage constructed in-place
+// loadPgDumpSchema actually loads the schema from PostgreSQL source using a storage constructed in-place.
 func loadPgDumpSchema(ctx context.Context, src *PgSource, transfer *model.Transfer) ([]*pgDumpItem, error) {
 	storage, err := NewStorage(src.ToStorageParams(transfer))
 	if err != nil {
@@ -402,7 +402,7 @@ func loadPgDumpSchema(ctx context.Context, src *PgSource, transfer *model.Transf
 	return result, nil
 }
 
-// listAllSequences constructs a pg Storage in-place and obtains all (accessible) SEQUENCEs
+// listAllSequences constructs a pg Storage in-place and obtains all (accessible) SEQUENCEs.
 func listAllSequences(ctx context.Context, src *PgSource, conn *pgx.Conn) (SequenceMap, error) {
 	if !src.PreSteps.Sequence && !src.PostSteps.Sequence {
 		return make(SequenceMap), nil
@@ -411,7 +411,7 @@ func listAllSequences(ctx context.Context, src *PgSource, conn *pgx.Conn) (Seque
 	return ListSequencesWithDependants(ctx, conn, src.KeeperSchema)
 }
 
-// filterSequences separates the given sequences into included and excluded ones by applying the given filter
+// filterSequences separates the given sequences into included and excluded ones by applying the given filter.
 func filterSequences(sequences SequenceMap, filter abstract.Includeable) (included []abstract.TableID, excluded []abstract.TableID) {
 	for _, sequenceInfo := range sequences {
 		sequenceIncluded := false
@@ -469,7 +469,7 @@ func dumpCollations(collations []*pgDumpItem, tablesSchemas *set.Set[string]) []
 	return result
 }
 
-// parse and validate types in cast
+// parse and validate types in cast.
 func isAllowedCast(createCastSQL string, excludedTypes *set.Set[string], tablesSchemas *set.Set[string]) bool {
 	cleanedStatement := strings.TrimPrefix(createCastSQL, "\n--\nCREATE CAST (")
 	parts := splitSQLBySeparator(cleanedStatement, " AS ")
@@ -529,7 +529,7 @@ func dumpDefinedItems(connString string, connPass model.SecretString, src *PgSou
 	return result, nil
 }
 
-// strings.Split without considering the separator inside the quotes
+// strings.Split without considering the separator inside the quotes.
 func splitSQLBySeparator(SQL string, sep string) []string {
 	result := make([]string, 0)
 
@@ -560,7 +560,7 @@ func isArgMode(argPart string) bool {
 	return argPart == "IN" || argPart == "OUT" || argPart == "INOUT" || argPart == "VARIADIC"
 }
 
-// parse args in ... FUNCTION <functionName>([argMode1] [argName1] arg1, [argMode2] [argName2] arg2, ..., [argMode] [argName] arg) ... argMode and argName is optional
+// parse args in ... FUNCTION <functionName>([argMode1] [argName1] arg1, [argMode2] [argName2] arg2, ..., [argMode] [argName] arg) ... argMode and argName is optional.
 func extractFunctionArgsTypes(functionBody string) ([]string, bool) {
 	nameWithoutCloseBracket := splitSQLBySeparator(functionBody, ")")
 	argsParts := splitSQLBySeparator(nameWithoutCloseBracket[0], "(")
@@ -594,7 +594,7 @@ func extractFunctionArgsTypes(functionBody string) ([]string, bool) {
 	return result, true
 }
 
-// function is allowed if all types of args and the returned type are allowed
+// function is allowed if all types of args and the returned type are allowed.
 func isAllowedFunction(function *pgDumpItem, excludedTypes *set.Set[string]) bool {
 	argsTypes, isOk := extractFunctionArgsTypes(function.Body)
 	if !isOk {

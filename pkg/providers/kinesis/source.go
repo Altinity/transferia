@@ -202,7 +202,7 @@ func (s *Source) makeRawChangeItem(msg *consumer.Record) abstract.ChangeItem {
 		s.config.Stream,
 		splitShard(msg.ShardID),
 		hash(*msg.SequenceNumber),
-		msg.Record.Data,
+		msg.Data,
 	)
 }
 

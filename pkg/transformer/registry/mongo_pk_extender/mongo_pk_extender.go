@@ -172,8 +172,8 @@ func (t *MongoPKExtenderTransformer) collapseValue(value interface{}) (interface
 }
 
 func (t *MongoPKExtenderTransformer) createOldKeys(item abstract.ChangeItem) (abstract.OldKeysType, string) {
-	switch {
-	case item.Kind == abstract.InsertKind:
+	switch item.Kind {
+	case abstract.InsertKind:
 		keyNames := make([]string, 0, 1)
 		keyTypes := make([]string, 0, 1)
 		keyValues := make([]interface{}, 0, 1)
@@ -193,7 +193,7 @@ func (t *MongoPKExtenderTransformer) createOldKeys(item abstract.ChangeItem) (ab
 			KeyTypes:  keyTypes,
 			KeyValues: keyValues,
 		}, item.Schema
-	case item.Kind == abstract.DeleteKind || item.Kind == abstract.UpdateKind:
+	case abstract.DeleteKind, abstract.UpdateKind:
 		schema := item.Schema
 		keyValues := make([]interface{}, len(item.OldKeys.KeyValues))
 		for i, keyValue := range item.OldKeys.KeyValues {

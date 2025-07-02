@@ -4,12 +4,12 @@ package predicate
 type Token int
 
 const (
-	// ILLEGAL token represent illegal token found in the statement
+	// ILLEGAL token represent illegal token found in the statement.
 	ILLEGAL Token = iota
-	// EOF token represents end of statement
+	// EOF token represents end of statement.
 	EOF
 
-	// Literals
+	// Literals.
 	NUMBER // 12345.67
 	STRING // "abc"
 	TRUE   // true

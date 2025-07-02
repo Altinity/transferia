@@ -124,7 +124,7 @@ func (s *sink) cleanup(head abstract.ChangeItem) error {
 }
 
 func (s *sink) createPart(partID abstract.TablePartID) error {
-	tableID := *abstract.NewTableID(s.cfg.Database(), partID.TableID.Name)
+	tableID := *abstract.NewTableID(s.cfg.Database(), partID.Name)
 	if _, ok := s.parts[partID]; ok {
 		return xerrors.Errorf("part %s of table %s already exists", partID.PartID, partID.Fqtn())
 	}
@@ -157,7 +157,7 @@ func (s *sink) withBacklog(partID abstract.TablePartID, flushOnlyIfError bool, f
 }
 
 func (s *sink) mergePart(partID abstract.TablePartID) error {
-	tbl := partID.TableID.Name
+	tbl := partID.Name
 	if part := s.parts.Part(partID); part != nil {
 		s.lgr.Infof("Going to commit part %s of table %s", partID.PartID, tbl)
 		err := part.Commit()
@@ -168,7 +168,7 @@ func (s *sink) mergePart(partID abstract.TablePartID) error {
 	}
 }
 
-// flushPart commits all uncommited part data but allows to continue writing to the same part
+// flushPart commits all uncommited part data but allows to continue writing to the same part.
 func (s *sink) flushPart(partID abstract.TablePartID) chan error {
 	return s.withBacklog(partID, false, func() error {
 		s.lgr.Info("Need to synchronize, flushing part",

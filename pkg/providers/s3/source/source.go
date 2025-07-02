@@ -44,10 +44,8 @@ func (s *S3Source) Run(sink abstract.AsyncSink) error {
 }
 
 func (s *S3Source) waitPusherEmpty() {
-	for {
-		if s.pusher.IsEmpty() {
-			break
-		}
+	for !s.pusher.IsEmpty() {
+
 		time.Sleep(10 * time.Millisecond)
 	}
 }

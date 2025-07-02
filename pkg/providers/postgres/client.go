@@ -26,7 +26,7 @@ import (
 
 const SelectCurrentLsnDelay = `select pg_wal_lsn_diff(pg_last_wal_replay_lsn(), $1);`
 
-// replica specific stuff
+// replica specific stuff.
 func getHostPreferablyReplica(lgr log.Logger, conn *connection.ConnectionPG, slotID string) (*connection.Host, error) {
 	if conn.ClusterID == "" {
 		replHost, err := getReplicaOnPrem(conn)
@@ -500,7 +500,7 @@ func NewPgConnPool(connConfig *pgx.ConnConfig, lgr log.Logger, dataTypesOptions 
 	return pool, nil
 }
 
-// pgStatementTimeout returns the GUC `statement_timeout` or a default timeout if the former is zero
+// pgStatementTimeout returns the GUC `statement_timeout` or a default timeout if the former is zero.
 func pgStatementTimeout(ctx context.Context, conn *pgx.Conn) (time.Duration, error) {
 	sql := "select setting from pg_settings where name = 'statement_timeout'"
 	var rawResult string
@@ -520,7 +520,7 @@ func pgStatementTimeout(ctx context.Context, conn *pgx.Conn) (time.Duration, err
 	}
 }
 
-// NewPgConnPoolConfig creates a connection pool. It provides built-in timeouts to limit the duration of connection attempts
+// NewPgConnPoolConfig creates a connection pool. It provides built-in timeouts to limit the duration of connection attempts.
 func NewPgConnPoolConfig(ctx context.Context, poolConfig *pgxpool.Config) (*pgxpool.Pool, error) {
 	basicCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()

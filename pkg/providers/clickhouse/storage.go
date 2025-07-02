@@ -376,7 +376,7 @@ func (s *Storage) inferDesiredChunkSize(table abstract.TableDescription) uint64 
 }
 
 // in fact - it's estimate, and it's enough to be estimate
-// works only for 20+ clickhouse version
+// works only for 20+ clickhouse version.
 func (s *Storage) getTableSize(tableID abstract.TableID) (rows uint64, bytes uint64, err error) {
 	if s.version.Major < 20 {
 		return 0, 0, nil
@@ -414,6 +414,7 @@ func (s *Storage) GetRowsCount(tableID abstract.TableID) (uint64, error) {
 		if deletable {
 			maybeFinal = "FINAL"
 		}
+		//nolint:gosec
 		query := fmt.Sprintf("SELECT COUNT(*) FROM `%s`.`%s` %s WHERE 1=1 %s;", tableID.Namespace, tableID.Name, maybeFinal, getDeleteTimeFilterExpr(deletable))
 		res := s.db.QueryRow(query)
 		err = res.Scan(&rows)
@@ -665,6 +666,7 @@ func makeFilters(tables []abstract.TableID) (string, string) {
 
 func (s *Storage) LoadTablesDDL(tables []abstract.TableID) ([]*schema.TableDDL, error) {
 	dbFilter, nameFilter := makeFilters(tables)
+	//nolint:gosec
 	q := fmt.Sprintf("select database, name, create_table_query, engine from system.tables where database in %v and name in %v", dbFilter, nameFilter)
 	foundDdls := make(map[abstract.TableID]*schema.TableDDL)
 	if err := backoff.Retry(func() error {

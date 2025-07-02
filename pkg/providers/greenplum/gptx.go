@@ -15,7 +15,7 @@ import (
 	"go.ytsaurus.tech/library/go/core/log"
 )
 
-// gpTx is a transaction with a connection
+// gpTx is a transaction with a connection.
 type gpTx struct {
 	tx      pgx.Tx
 	txMutex sync.Mutex
@@ -62,7 +62,7 @@ func (s *gpTx) withConnection(f func(conn *pgx.Conn) error) error {
 	return f(s.tx.Conn())
 }
 
-// CloseRollback ROLLBACKs the transaction
+// CloseRollback ROLLBACKs the transaction.
 func (s *gpTx) CloseRollback(ctx context.Context) error {
 	if s.closed {
 		return nil
@@ -78,7 +78,7 @@ func (s *gpTx) CloseRollback(ctx context.Context) error {
 	return nil
 }
 
-// CloseCommit first tries to COMMIT transaction. If an error is encountered, the transaction is ROLLBACKed
+// CloseCommit first tries to COMMIT transaction. If an error is encountered, the transaction is ROLLBACKed.
 func (s *gpTx) CloseCommit(ctx context.Context) error {
 	if s.closed {
 		return nil

@@ -41,10 +41,10 @@ type sizedFullDocument struct {
 	size       int
 }
 
-// FullDocumentExtractor to get default instance of this type use MakeDefaultFullDocumentExtractor
+// FullDocumentExtractor to get default instance of this type use MakeDefaultFullDocumentExtractor.
 type FullDocumentExtractor func(ctx context.Context, ns Namespace, keyList bson.A) ([]sizedFullDocument, error)
 
-// MakeDefaultFullDocumentExtractor Constructs default document extractor for batcher that uses Mongo connection
+// MakeDefaultFullDocumentExtractor Constructs default document extractor for batcher that uses Mongo connection.
 func MakeDefaultFullDocumentExtractor(client *MongoClientWrapper) FullDocumentExtractor {
 	return func(ctx context.Context, ns Namespace, keyList bson.A) ([]sizedFullDocument, error) {
 		filter := bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: keyList}}}}
@@ -83,7 +83,7 @@ func MakeDefaultFullDocumentExtractor(client *MongoClientWrapper) FullDocumentEx
 // it uses namespace, key, size of key and timestamp in order to form
 // batch of keys, then it uploads documents directly from source
 // database and produce new change events that dispatch into specified
-// in NewKeyBatcher's fullDocumentPusher argument
+// in NewKeyBatcher's fullDocumentPusher argument.
 type keyBatcher struct {
 	logger                log.Logger
 	fullDocumentExtractor FullDocumentExtractor
@@ -107,7 +107,7 @@ type keyBatcher struct {
 	cancel func()
 }
 
-// Close do not forget to defer Close() this resource
+// Close do not forget to defer Close() this resource.
 func (f *keyBatcher) Close() error {
 	f.closeOnce.Do(func() {
 		f.cancel()
@@ -191,7 +191,7 @@ func (f *keyBatcher) periodicFlusher() {
 
 // putInBatch responsible for adding key in namespace for update.
 // do not use it directly as client
-// byteSize needed to track request BSON size
+// byteSize needed to track request BSON size.
 func (f *keyBatcher) putInBatch(chEvent *keyChangeEvent) error {
 	event := chEvent.keyEvent
 	byteSize := uint64(chEvent.size)
@@ -375,7 +375,7 @@ func (f *keyBatcher) processBatch(batchAndMetainfo keyBatch) error {
 }
 
 // NewKeyBatcher
-// nil parameters are default parameters
+// nil parameters are default parameters.
 func NewKeyBatcher(
 	ctx context.Context,
 	logger log.Logger,

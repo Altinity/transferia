@@ -17,10 +17,10 @@ type WhereStatement string
 
 const NoFilter WhereStatement = WhereStatement("")
 
-// bracketType sorts characters into either opening, closing, or not a bracket
+// bracketType sorts characters into either opening, closing, or not a bracket.
 type bracketType int
 
-// TestVersion is the version of unit tests that this will pass
+// TestVersion is the version of unit tests that this will pass.
 const TestVersion = 2
 
 const (

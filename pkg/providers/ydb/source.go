@@ -113,7 +113,7 @@ func (s *Source) run(parseQ *parsequeue.WaitableParseQueue[[]batchWithSize]) err
 			messagesCount += len(ydbBatch.Messages)
 		}
 
-		if !s.memThrottler.ExceededLimits() && !(time.Since(lastPushTime) >= bufferFlushingInterval && bufSize > 0) {
+		if !s.memThrottler.ExceededLimits() && (time.Since(lastPushTime) < bufferFlushingInterval || bufSize <= 0) {
 			continue
 		}
 

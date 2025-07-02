@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	// Test input {{{
+	// Test input {{{.
 	changesets = [][]byte{[]byte(`{
 		"xid": 47931104,
 		"nextlsn": "6E/85004178",
@@ -113,7 +113,7 @@ var (
 		]
 	}`)}  // }}}
 
-	// Test canonical data {{{
+	// Test canonical data {{{.
 	multipleChangesetsCanonical = []Wal2JSONItem{
 		{
 			ID:         47931104,

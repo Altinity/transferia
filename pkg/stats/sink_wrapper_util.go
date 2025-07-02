@@ -13,7 +13,7 @@ func batchStats(logger log.Logger, input []abstract.ChangeItem) (oldestTime time
 	itemsWithoutCommitTime := 0
 	for _, item := range input {
 		// condition what we take into account
-		if !(item.IsRowEvent() || item.Kind == abstract.SynchronizeKind) {
+		if !item.IsRowEvent() && item.Kind != abstract.SynchronizeKind {
 			continue
 		}
 

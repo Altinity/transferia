@@ -131,7 +131,7 @@ func (r *Reader) readSingleLine() ([]string, error) {
 	return entries, nil
 }
 
-// readAndDecodeLine reads until \n from buffer and returns a string decoded based on configured Encoding
+// readAndDecodeLine reads until \n from buffer and returns a string decoded based on configured Encoding.
 func (r *Reader) readAndDecodeLine() (string, error) {
 	var err error
 	read, err := r.reader.ReadBytes('\n')

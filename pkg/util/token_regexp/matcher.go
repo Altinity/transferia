@@ -10,7 +10,7 @@ type TokenRegexp struct {
 	ops []abstract.Op
 }
 
-// FindAll - just like in package 'regexp', method Regexp.FindAll
+// FindAll - just like in package 'regexp', method Regexp.FindAll.
 func (m *TokenRegexp) FindAll(tokens []antlr.Token) *abstract.MatchedResults {
 	matcherTokens := make([]*abstract.Token, 0, len(tokens))
 	for _, currToken := range tokens {

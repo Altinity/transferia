@@ -156,7 +156,7 @@ func ConfigFromDestination(logger log.Logger, cfg *ElasticSearchDestination, ser
 }
 
 // setProductCheckSuccess
-// cures client from working-only-with-elastic
+// cures client from working-only-with-elastic.
 func setProductCheckSuccess(client *elasticsearch.Client) error {
 	value := reflect.ValueOf(&client)
 	elem := value.Elem()

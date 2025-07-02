@@ -160,7 +160,7 @@ func reportTransferHealth(ctx context.Context, cp coordinator.Coordinator, trans
 	}
 }
 
-// Does not return unless an error occurs
+// Does not return unless an error occurs.
 func iteration(ctx context.Context, cp coordinator.Coordinator, dataFlow *model.Transfer, registry metrics.Registry, lgr log.Logger) (err error) {
 	defer func() {
 		if r := recover(); r != nil {

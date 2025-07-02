@@ -202,6 +202,7 @@ func (e *Executor) Do(data []abstract.ChangeItem) ([]abstract.ChangeItem, error)
 					e.logger.Error("failed to invoke function", log.Error(err))
 					return xerrors.Errorf("failed to invoke function: %w", err)
 				}
+				defer resp.Body.Close()
 				if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 					var errorResp interface{}
 					if err = json.NewDecoder(resp.Body).Decode(&errorResp); err == nil {

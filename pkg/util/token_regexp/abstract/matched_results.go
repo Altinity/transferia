@@ -18,7 +18,7 @@ func (r *MatchedResults) AddMatchedPathsAfterConsumePrimitive(lengths []int, op 
 	}
 }
 
-// AddLocalResults - usually used after ConsumeComplex, to consume its results
+// AddLocalResults - usually used after ConsumeComplex, to consume its results.
 func (r *MatchedResults) AddLocalResults(localResults *MatchedResults, op Op, opTokens []*Token) {
 	if len(localResults.paths) == 0 {
 		return

@@ -102,10 +102,8 @@ func (p *ConfluentSrImpl) DoOne(partition abstract.Partition, buf []byte, offset
 func (p *ConfluentSrImpl) DoBuf(partition abstract.Partition, buf []byte, offset uint64, writeTime time.Time) []abstract.ChangeItem {
 	result := make([]abstract.ChangeItem, 0)
 	leastBuf := buf
-	for {
-		if len(leastBuf) == 0 {
-			break
-		}
+	for len(leastBuf) != 0 {
+
 		var changeItems []abstract.ChangeItem
 		leastBuf, changeItems = p.DoOne(partition, leastBuf, offset, writeTime)
 		result = append(result, changeItems...)

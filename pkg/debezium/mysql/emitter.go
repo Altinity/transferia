@@ -121,10 +121,8 @@ func smallintParamsToKafkaType(colSchema *abstract.ColSchema, _, _ bool, _ map[s
 }
 
 func integerParamsToKafkaType(colSchema *abstract.ColSchema, _, isSnapshot bool, _ map[string]string) (string, string, map[string]interface{}) {
-	enableInt64 := true
-	if !isSnapshot && colSchema.PrimaryKey {
-		enableInt64 = false
-	}
+	enableInt64 := isSnapshot || !colSchema.PrimaryKey
+
 	if strings.HasSuffix(colSchema.OriginalType, " unsigned") && enableInt64 {
 		return "int64", "", nil
 	} else {

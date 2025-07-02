@@ -12,7 +12,7 @@ import (
 	"github.com/transferia/transferia/library/go/core/xerrors"
 )
 
-// go-sumtype:decl DataTypesOption
+// go-sumtype:decl DataTypesOption.
 type DataTypesOption interface {
 	isDataTypeOption()
 }

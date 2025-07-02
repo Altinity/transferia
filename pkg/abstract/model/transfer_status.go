@@ -19,7 +19,7 @@ const (
 	Deactivating = TransferStatus("Deactivating")
 	Failing      = TransferStatus("Failing")
 
-	// tmp statuses for async transfers
+	// tmp statuses for async transfers.
 	Paused    = TransferStatus("Paused")    // replication is paused manually
 	Preparing = TransferStatus("Preparing") // replication is being started
 )

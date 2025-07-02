@@ -53,7 +53,7 @@ func saveObject(t *testing.T, item interface{}) {
 	canonData.TestName = t.Name()
 	canonData.Data = item
 
-	testName := strings.Replace(t.Name(), "/", ".", -1)
+	testName := strings.ReplaceAll(t.Name(), "/", ".")
 	canonDir := yatest.WorkPath("canon")
 	pathToCanonFile := filepath.Join(canonDir, testName)
 

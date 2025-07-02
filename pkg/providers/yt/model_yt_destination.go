@@ -186,7 +186,7 @@ func (d *YtDestinationWrapper) SetParams(jsonStr string) error {
 	return json.Unmarshal([]byte(jsonStr), &d.Model)
 }
 
-// TODO: Remove in march
+// TODO: Remove in march.
 func (d *YtDestinationWrapper) DisableDatetimeHack() bool {
 	return d.Model.DisableDatetimeHack
 }
@@ -505,10 +505,10 @@ func (d *YtDestinationWrapper) Proxy() string {
 }
 
 func (d *YtDestinationWrapper) SupportSharding() bool {
-	return !(d.Model.Static && d.Rotation() != nil)
+	return !d.Model.Static || d.Rotation() == nil
 }
 
-// this is kusok govna, it here for purpose - backward compatibility and no reuse without backward compatibility
+// this is kusok govna, it here for purpose - backward compatibility and no reuse without backward compatibility.
 func (d *YtDestinationWrapper) LegacyModel() interface{} {
 	return d.Model
 }

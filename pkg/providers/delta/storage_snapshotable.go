@@ -10,7 +10,7 @@ import (
 	"github.com/transferia/transferia/pkg/abstract"
 )
 
-// To verify providers contract implementation
+// To verify providers contract implementation.
 var (
 	_ abstract.SnapshotableStorage = (*Storage)(nil)
 )

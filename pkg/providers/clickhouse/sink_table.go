@@ -641,6 +641,7 @@ func doOperation(t *sinkTable, tx *sql.Tx, items []abstract.ChangeItem) (err err
 		colVals = append(colVals, "?")
 	}
 
+	//nolint:gosec
 	q := fmt.Sprintf(
 		"INSERT INTO `%s`.`%s` (%s) VALUES (%s)",
 		t.config.Database(),

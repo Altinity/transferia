@@ -21,7 +21,7 @@ type StatusMessage struct {
 	ID         string            `json:"id"`
 }
 
-// IsProlongableWith other checks that message can be prolonged with provided status message instead of reopening
+// IsProlongableWith other checks that message can be prolonged with provided status message instead of reopening.
 func (s *StatusMessage) IsProlongableWith(other *StatusMessage) bool {
 	categoriesEqual := slices.EqualUnordered(s.Categories, other.Categories)
 	return s.Type == other.Type && s.Heading == other.Heading && s.Message == other.Message && categoriesEqual && s.Code == other.Code

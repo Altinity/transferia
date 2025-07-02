@@ -62,7 +62,7 @@ func isSystemTable(tableName string) bool {
 	return false
 }
 
-// To verify providers contract implementation
+// To verify providers contract implementation.
 var (
 	_ providers.Snapshot    = (*Provider)(nil)
 	_ providers.Replication = (*Provider)(nil)

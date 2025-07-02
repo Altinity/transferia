@@ -9,7 +9,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// TODO can be removed after go1.21
+// TODO can be removed after go1.21.
 func min[T constraints.Ordered](x T, y ...T) T {
 	result := x
 	for _, y := range y {
@@ -29,17 +29,17 @@ func LineDiff(a, b string) (DiffItems, error) {
 }
 
 // DiffItems is array of diff items, that has useful `AsString` method which can give you a
-// readable format. You can use default String method if you want default settings
+// readable format. You can use default String method if you want default settings.
 type DiffItems []DiffItem
 
-// String converts DiffItems to string with AsString method with default string conversion options
+// String converts DiffItems to string with AsString method with default string conversion options.
 func (d DiffItems) String() string {
 	return d.AsString(nil)
 }
 
 // AsString converts array of DiffItem into single string. You can control the
 // result with parameter `options *DiffItemsAsStringOptions`, or set it to null
-// for default configuration
+// for default configuration.
 func (d DiffItems) AsString(options *diffItemsAsStringOptions) string {
 	opts := util.Coalesce(options, makeDiffAsStringOptions())
 	items := yslices.Filter(d, func(item DiffItem) bool {
@@ -78,19 +78,19 @@ type diffItemsAsStringOptions struct {
 	JoinWith string
 }
 
-// DiffOnlySources is used when you want to get only diff lines
+// DiffOnlySources is used when you want to get only diff lines.
 func (l *diffItemsAsStringOptions) DiffOnlySources() *diffItemsAsStringOptions {
 	l.DiffSourceExcludeFilter = []DiffSource{DiffSourceBoth}
 	return l
 }
 
-// CommonOnlySources is used when you want to get only common lines
+// CommonOnlySources is used when you want to get only common lines.
 func (l *diffItemsAsStringOptions) CommonOnlySources() *diffItemsAsStringOptions {
 	l.DiffSourceExcludeFilter = []DiffSource{DiffSourceLeft, DiffSourceRight}
 	return l
 }
 
-// AllSources is used when you want to get all lines: diff and common
+// AllSources is used when you want to get all lines: diff and common.
 func (l *diffItemsAsStringOptions) AllSources() *diffItemsAsStringOptions {
 	l.DiffSourceExcludeFilter = nil
 	return l

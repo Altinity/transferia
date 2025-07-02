@@ -14,7 +14,7 @@ import (
 
 // fast check whether cleanup may be skipped
 // if returns false, it can be skipped definitely
-// if returns true, we should run cleanup just in case  - this keeps old logic
+// if returns true, we should run cleanup just in case  - this keeps old logic.
 func CleanupNeeded(transfer model.Transfer) bool {
 	if _, ok := transfer.Dst.(model.TmpPolicyProvider); ok && transfer.TmpPolicy != nil {
 		return true

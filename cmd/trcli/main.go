@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -80,7 +81,14 @@ func main() {
 					ErrorHandling: promhttp.PanicOnError,
 				}))
 				logger.Log.Infof("Prometheus is uprising on port %v", "9091")
-				if err := http.ListenAndServe(":9091", rootMux); err != nil {
+				server := &http.Server{
+					Addr:         ":9091",
+					ReadTimeout:  60 * time.Second,
+					WriteTimeout: 60 * time.Second,
+					Handler:      rootMux,
+				}
+
+				if err := server.ListenAndServe(); err != nil {
 					logger.Log.Error("failed to serve metrics", log.Error(err))
 				}
 			}()

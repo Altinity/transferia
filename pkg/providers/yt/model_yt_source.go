@@ -71,7 +71,7 @@ func (y ytSrcWrapper) Proxy() string {
 	if y.YtSource.Proxy != "" {
 		return y.YtSource.Proxy
 	}
-	return y.YtSource.Cluster
+	return y.Cluster
 }
 
 func (y ytSrcWrapper) Token() string {

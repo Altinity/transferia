@@ -168,10 +168,8 @@ func (s *sinker) Close() error {
 }
 
 func (s *sinker) checkTable(schema []abstract.ColSchema, table string) error {
-	for {
-		if s.lock.TryLock(table) {
-			break
-		}
+	for !s.lock.TryLock(table) {
+
 		time.Sleep(time.Second)
 		s.logger.Debugf("Unable to lock table checker %v", table)
 	}
@@ -373,7 +371,7 @@ func (s *sinker) pushOneBatch(table string, batch []abstract.ChangeItem) error {
 // if we catch change with primary keys update we will transform it to insert + delete
 // When processing insert we will add __dummy column, if only primary keys were present. This will lead to error
 // If some non PK colum were absent in update we will lose data
-// Therefore we first try to fill this updates with non primary key col values
+// Therefore we first try to fill this updates with non primary key col values.
 func (s *sinker) processPKUpdates(batch []abstract.ChangeItem, table string) error {
 	if len(batch) != 2 {
 		return nil

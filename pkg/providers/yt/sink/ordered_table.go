@@ -341,7 +341,7 @@ func (t *OrderedTable) insertToSpecificTablet(tabletIndex uint32, changeItems []
 	for _, changeItem := range changeItems {
 		changeOffset, found := changeItem.Offset()
 		if !found {
-			return xerrors.Errorf("changeItem doesn't contain '_offset' column: " + changeItem.ToJSONString()) // TODO - change it when TM-1290
+			return xerrors.Errorf("%s", "changeItem doesn't contain '_offset' column: "+changeItem.ToJSONString()) // TODO - change it when TM-1290
 		}
 		if (maxCommittedLbOffset != 0) && (changeOffset <= maxCommittedLbOffset) {
 			skippedCount++
@@ -358,7 +358,7 @@ func (t *OrderedTable) insertToSpecificTablet(tabletIndex uint32, changeItems []
 	lastChangeItem := changeItems[len(changeItems)-1]
 	lastOffset, found := lastChangeItem.Offset()
 	if !found {
-		return xerrors.Errorf("changeItem doesn't contain '_offset' column: " + lastChangeItem.ToJSONString()) // TODO - change it when TM-1290
+		return xerrors.Errorf("%s", "changeItem doesn't contain '_offset' column: "+lastChangeItem.ToJSONString()) // TODO - change it when TM-1290
 	}
 	if len(insertChangeItems) == 0 {
 		t.logger.Warnf("tablet %v deduplicated (maxCommittedLbOffset:%v lastOffset:%v)", tabletIndex, maxCommittedLbOffset, lastOffset)

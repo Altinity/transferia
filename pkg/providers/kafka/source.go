@@ -525,9 +525,10 @@ func newSourceWithCallbacks(cfg *KafkaSource, logger log.Logger, registry metric
 		}),
 		kgo.ConsumeTopics(topics...),
 	)
-	if cfg.OffsetPolicy == AtStartOffsetPolicy {
+	switch cfg.OffsetPolicy {
+	case AtStartOffsetPolicy:
 		opts = append(opts, kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()))
-	} else if cfg.OffsetPolicy == AtEndOffsetPolicy {
+	case AtEndOffsetPolicy:
 		opts = append(opts, kgo.ConsumeResetOffset(kgo.NewOffset().AtEnd()))
 	}
 

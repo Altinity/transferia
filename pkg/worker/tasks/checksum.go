@@ -699,10 +699,7 @@ func parsePolygon(polygon string) (interface{}, error) {
 	// Example: ((-2,0),(-1.7320508075688774,0.9999999999999999))
 	start := 1
 	var points []pgtype.Vec2
-	for {
-		if start >= len(polygon) {
-			break
-		}
+	for start < len(polygon) {
 
 		isLast := false
 		innerComma := start + strings.Index(polygon[start:], ",")
@@ -973,7 +970,7 @@ func compareSlices(lVal []interface{}, lSchema abstract.ColSchema, rVal []interf
 	return equal, nil
 }
 
-// colSchemaForSliceElement transforms the given schema in such a way that it is suitable for comparison of an individual slice element
+// colSchemaForSliceElement transforms the given schema in such a way that it is suitable for comparison of an individual slice element.
 func colSchemaForSliceElement(s abstract.ColSchema) abstract.ColSchema {
 	s.OriginalType = strings.TrimSuffix(s.OriginalType, "[]")
 	return s

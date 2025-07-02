@@ -27,7 +27,7 @@ func WithPanicsCatch(fn func(recover any) error) mapAsyncOption {
 	}
 }
 
-// MapA is like MapE, but runs mapping of each element in a dedicated goroutine
+// MapA is like MapE, but runs mapping of each element in a dedicated goroutine.
 func MapA[S ~[]T, T, M any](ctx context.Context, s S, fn func(context.Context, T) (M, error), options ...mapAsyncOption) ([]M, error) {
 	if s == nil {
 		return []M(nil), nil

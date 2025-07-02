@@ -24,7 +24,7 @@ func (a *Storage) GetNextIncrementalState(ctx context.Context, incremental []abs
 	}), nil
 }
 
-// SetInitialState should have done nothing, since state handled inside loadTable method
+// SetInitialState should have done nothing, since state handled inside loadTable method.
 func (a *Storage) BuildArrTableDescriptionWithIncrementalState(tables []abstract.TableDescription, incrementalTables []abstract.IncrementalTable) []abstract.TableDescription {
 	result := slices.Clone(tables)
 	for i, table := range result {

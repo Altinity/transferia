@@ -62,7 +62,7 @@ func (w *K8sWrapper) getCurrentNamespace() (string, error) {
 	return namespace, nil
 }
 
-// Helper method to create a job
+// Helper method to create a job.
 func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts, suspend bool) (*batchv1.Job, error) {
 	if opts.PodName == "" {
 		opts.PodName = "transferia-runner"
@@ -131,7 +131,7 @@ func (w *K8sWrapper) createJob(ctx context.Context, opts K8sOpts, suspend bool) 
 	return createdJob, nil
 }
 
-// Helper method to find the pod created by a job
+// Helper method to find the pod created by a job.
 func (w *K8sWrapper) findJobPod(ctx context.Context, job *batchv1.Job) (*corev1.Pod, error) {
 	w.logger.Infof("Finding pod for job %s", job.Name)
 
@@ -350,7 +350,7 @@ func (w *K8sWrapper) Run(ctx context.Context, opts ContainerOpts) (stdout io.Rea
 	return wrappedStream, nil, nil
 }
 
-// Helper to wait for pod to be ready
+// Helper to wait for pod to be ready.
 func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string, timeout time.Duration) error {
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -386,7 +386,7 @@ func (w *K8sWrapper) waitForPodReady(ctx context.Context, namespace, name string
 	}
 }
 
-// RunAndWait creates a job and waits for it to complete, collecting logs
+// RunAndWait creates a job and waits for it to complete, collecting logs.
 func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes.Buffer, *bytes.Buffer, error) {
 	stdoutReader, _, err := w.Run(ctx, opts)
 	if err != nil {
@@ -483,7 +483,7 @@ func (w *K8sWrapper) RunAndWait(ctx context.Context, opts ContainerOpts) (*bytes
 	return stdoutBuf, nil, nil
 }
 
-// Type returns the container backend type
+// Type returns the container backend type.
 func (w *K8sWrapper) Type() ContainerBackend {
 	return BackendKubernetes
 }

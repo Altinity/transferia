@@ -29,7 +29,7 @@ type MongoConnectionOptions struct {
 	ConnectionID  string
 }
 
-// IsDocDB check if we connect to amazon doc DB
+// IsDocDB check if we connect to amazon doc DB.
 func (o *MongoConnectionOptions) IsDocDB() bool {
 	for _, h := range o.HostsWithPort {
 		if strings.Contains(h.Host, "docdb.amazonaws.com") {

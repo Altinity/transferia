@@ -141,7 +141,7 @@ func CheckCanonizedDebeziumEvent(t *testing.T, changeItem *abstract.ChangeItem, 
 		realEventKey := sortJSON(resultKV[i].DebeziumKey)
 		canonEventKey := sortJSON(canonEvents[i].DebeziumKey)
 		Compare(t, normalizeDebeziumEvent(t, canonEventKey, true), normalizeDebeziumEvent(t, realEventKey, true))
-		if !(canonEvents[i].DebeziumVal == nil && resultKV[i].DebeziumVal == nil) {
+		if canonEvents[i].DebeziumVal != nil || resultKV[i].DebeziumVal != nil {
 			Compare(t, normalizeDebeziumEvent(t, *canonEvents[i].DebeziumVal, true), normalizeDebeziumEvent(t, *resultKV[i].DebeziumVal, true))
 		}
 	}
@@ -153,7 +153,7 @@ func CheckCanonizedDebeziumEvent2(t *testing.T, key string, value *string, canon
 
 	Compare(t, normalizeDebeziumEvent(t, canonEventKey, true), normalizeDebeziumEvent(t, realEventKey, true))
 
-	if !(canonEvent.DebeziumVal == nil && value == nil) {
+	if canonEvent.DebeziumVal != nil || value != nil {
 		Compare(t, normalizeDebeziumEvent(t, *canonEvent.DebeziumVal, true), normalizeDebeziumEvent(t, *value, true))
 	}
 }

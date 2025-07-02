@@ -284,9 +284,10 @@ func matchValue(val1 interface{}, term termWithValues) (bool, error) {
 	case val2.IsString(), val2.IsStringList():
 		byt, ok := val1.([]byte)
 		if val2.IsString() && ok {
-			if op == parser.Match {
+			switch op {
+			case parser.Match:
 				return bytes.Contains(byt, term.ByteValue), nil
-			} else if op == parser.NotMatch {
+			case parser.NotMatch:
 				return !bytes.Contains(byt, term.ByteValue), nil
 			}
 
@@ -306,9 +307,10 @@ func matchValue(val1 interface{}, term termWithValues) (bool, error) {
 			ok = isString
 		}
 		if ok {
-			if op == parser.Match {
+			switch op {
+			case parser.Match:
 				return strings.Contains(str1, val2.AsString()), nil
-			} else if op == parser.NotMatch {
+			case parser.NotMatch:
 				return !strings.Contains(str1, val2.AsString()), nil
 			}
 
@@ -352,9 +354,10 @@ func matchValue(val1 interface{}, term termWithValues) (bool, error) {
 		}
 
 	case val2.IsNull():
-		if op == parser.Equals {
+		switch op {
+		case parser.Equals:
 			return val1 == nil, nil
-		} else if op == parser.NotEquals {
+		case parser.NotEquals:
 			return val1 != nil, nil
 		}
 

@@ -185,7 +185,7 @@ func checkPartProvider(t *testing.T, expected []*model.OperationTablePart, provi
 	}
 }
 
-func TestAddKeyToJson(t *testing.T) {
+func TestAddKeyToJSON(t *testing.T) {
 	testCases := []struct {
 		input    string
 		expected map[string]any
@@ -201,7 +201,7 @@ func TestAddKeyToJson(t *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		res, err := addKeyToJson(testCase.input, "key", 123)
+		res, err := addKeyToJSON(testCase.input, "key", 123)
 		require.NoError(t, err)
 		var actual map[string]any
 		require.NoError(t, jsonx.Unmarshal(res, &actual))
