@@ -134,7 +134,6 @@ func (s *Sink) Push(input []abstract.ChangeItem) error {
 			abstract.MongoCreateKind,
 			abstract.MongoRenameKind,
 			abstract.MongoDropKind,
-			abstract.ChCreateTableDistributedKind,
 			abstract.ChCreateTableKind:
 			s.logger.Warnf("kind: %s not supported, skip", row.Kind)
 		default:

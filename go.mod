@@ -84,11 +84,11 @@ require (
 	go.uber.org/zap v1.27.0
 	go.ytsaurus.tech/library/go/core/log v0.0.4
 	go.ytsaurus.tech/yt/go v0.0.27
-	golang.org/x/crypto v0.39.0
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	golang.org/x/mod v0.25.0
 	golang.org/x/net v0.41.0
 	golang.org/x/sync v0.15.0
+	golang.org/x/term v0.32.0
 	golang.org/x/text v0.26.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	golang.yandex/hasql v1.1.1
@@ -269,8 +269,7 @@ require (
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.60.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.35.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.31.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.35.0 // indirect
 	go.opentelemetry.io/otel/log v0.12.2 // indirect
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/sdk/log/logtest v0.0.0-20250521073539-a85ae98dcedc // indirect
@@ -283,9 +282,9 @@ require (
 	go.ytsaurus.tech/library/go/ptr v0.0.2 // indirect
 	go.ytsaurus.tech/library/go/x/xreflect v0.0.3 // indirect
 	go.ytsaurus.tech/library/go/x/xruntime v0.0.4 // indirect
+	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	golang.org/x/tools v0.33.0 // indirect
 	gonum.org/v1/gonum v0.15.1 // indirect
@@ -385,6 +384,8 @@ replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.24
 
 replace github.com/docker/docker => github.com/docker/docker v25.0.6+incompatible
 
+replace github.com/docker/cli => github.com/docker/cli v25.0.4+incompatible
+
 replace github.com/testcontainers/testcontainers-go => github.com/testcontainers/testcontainers-go v0.31.0
 
 replace github.com/grpc-ecosystem/go-grpc-middleware/v2 => github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
@@ -394,3 +395,7 @@ replace github.com/vertica/vertica-sql-go => github.com/vertica/vertica-sql-go v
 replace golang.org/x/tools => golang.org/x/tools v0.30.1-0.20250221230316-5055f70f240c
 
 replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.14.6
+
+replace buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go => buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.4-20250130201111-63bb56e20495.1
+
+replace github.com/bufbuild/protoyaml-go => buf.build/go/protoyaml v0.3.2

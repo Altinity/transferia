@@ -184,8 +184,7 @@ func (c *HTTPTarget) Close() error {
 }
 
 func (c *HTTPTarget) adjustDDLToTarget(ddl *schema.TableDDL, distributed bool) (string, error) {
-	return schema.BuildDDLForSink(
-		c.logger,
+	return schema.BuildDDLForHomoSink(
 		ddl,
 		distributed,
 		c.cluster.Name(),
