@@ -107,3 +107,4 @@ networkPolicy:
       - port: 9440
         protocol: TCP
     allowedIpBlocks: # Define IP blocks for egress
+    
