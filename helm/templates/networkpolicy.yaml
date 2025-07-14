@@ -46,7 +46,15 @@ spec:
       port: {{ .Values.networkPolicy.egress.dnsPort | default 53 }}
 
   # Allow Egress to other required services
-  - to: []
+  - to:
+    {{- if .Values.networkPolicy.egress.allowedIpBlocks }}
+    {{- range .Values.networkPolicy.egress.allowedIpBlocks }}
+    - ipBlock:
+        cidr: {{ .cidr }}
+    {{- end }}
+    {{- else }}
+    []
+    {{- end }}
     ports:
     {{- range .Values.networkPolicy.egress.allowedPorts }}
     - protocol: {{ .protocol | default "TCP" }}
