@@ -1,4 +1,22 @@
 {{- if .Values.networkPolicy.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-default-deny-network-policy
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: transferia
+  policyTypes:
+    - Egress
+  # An empty egress list means no egress is allowed by default
+  egress: []
+---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
