@@ -174,6 +174,7 @@ func (s *Source) makeRawChangeItem(event *eventhubs.Event) abstract.ChangeItem {
 	}
 	topic := fmt.Sprintf("%v_%v", s.transferID, partitionID)
 	return abstract.MakeRawMessage(
+		[]byte("stub"),
 		s.transferID,
 		*event.SystemProperties.EnqueuedTime,
 		topic,

@@ -66,6 +66,7 @@ func TestListUnlockedNodes(t *testing.T) {
 	require.NoError(t, err, "newIntermediateWriter throws")
 	err = iw.Write([]abstract.ChangeItem{
 		abstract.MakeRawMessage(
+			[]byte("stub"),
 			"fake-topic",
 			time.Now(),
 			"fake-topic",

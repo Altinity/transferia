@@ -22,7 +22,7 @@ import (
 )
 
 type source struct {
-	cfg     *yt2.YtSource
+	cfg     yt2.YtSourceModel
 	yt      yt.Client
 	tx      yt.Tx
 	txID    yt.TxID
@@ -36,8 +36,8 @@ var (
 	_ base.SnapshotProvider = (*source)(nil)
 )
 
-func NewSource(logger log.Logger, registry metrics.Registry, cfg *yt2.YtSource) (*source, error) {
-	ytc, err := ytclient.FromConnParams(cfg.ConnParams(), logger)
+func NewSource(logger log.Logger, registry metrics.Registry, cfg yt2.YtSourceModel) (*source, error) {
+	ytc, err := ytclient.FromConnParams(cfg, logger)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to create yt client: %w", err)
 	}

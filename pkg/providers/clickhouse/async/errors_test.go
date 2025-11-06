@@ -11,7 +11,7 @@ import (
 	"github.com/transferia/transferia/pkg/abstract/changeitem"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/errors/coded"
-	"github.com/transferia/transferia/pkg/providers"
+	"github.com/transferia/transferia/pkg/errors/codes"
 	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
 	"go.ytsaurus.tech/yt/go/schema"
 )
@@ -24,7 +24,7 @@ type testCase struct {
 
 var cases = []testCase{{
 	name:         "BrokenDecimal",
-	expectedCode: providers.DataValueError,
+	expectedCode: codes.DataValueError,
 	item: changeitem.ChangeItem{
 		Kind:         changeitem.InsertKind,
 		Table:        "decimal",
@@ -37,7 +37,7 @@ var cases = []testCase{{
 	},
 }, {
 	name:         "BoolToDecimal",
-	expectedCode: providers.UnsupportedConversion,
+	expectedCode: codes.UnsupportedConversion,
 	item: changeitem.ChangeItem{
 		Kind:         changeitem.InsertKind,
 		Table:        "decimal",

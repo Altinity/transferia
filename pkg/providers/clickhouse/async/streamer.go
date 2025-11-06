@@ -15,7 +15,7 @@ import (
 	"github.com/transferia/transferia/library/go/core/xerrors/multierr"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/errors/coded"
-	"github.com/transferia/transferia/pkg/providers"
+	"github.com/transferia/transferia/pkg/errors/codes"
 	"github.com/transferia/transferia/pkg/providers/clickhouse/async/model/db"
 	"go.ytsaurus.tech/library/go/core/log"
 )
@@ -76,9 +76,9 @@ func (c *chV2Streamer) Append(row abstract.ChangeItem) error {
 			var code coded.Code
 			switch blockErr.Err.(type) {
 			case *column.ColumnConverterError:
-				code = providers.UnsupportedConversion
+				code = codes.UnsupportedConversion
 			case *column.UnsupportedColumnTypeError:
-				code = providers.UnsupportedConversion
+				code = codes.UnsupportedConversion
 			default:
 			}
 			err = BlockMarshallingError{blockErr, code}

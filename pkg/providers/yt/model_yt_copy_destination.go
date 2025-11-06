@@ -18,6 +18,7 @@ type YtCopyDestination struct {
 	Pool               string
 	UsePushTransaction bool
 	ResourceLimits     *spec.ResourceLimits
+	Cleanup            model.CleanupType
 }
 
 var _ model.Destination = (*YtCopyDestination)(nil)
@@ -29,7 +30,7 @@ func (y *YtCopyDestination) Transformer() map[string]string {
 }
 
 func (y *YtCopyDestination) CleanupMode() model.CleanupType {
-	return model.DisabledCleanup
+	return y.Cleanup
 }
 
 func (y *YtCopyDestination) WithDefaults() {
@@ -38,6 +39,9 @@ func (y *YtCopyDestination) WithDefaults() {
 	}
 	if y.ResourceLimits == nil {
 		y.ResourceLimits = new(spec.ResourceLimits)
+	}
+	if y.Cleanup == "" {
+		y.Cleanup = model.DisabledCleanup // default behaviour is preserved
 	}
 	if y.ResourceLimits.UserSlots == 0 {
 		y.ResourceLimits.UserSlots = 1000
@@ -80,4 +84,20 @@ func (y *YtCopyDestination) DisableProxyDiscovery() bool {
 
 func (y *YtCopyDestination) CompressionCodec() yt.ClientCompressionCodec {
 	return yt.ClientCodecBrotliFastest
+}
+
+func (y *YtCopyDestination) UseTLS() bool {
+	return false
+}
+
+func (y *YtCopyDestination) TLSFile() string {
+	return ""
+}
+
+func (y *YtCopyDestination) ServiceAccountID() string {
+	return ""
+}
+
+func (y *YtCopyDestination) ProxyRole() string {
+	return ""
 }

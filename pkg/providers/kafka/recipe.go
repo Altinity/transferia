@@ -9,6 +9,7 @@ import (
 
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/pkg/abstract/model"
+	kafkaConn "github.com/transferia/transferia/pkg/connection/kafka"
 	"github.com/transferia/transferia/tests/tcrecipes/kafka"
 )
 
@@ -30,10 +31,11 @@ func SourceRecipe() (*KafkaSource, error) {
 		TLSFile:      "",
 		Brokers:      []string{brokers},
 		SubNetworkID: "",
+		ConnectionID: "",
 	}
 	src.Auth = &KafkaAuth{
 		Enabled:   false,
-		Mechanism: "",
+		Mechanism: kafkaConn.KafkaSaslSecurityMechanism_UNSPECIFIED,
 		User:      "",
 		Password:  "",
 	}
@@ -79,10 +81,11 @@ func DestinationRecipe() (*KafkaDestination, error) {
 		TLSFile:      "",
 		Brokers:      []string{brokers},
 		SubNetworkID: "",
+		ConnectionID: "",
 	}
 	dst.Auth = &KafkaAuth{
 		Enabled:   false,
-		Mechanism: "",
+		Mechanism: kafkaConn.KafkaSaslSecurityMechanism_UNSPECIFIED,
 		User:      "",
 		Password:  "",
 	}

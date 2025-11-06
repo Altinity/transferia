@@ -41,8 +41,12 @@ func TestIncrementalSnapshotFaultTolerance(t *testing.T) {
 			helpers.LabeledPort{Label: "PG source", Port: Source.Port},
 		))
 	}()
+
+	transferID := helpers.GenerateTransferID("TestIncrementalSnapshotFaultTolerance")
+	Source.SlotID = transferID
+
 	sinkParams := Source.ToSinkParams()
-	sink, err := postgres.NewSink(logger.Log, helpers.TransferID, sinkParams, helpers.EmptyRegistry())
+	sink, err := postgres.NewSink(logger.Log, transferID, sinkParams, helpers.EmptyRegistry())
 	require.NoError(t, err)
 
 	arrColSchema := abstract.NewTableSchema([]abstract.ColSchema{
@@ -61,7 +65,7 @@ func TestIncrementalSnapshotFaultTolerance(t *testing.T) {
 
 	src, err := postgres.NewSourceWrapper(
 		&Source,
-		Source.SlotID,
+		transferID,
 		nil,
 		logger.Log,
 		stats.NewSourceStats(metrics.NewRegistry()),
@@ -70,7 +74,7 @@ func TestIncrementalSnapshotFaultTolerance(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	storage, err := dblog.NewStorage(logger.Log, src, pgStorage, pgStorage.Conn, incrementalLimit, Source.SlotID, "public", postgres.Represent)
+	storage, err := dblog.NewStorage(logger.Log, src, pgStorage, pgStorage.Conn, incrementalLimit, transferID, "public", postgres.Represent)
 	require.NoError(t, err)
 
 	sourceTables, err := storage.TableList(nil)
@@ -105,7 +109,7 @@ func TestIncrementalSnapshotFaultTolerance(t *testing.T) {
 
 	src, err = postgres.NewSourceWrapper(
 		&Source,
-		Source.SlotID,
+		transferID,
 		nil,
 		logger.Log,
 		stats.NewSourceStats(metrics.NewRegistry()),
@@ -114,7 +118,7 @@ func TestIncrementalSnapshotFaultTolerance(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	storage, err = dblog.NewStorage(logger.Log, src, pgStorage, pgStorage.Conn, incrementalLimit, Source.SlotID, "public", postgres.Represent)
+	storage, err = dblog.NewStorage(logger.Log, src, pgStorage, pgStorage.Conn, incrementalLimit, transferID, "public", postgres.Represent)
 	require.NoError(t, err)
 
 	err = storage.LoadTable(context.Background(), *numTable, pusher)

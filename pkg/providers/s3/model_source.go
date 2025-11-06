@@ -3,6 +3,8 @@
 package s3
 
 import (
+	"time"
+
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/parsers/registry/protobuf/protoparser"
@@ -68,6 +70,9 @@ type S3Source struct {
 	// Concurrency - amount of parallel goroutines into one worker on REPLICATION
 	Concurrency            int64
 	SyntheticPartitionsNum int
+
+	// FetchInterval - fixed interval for fetching objects. If set to 0, exponential backoff is used
+	FetchInterval time.Duration
 }
 
 // TODO: Add sharding of one file to bytes ranges.
@@ -104,7 +109,8 @@ type ProtoSetting struct {
 	PrimaryKeys    []string
 	PackageType    protoparser.MessagePackageType
 
-	NullKeysAllowed bool
+	NullKeysAllowed    bool
+	NotFillEmptyFields bool
 }
 
 type Format struct {
@@ -181,6 +187,13 @@ func (s *S3Source) GetProviderType() abstract.ProviderType {
 }
 
 func (s *S3Source) Validate() error {
+	return nil
+}
+
+func (s *S3Source) ServiceAccountIDs() []string {
+	if s.ConnectionConfig.ServiceAccountID != "" {
+		return []string{s.ConnectionConfig.ServiceAccountID}
+	}
 	return nil
 }
 

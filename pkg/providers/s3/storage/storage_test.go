@@ -22,18 +22,19 @@ import (
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/predicate"
 	"github.com/transferia/transferia/pkg/providers/s3"
+	"github.com/transferia/transferia/pkg/providers/s3/s3recipe"
 )
 
 func TestCanonParquet(t *testing.T) {
 	testCasePath := "yellow_taxi"
-	cfg := s3.PrepareCfg(t, "data3", "")
+	cfg := s3recipe.PrepareCfg(t, "data3", "")
 	cfg.PathPrefix = testCasePath
 	if os.Getenv("S3MDS_PORT") != "" { // for local recipe we need to upload test case to internet
-		s3.PrepareTestCase(t, cfg, cfg.PathPrefix)
+		s3recipe.PrepareTestCase(t, cfg, cfg.PathPrefix)
 		logger.Log.Info("dir uploaded")
 	}
 	cfg.ReadBatchSize = 100_000
-	storage, err := New(cfg, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
+	storage, err := New(cfg, "", false, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
 	require.NoError(t, err)
 	schema, err := storage.TableList(nil)
 	require.NoError(t, err)
@@ -91,16 +92,16 @@ func TestCanonParquet(t *testing.T) {
 
 func TestCanonJsonline(t *testing.T) {
 	testCasePath := "test_jsonline_files"
-	cfg := s3.PrepareCfg(t, "jsonlinecanon", model.ParsingFormatJSONLine)
+	cfg := s3recipe.PrepareCfg(t, "jsonlinecanon", model.ParsingFormatJSONLine)
 	cfg.PathPrefix = testCasePath
 	if os.Getenv("S3MDS_PORT") != "" { // for local recipe we need to upload test case to internet
-		s3.PrepareTestCase(t, cfg, cfg.PathPrefix)
+		s3recipe.PrepareTestCase(t, cfg, cfg.PathPrefix)
 		logger.Log.Info("dir uploaded")
 	}
 	cfg.ReadBatchSize = 100_000
 	cfg.Format.JSONLSetting = new(s3.JSONLSetting)
 	cfg.Format.JSONLSetting.BlockSize = 100_000
-	storage, err := New(cfg, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
+	storage, err := New(cfg, "", false, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
 	require.NoError(t, err)
 	schema, err := storage.TableList(nil)
 	require.NoError(t, err)
@@ -153,10 +154,10 @@ func TestCanonJsonline(t *testing.T) {
 
 func TestCanonCsv(t *testing.T) {
 	testCasePath := "test_csv_large"
-	cfg := s3.PrepareCfg(t, "csv_canon", model.ParsingFormatCSV)
+	cfg := s3recipe.PrepareCfg(t, "csv_canon", model.ParsingFormatCSV)
 	cfg.PathPrefix = testCasePath
 	if os.Getenv("S3MDS_PORT") != "" { // for local recipe we need to upload test case to internet
-		s3.PrepareTestCase(t, cfg, cfg.PathPrefix)
+		s3recipe.PrepareTestCase(t, cfg, cfg.PathPrefix)
 		logger.Log.Info("dir uploaded")
 	}
 	cfg.ReadBatchSize = 100_000_0
@@ -165,7 +166,7 @@ func TestCanonCsv(t *testing.T) {
 	cfg.Format.CSVSetting.Delimiter = ","
 	cfg.Format.CSVSetting.QuoteChar = "\""
 	cfg.Format.CSVSetting.EscapeChar = "\\"
-	storage, err := New(cfg, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
+	storage, err := New(cfg, "", false, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
 	require.NoError(t, err)
 	schema, err := storage.TableList(nil)
 	require.NoError(t, err)
@@ -222,10 +223,10 @@ func TestCanonCsv(t *testing.T) {
 
 func TestEstimateTableRowsCount(t *testing.T) {
 	testCasePath := "test_csv_large"
-	cfg := s3.PrepareCfg(t, "estimate_rows", model.ParsingFormatCSV)
+	cfg := s3recipe.PrepareCfg(t, "estimate_rows", model.ParsingFormatCSV)
 	cfg.PathPrefix = testCasePath
 	if os.Getenv("S3MDS_PORT") != "" { // for local recipe we need to upload test case to internet
-		s3.PrepareTestCase(t, cfg, cfg.PathPrefix)
+		s3recipe.PrepareTestCase(t, cfg, cfg.PathPrefix)
 		logger.Log.Info("dir uploaded")
 	}
 	cfg.ReadBatchSize = 100_000_0
@@ -238,7 +239,7 @@ func TestEstimateTableRowsCount(t *testing.T) {
 		QueueName: "test",
 	}
 
-	storage, err := New(cfg, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
+	storage, err := New(cfg, "", false, logger.Log, solomon.NewRegistry(solomon.NewRegistryOpts()))
 	require.NoError(t, err)
 
 	zeroRes, err := storage.EstimateTableRowsCount(*abstract.NewTableID("test", "name"))

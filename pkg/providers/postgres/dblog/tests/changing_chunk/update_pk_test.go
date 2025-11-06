@@ -21,7 +21,6 @@ import (
 
 var (
 	numberOfUpdates = 10
-	slotIDSuffix    = "updatepk"
 )
 
 func init() {
@@ -36,10 +35,11 @@ func TestUpdateKey(t *testing.T) {
 		))
 	}()
 
-	Source.SlotID += slotIDSuffix
+	transferID := helpers.GenerateTransferID("TestUpdateKey")
+	Source.SlotID += transferID
 
 	sinkParams := Source.ToSinkParams()
-	sink, err := postgres.NewSink(logger.Log, helpers.TransferID, sinkParams, helpers.EmptyRegistry())
+	sink, err := postgres.NewSink(logger.Log, transferID, sinkParams, helpers.EmptyRegistry())
 	require.NoError(t, err)
 
 	arrColSchema := abstract.NewTableSchema([]abstract.ColSchema{

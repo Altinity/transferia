@@ -6,6 +6,8 @@ import (
 	"io"
 )
 
+var _ Snapshot = (*SnapshotRaw)(nil)
+
 type SnapshotRaw struct {
 	feedChannel chan []byte
 	remainder   []byte

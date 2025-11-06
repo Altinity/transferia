@@ -11,6 +11,7 @@ import (
 	"github.com/segmentio/kafka-go/sasl/scram"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/pkg/abstract/model"
+	"github.com/transferia/transferia/pkg/connection/kafka"
 	"github.com/transferia/transferia/pkg/util/validators"
 	franzsasl "github.com/twmb/franz-go/pkg/sasl"
 	franzscram "github.com/twmb/franz-go/pkg/sasl/scram"
@@ -18,7 +19,7 @@ import (
 
 type KafkaAuth struct {
 	Enabled   bool
-	Mechanism string
+	Mechanism kafka.KafkaSaslSecurityMechanism
 	User      string
 	Password  string
 }
@@ -28,7 +29,7 @@ func (a *KafkaAuth) GetAuthMechanism() (sasl.Mechanism, error) {
 		return nil, nil
 	}
 	var algo scram.Algorithm
-	if a.Mechanism == "SHA-512" {
+	if a.Mechanism == kafka.KafkaSaslSecurityMechanism_SCRAM_SHA512 {
 		algo = scram.SHA512
 	} else {
 		algo = scram.SHA256
@@ -48,7 +49,7 @@ func (a *KafkaAuth) GetFranzAuthMechanism() franzsasl.Mechanism {
 		User: a.User,
 		Pass: a.Password,
 	}
-	if a.Mechanism == "SHA-512" {
+	if a.Mechanism == kafka.KafkaSaslSecurityMechanism_SCRAM_SHA512 {
 		return auth.AsSha512Mechanism()
 	}
 
@@ -61,6 +62,7 @@ type KafkaConnectionOptions struct {
 	TLSFile      string `model:"PemFileContent"`
 	Brokers      []string
 	SubNetworkID string
+	ConnectionID string
 }
 
 func (o *KafkaConnectionOptions) TLSConfig() (*tls.Config, error) {
