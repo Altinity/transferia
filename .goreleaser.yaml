@@ -4,9 +4,9 @@ version: 2
 project_name: "transferia"
 
 before:
-  hooks:
-    - go mod tidy
-    - go generate ./...
+  hooks: []
+  #  - go mod tidy
+  #  - go generate ./...
 
 builds:
   - env:
