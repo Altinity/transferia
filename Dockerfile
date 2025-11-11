@@ -37,7 +37,7 @@ RUN cat <<EOF > /usr/local/bin/install-clickhouse.sh
 #!/bin/sh
 set -eo pipefail
 
-export VERSION=25.8.9.20
+export VERSION="25.8.9.20"
 
 case $(uname -m) in
   x86_64) export ARCH=amd64 ;;
@@ -46,7 +46,7 @@ case $(uname -m) in
 esac
 
 for PKG in clickhouse-common-static clickhouse-client; do
-  curl -fO /\$PKG-\$VERSION-\${ARCH}.tgz" || curl -fO "https://packages.clickhouse.com/tgz/stable/\$PKG-\$VERSION.tgz"
+  curl -fO "https://packages.clickhouse.com/tgz/stable/\$PKG-\$VERSION-\${ARCH}.tgz" || curl -fO "https://packages.clickhouse.com/tgz/stable/\$PKG-\$VERSION.tgz"
 done
 
 tar -xzvf "clickhouse-common-static-\$VERSION-\${ARCH}.tgz" || tar -xzvf "clickhouse-common-static-\$VERSION.tgz"
