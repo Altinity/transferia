@@ -50,6 +50,8 @@ for PKG in clickhouse-common-static clickhouse-client; do
   curl -L -o ${PKG}.tgz "https://github.com/ClickHouse/ClickHouse/releases/download/\${TAG}/\${PKG}-\${VERSION}-\${ARCH}.tgz"
 done
 
+ls -la
+
 tar -xzvf "clickhouse-common-static.tgz"
 clickhouse-common-static-\${VERSION}/install/doinst.sh
 
