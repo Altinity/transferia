@@ -47,7 +47,7 @@ case $(uname -m) in
 esac
 
 for PKG in clickhouse-common-static clickhouse-client; do
-  curl -L -o ${PKG}.tgz "https://github.com/ClickHouse/ClickHouse/releases/download/\${TAG}/\${PKG}-\${VERSION}-\${ARCH}.tgz"
+  curl -L -o \${PKG}.tgz "https://github.com/ClickHouse/ClickHouse/releases/download/\${TAG}/\${PKG}-\${VERSION}-\${ARCH}.tgz"
 done
 
 ls -la
