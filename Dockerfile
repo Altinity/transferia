@@ -37,7 +37,8 @@ RUN cat <<EOF > /usr/local/bin/install-clickhouse.sh
 #!/bin/sh
 set -eo pipefail
 
-export VERSION="25.8.9.20"
+export TAG="v25.8.11.66-lts"
+export VERSION="25.8.11.66"
 
 case $(uname -m) in
   x86_64) export ARCH=amd64 ;;
@@ -46,14 +47,14 @@ case $(uname -m) in
 esac
 
 for PKG in clickhouse-common-static clickhouse-client; do
-  curl -fO "https://packages.clickhouse.com/tgz/stable/\$PKG-\$VERSION-\${ARCH}.tgz" || curl -fO "https://packages.clickhouse.com/tgz/stable/\$PKG-\$VERSION.tgz"
+  curl -f0 "https://github.com/ClickHouse/ClickHouse/releases/download/\${TAG}/\${PKG}-\${VERSION}-\${ARCH}.tgz"
 done
 
-tar -xzvf "clickhouse-common-static-\$VERSION-\${ARCH}.tgz" || tar -xzvf "clickhouse-common-static-\$VERSION.tgz"
-clickhouse-common-static-\$VERSION/install/doinst.sh
+tar -xzvf "clickhouse-common-static-\${VERSION}-\${ARCH}.tgz"
+clickhouse-common-static-\${VERSION}/install/doinst.sh
 
-tar -xzvf "clickhouse-client-\$VERSION-\${ARCH}.tgz" || tar -xzvf "clickhouse-client-\$VERSION.tgz"
-clickhouse-client-\$VERSION/install/doinst.sh
+tar -xzvf "clickhouse-client-\${VERSION}-\${ARCH}.tgz"
+clickhouse-client-\${VERSION}/install/doinst.sh
 EOF
 
 RUN chmod +x /usr/local/bin/install-clickhouse.sh && /usr/local/bin/install-clickhouse.sh && rm -f /usr/local/bin/install-clickhouse.sh
