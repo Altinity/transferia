@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package httpuploader
 
 import (
@@ -50,7 +48,7 @@ type UploadStats struct {
 	UploadStartTime time.Time
 }
 
-// Insert row buffers should be pooled by tables as different tables may have different row size.
+// Insert row buffers should be pooled by tables as different tables may have different row size
 func getPoolForTable(table string) *sync.Pool {
 	tableBufMu.Lock()
 	defer tableBufMu.Unlock()
@@ -67,8 +65,7 @@ func UploadCIBatch(
 	config model.ChSinkServerParams,
 	table string,
 	avgRowSize int,
-	lgr log.Logger,
-) (*UploadStats, error) {
+	lgr log.Logger) (*UploadStats, error) {
 	stats := &UploadStats{
 		Bytes:           0,
 		StartTime:       time.Now(),

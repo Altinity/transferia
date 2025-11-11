@@ -11,10 +11,9 @@ func SplitStatements(s string) []string {
 	for j, char := range s {
 		if !escaped {
 			if isQuote(char) {
-				switch quote {
-				case 0:
+				if quote == 0 {
 					quote = char
-				case char:
+				} else if quote == char {
 					quote = 0
 				}
 			} else if char == ';' && quote == 0 && i < j {

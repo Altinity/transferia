@@ -243,7 +243,7 @@ func getNotElasticFields() []abstract.ColSchema {
 	}
 }
 
-// there are a lot of unused columns, which appear after renaming in `ingest_pipeline.json`.
+// there are a lot of unused columns, which appear after renaming in `ingest_pipeline.json`
 func getElasticFields() *abstract.TableSchema {
 	return abstract.NewTableSchema([]abstract.ColSchema{
 		makeColSchemaPK("event_id", "", "string"),

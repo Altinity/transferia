@@ -1,5 +1,3 @@
-//go:build !disable_greenplum_provider
-
 package greenplum
 
 import (
@@ -23,7 +21,7 @@ func NewGreenplumFlavourImpl(coordinatorOnlyMode bool, pgClassFilter func(bool, 
 	}
 }
 
-// NewGreenplumFlavour constructs a flavour for PostgreSQL schema extractor.
+// NewGreenplumFlavour constructs a flavour for PostgreSQL schema extractor
 func NewGreenplumFlavour(coordinatorOnlyMode bool) *GreenplumFlavour {
 	return NewGreenplumFlavourImpl(coordinatorOnlyMode, pgClassFilter, pgClassRelsOnlyFilter)
 }

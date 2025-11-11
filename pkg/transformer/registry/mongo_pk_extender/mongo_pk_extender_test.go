@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo_pk_extender
 
 import (

@@ -1,5 +1,3 @@
-//go:build !disable_greenplum_provider
-
 package greenplum
 
 import (
@@ -51,7 +49,7 @@ func makeTestChangeItem(t *testing.T, colNames []string, colValues []interface{}
 }
 
 // TestGpParallel checks that sink pushes values to segments asynchronously when destination has more than 12 segments
-// The value of required segments is due to the SegPoolShare field of sink.
+// The value of required segments is due to the SegPoolShare field of sink
 func TestGpParallel(t *testing.T) {
 	fakeSinks := new(fakePgSinks)
 	fakeSinks.totalSegmentsCached = 13

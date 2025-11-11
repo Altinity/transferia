@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package statictable
 
 import (
@@ -582,7 +580,6 @@ func initYt(t *testing.T, path string) (testEnv *yttest.Env, testCfg yt2.YtDesti
 		cancel()
 	}
 }
-
 func teardown(env *yttest.Env, path ypath.Path) {
 	err := env.YT.RemoveNode(
 		env.Ctx,

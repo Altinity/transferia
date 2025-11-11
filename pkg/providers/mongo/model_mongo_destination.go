@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -32,10 +30,8 @@ type MongoDestination struct {
 	SRVMode bool
 }
 
-var (
-	_ model.Destination      = (*MongoDestination)(nil)
-	_ model.WithConnectionID = (*MongoDestination)(nil)
-)
+var _ model.Destination = (*MongoDestination)(nil)
+var _ model.WithConnectionID = (*MongoDestination)(nil)
 
 func (d *MongoDestination) MDBClusterID() string {
 	return d.ClusterID

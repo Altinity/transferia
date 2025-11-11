@@ -1,5 +1,3 @@
-//go:build !disable_ydb_provider
-
 package ydb
 
 import (
@@ -139,7 +137,7 @@ const (
 // based on
 // https://ydb.tech/ru/docs/yql/reference/types/primitive
 // https://ydb.tech/ru/docs/concepts/column-table#olap-data-types
-// unmentioned types can't be primary keys.
+// unmentioned types can't be primary keys
 var primaryIsAllowedFor = map[types.Type]AllowedIn{
 	// we cast bool to uint8 for OLAP tables
 	types.TypeBool: BOTH,

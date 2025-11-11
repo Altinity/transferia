@@ -332,8 +332,7 @@ func exponentialFloatFormToNumericPositivePart(in string) (string, error) {
 		return "", xerrors.Errorf("unknown exponential value: %s", in)
 	}
 
-	switch sign {
-	case "-":
+	if sign == "-" {
 		if basePart[0] == '.' {
 			return "0." + strings.Repeat("0", expVal) + basePart[1:], nil
 		} else {
@@ -348,7 +347,7 @@ func exponentialFloatFormToNumericPositivePart(in string) (string, error) {
 				return basePart[0:index] + "." + basePart[index:], nil
 			}
 		}
-	case "+":
+	} else if sign == "+" {
 		basePart = basePart[1:]
 		if expVal >= len(basePart) {
 			result, err := fillByZeroesToAlignR(basePart, expVal)
@@ -360,7 +359,7 @@ func exponentialFloatFormToNumericPositivePart(in string) (string, error) {
 			index := len(basePart) - expVal
 			return basePart[0:index] + "." + basePart[index:], nil
 		}
-	default:
+	} else {
 		return "", xerrors.Errorf("unknown sign: %s, string: %s", sign, in)
 	}
 }
@@ -890,7 +889,7 @@ func EmitPostgresInterval(val int64) string {
 		result += fmt.Sprintf("%d day", d)
 		result = makeEndOfBlock(result, d)
 	}
-	if h != 0 || min != 0 || s != 0 || ms != 0 {
+	if !(h == 0 && min == 0 && s == 0 && ms == 0) {
 		result += fmt.Sprintf("%02d:%02d:%02d.%06d", h, min, s, ms)
 		result = makeEndOfBlock(result, d)
 	}
@@ -1055,7 +1054,7 @@ func ShrinkMysqlBit(colVal interface{}, colType string) ([]uint8, error) {
 
 var reParametrizedType = regexp.MustCompile(`^.*\((\d)\).*`)
 
-// MysqlFitBinaryLength - used for types: "mysql:binary", "mysql:varbinary", "mysql:longblob", "mysql:mediumblob", "mysql:blob", "mysql:tinyblob".
+// MysqlFitBinaryLength - used for types: "mysql:binary", "mysql:varbinary", "mysql:longblob", "mysql:mediumblob", "mysql:blob", "mysql:tinyblob"
 func MysqlFitBinaryLength(colType string, colVal interface{}) (interface{}, error) {
 	reMatch := reParametrizedType.FindStringSubmatch(colType)
 	if len(reMatch) == 2 {

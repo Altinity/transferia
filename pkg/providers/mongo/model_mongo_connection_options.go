@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -29,7 +27,7 @@ type MongoConnectionOptions struct {
 	ConnectionID  string
 }
 
-// IsDocDB check if we connect to amazon doc DB.
+// IsDocDB check if we connect to amazon doc DB
 func (o *MongoConnectionOptions) IsDocDB() bool {
 	for _, h := range o.HostsWithPort {
 		if strings.Contains(h.Host, "docdb.amazonaws.com") {
@@ -74,10 +72,8 @@ type TrustedCACertificate interface {
 	isTrustedCACertificate()
 }
 
-type (
-	InlineCACertificatePEM    []byte
-	CACertificatePEMFilePaths []string
-)
+type InlineCACertificatePEM []byte
+type CACertificatePEMFilePaths []string
 
 func (InlineCACertificatePEM) isTrustedCACertificate()    {}
 func (CACertificatePEMFilePaths) isTrustedCACertificate() {}

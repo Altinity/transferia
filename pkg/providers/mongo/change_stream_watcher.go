@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -40,7 +38,7 @@ type puChangeEvent struct {
 type changeEventPusher func(ctx context.Context, event *changeEvent) error
 
 // ChangeStreamWatcher produces changeEvents
-// encapsulates method with which full documents of mongo collections are retrieved.
+// encapsulates method with which full documents of mongo collections are retrieved
 type ChangeStreamWatcher interface {
 	// Watch is one-shot method. After return all allocated resources should be freed with calling Close
 	Watch(context.Context, changeEventPusher) error

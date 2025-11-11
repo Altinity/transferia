@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package clickhouse
 
 import (
@@ -85,7 +83,7 @@ func (s *sink) Push(input []abstract.ChangeItem) error {
 	)
 
 	var wg sync.WaitGroup
-	errs := make([]error, len(shardToChangeItems))
+	var errs = make([]error, len(shardToChangeItems))
 	i := 0
 	for shard, itemsForShard := range shardToChangeItems {
 		wg.Add(1)

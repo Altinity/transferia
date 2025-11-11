@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package types
 
 import "fmt"
@@ -12,19 +10,22 @@ type AliaseDataType interface {
 	Aliases() []string
 }
 
-type BinaryType struct{}
+type BinaryType struct {
+}
 
 func (b *BinaryType) Name() string {
 	return "binary"
 }
 
-type BooleanType struct{}
+type BooleanType struct {
+}
 
 func (b *BooleanType) Name() string {
 	return "boolean"
 }
 
-type ByteType struct{}
+type ByteType struct {
+}
 
 func (b *ByteType) Name() string {
 	return "tinyint"
@@ -34,7 +35,8 @@ func (b *ByteType) Aliases() []string {
 	return []string{"tinyint", "byte"}
 }
 
-type DateType struct{}
+type DateType struct {
+}
 
 func (d *DateType) Name() string {
 	return "date"
@@ -53,13 +55,15 @@ func (d *DecimalType) JSON() string {
 	return fmt.Sprintf("decimal(%d,%d)", d.Precision, d.Scale)
 }
 
-type DoubleType struct{}
+type DoubleType struct {
+}
 
 func (d *DoubleType) Name() string {
 	return "double"
 }
 
-type FloatType struct{}
+type FloatType struct {
+}
 
 func (f *FloatType) Name() string {
 	return "float"
@@ -69,7 +73,8 @@ func (f *FloatType) Aliases() []string {
 	return []string{f.Name(), "real"}
 }
 
-type IntegerType struct{}
+type IntegerType struct {
+}
 
 func (i *IntegerType) Name() string {
 	return "int"
@@ -79,7 +84,8 @@ func (i *IntegerType) Aliases() []string {
 	return []string{i.Name(), "integer"}
 }
 
-type LongType struct{}
+type LongType struct {
+}
 
 func (l *LongType) Name() string {
 	return "bigint"
@@ -89,7 +95,8 @@ func (l *LongType) Aliases() []string {
 	return []string{l.Name(), "long"}
 }
 
-type NullType struct{}
+type NullType struct {
+}
 
 func (n *NullType) Name() string {
 	return "null"
@@ -99,7 +106,8 @@ func (n *NullType) Aliases() []string {
 	return []string{n.Name(), "void"}
 }
 
-type ShortType struct{}
+type ShortType struct {
+}
 
 func (s *ShortType) Name() string {
 	return "smallint"
@@ -109,13 +117,15 @@ func (s *ShortType) Aliases() []string {
 	return []string{s.Name(), "short"}
 }
 
-type StringType struct{}
+type StringType struct {
+}
 
 func (s *StringType) Name() string {
 	return "string"
 }
 
-type TimestampType struct{}
+type TimestampType struct {
+}
 
 func (t *TimestampType) Name() string {
 	return "timestamp"

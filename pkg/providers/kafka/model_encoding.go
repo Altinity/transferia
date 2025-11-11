@@ -1,5 +1,3 @@
-//go:build !disable_kafka_provider
-
 package kafka
 
 import "github.com/segmentio/kafka-go"

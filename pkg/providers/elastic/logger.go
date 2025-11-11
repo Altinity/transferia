@@ -1,5 +1,3 @@
-//go:build !disable_elastic_provider
-
 package elastic
 
 import (
@@ -15,8 +13,8 @@ type eslogger struct {
 
 func (e eslogger) LogRoundTrip(request *http.Request, response *http.Response, err error, time time.Time, duration time.Duration) error {
 	const logMessage = "Elasticsearch request"
-	logFn := e.logger.Info
-	fields := []log.Field{log.Time("start", time), log.Duration("duration", duration)}
+	var logFn = e.logger.Info
+	var fields = []log.Field{log.Time("start", time), log.Duration("duration", duration)}
 	if request != nil {
 		fields = append(fields,
 			log.String("method", request.Method),

@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package protocol
 
 import (
@@ -127,7 +125,7 @@ type replayTuple struct {
 type MemoryOptimizedLogReplay struct {
 	files    []string
 	logStore store.Store
-	// timezone      time.Location
+	//timezone      time.Location
 	checkpointReader CheckpointReader
 }
 
@@ -145,7 +143,9 @@ func (m *MemoryOptimizedLogReplay) GetReverseIterator() iter.Iter[*replayTuple] 
 	}
 }
 
-var _ iter.Iter[*replayTuple] = new(customJSONIterator)
+var (
+	_ iter.Iter[*replayTuple] = new(customJSONIterator)
+)
 
 type customJSONIterator struct {
 	iter iter.Iter[string]
@@ -209,6 +209,7 @@ type logReplayIterator struct {
 }
 
 func (l *logReplayIterator) getNextIter() (iter.Iter[*replayTuple], error) {
+
 	nextFile, err := l.reverseFilesIter.Value()
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read reversed values: %w", err)

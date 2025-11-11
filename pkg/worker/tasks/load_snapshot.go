@@ -97,7 +97,10 @@ func (l *SnapshotLoader) LoadSnapshot(ctx context.Context) error {
 	l.schemaLock.Unlock()
 
 	logger.Log.Infof("storage resolved: %d tables in total", len(tables))
-	if err := l.CheckIncludeDirectives(tableDescriptions); err != nil {
+	err = l.CheckIncludeDirectives(tableDescriptions, func() (abstract.Storage, error) {
+		return storage.NewStorage(l.transfer, coordinator.NewFakeClient(), l.registry)
+	})
+	if err != nil {
 		return xerrors.Errorf("failed in accordance with configuration: %w", err)
 	}
 	if err = l.UploadTables(ctx, tableDescriptions, true); err != nil {
@@ -106,7 +109,7 @@ func (l *SnapshotLoader) LoadSnapshot(ctx context.Context) error {
 	return nil
 }
 
-func (l *SnapshotLoader) CheckIncludeDirectives(tables []abstract.TableDescription) error {
+func (l *SnapshotLoader) CheckIncludeDirectives(tables []abstract.TableDescription, storageBuilder func() (abstract.Storage, error)) error {
 	unfulfilledIncludes := set.New[string]()
 	if l.transfer.DataObjects != nil {
 		for _, includeObject := range l.transfer.DataObjects.IncludeObjects {
@@ -136,13 +139,37 @@ func (l *SnapshotLoader) CheckIncludeDirectives(tables []abstract.TableDescripti
 		}
 	}
 
+	// handle 'skips'
+
+	srcStorage, err := storageBuilder()
+	if err != nil {
+		return xerrors.Errorf("unable to create storage, err: %w", err)
+	}
+	defer srcStorage.Close()
+	if skippableStorage, ok := srcStorage.(abstract.SkippableStorage); ok {
+		keys := unfulfilledIncludes.Slice()
+		for _, key := range keys {
+			requiredTableID, err := abstract.ParseTableID(key)
+			if err != nil {
+				return xerrors.Errorf("unable to parse table id: %w", err)
+			}
+			skipped, err := skippableStorage.Skipped(*requiredTableID)
+			if err != nil {
+				return xerrors.Errorf("unable to check if table skipped, err: %w", err)
+			}
+			if skipped {
+				unfulfilledIncludes.Remove(key)
+			}
+		}
+	}
+
 	if !unfulfilledIncludes.Empty() {
 		return errors.CategorizedErrorf(categories.Source, "some tables from include list are missing in the source database: %v", unfulfilledIncludes.SortedSliceFunc(func(a, b string) bool { return a < b }))
 	}
 	return nil
 }
 
-// TODO Remove, legacy hacks.
+// TODO Remove, legacy hacks
 func (l *SnapshotLoader) endpointsPreSnapshotActions(sourceStorage abstract.Storage) {
 	switch specificStorage := sourceStorage.(type) {
 	case *greenplum.Storage:
@@ -157,7 +184,7 @@ func (l *SnapshotLoader) endpointsPreSnapshotActions(sourceStorage abstract.Stor
 	}
 }
 
-// TODO Remove, legacy hacks.
+// TODO Remove, legacy hacks
 func (l *SnapshotLoader) endpointsPostSnapshotActions() {
 	switch dst := l.transfer.Dst.(type) {
 	case model.HackableTarget:
@@ -244,13 +271,38 @@ func (l *SnapshotLoader) beginSnapshot(
 			return errors.CategorizedErrorf(categories.Source, "Can't begin %s snapshot: %w", l.transfer.SrcType(), err)
 		}
 	case *postgres.Storage:
-		if err := beginSnapshotPg(ctx, l, specificStorage); err != nil {
-			return err
+		err := specificStorage.BeginPGSnapshot(ctx)
+		if err != nil {
+			// TODO: change to fatal?
+			logger.Log.Warn("unable to begin snapshot", log.Error(err))
+		} else {
+			logger.Log.Infof("begin postgres snapshot on lsn: %v", specificStorage.SnapshotLSN())
+		}
+		if !l.transfer.SnapshotOnly() {
+			var err error
+			tracker := postgres.NewTracker(l.transfer.ID, l.cp)
+			l.slotKiller, l.slotKillerErrorChannel, err = specificStorage.RunSlotMonitor(ctx, l.transfer.Src, l.registry, tracker)
+			if err != nil {
+				return errors.CategorizedErrorf(categories.Source, "failed to start slot monitor: %w", err)
+			}
 		}
 	case *greenplum.Storage:
-		if err := beginSnapshotGreenplum(ctx, l, specificStorage, tables); err != nil {
-			return err
+		if err := specificStorage.BeginGPSnapshot(ctx, tables); err != nil {
+			return errors.CategorizedErrorf(categories.Source, "failed to initialize a Greenplum snapshot: %w", err)
 		}
+		if !l.transfer.SnapshotOnly() {
+			var err error
+			l.slotKiller, l.slotKillerErrorChannel, err = specificStorage.RunSlotMonitor(ctx, l.transfer.Src, l.registry)
+			if err != nil {
+				return errors.CategorizedErrorf(categories.Source, "failed to start liveness monitor for Greenplum storage: %w", err)
+			}
+		}
+		workersGpConfig := specificStorage.WorkersGpConfig()
+		logger.Log.Info(
+			"Greenplum snapshot source runtime configuration",
+			log.Any("cluster", workersGpConfig.GetCluster()),
+			log.Array("sharding", workersGpConfig.GetWtsList()),
+		)
 	}
 	return nil
 }
@@ -265,10 +317,18 @@ func (l *SnapshotLoader) endSnapshot(
 			logger.Log.Error("Failed to end snapshot", log.Error(err))
 		}
 	case *postgres.Storage:
-		endSnapshotPg(ctx, specificStorage)
+		if err := specificStorage.EndPGSnapshot(ctx); err != nil {
+			logger.Log.Error("Failed to end snapshot in PostgreSQL", log.Error(err))
+		}
 	case *greenplum.Storage:
-		if err := endSnapshotGreenplum(ctx, specificStorage); err != nil {
-			return err
+		esCtx, esCancel := context.WithTimeout(context.Background(), greenplum.PingTimeout)
+		defer esCancel()
+		if err := specificStorage.EndGPSnapshot(esCtx); err != nil {
+			logger.Log.Error("Failed to end snapshot in Greenplum", log.Error(err))
+			// When we are here, snapshot could not be finished on coordinator.
+			// This may be due to various reasons, which include transaction failure (e.g. due to coordinator-standby fallback).
+			// For this reason, we must retry the transfer, as the data obtained from Greenplum segments may be inconsistent.
+			return errors.CategorizedErrorf(categories.Source, "failed to end snapshot in Greenplum (on coordinator): %w", err)
 		}
 	}
 	return nil

@@ -1,5 +1,3 @@
-//go:build !disable_opensearch_provider
-
 package opensearch
 
 import (
@@ -29,10 +27,8 @@ type OpenSearchDestination struct {
 	SanitizeDocKeys bool
 }
 
-var (
-	_ model.Destination      = (*OpenSearchDestination)(nil)
-	_ model.WithConnectionID = (*OpenSearchDestination)(nil)
-)
+var _ model.Destination = (*OpenSearchDestination)(nil)
+var _ model.WithConnectionID = (*OpenSearchDestination)(nil)
 
 func (d *OpenSearchDestination) MDBClusterID() string {
 	return d.ClusterID

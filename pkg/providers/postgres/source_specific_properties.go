@@ -1,15 +1,11 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
 	"github.com/transferia/transferia/pkg/abstract"
 )
 
-const (
-	EnumAllValues    = abstract.PropertyKey("pg:enum_all_values")
-	DatabaseTimeZone = abstract.PropertyKey("pg:database_timezone")
-)
+const EnumAllValues = abstract.PropertyKey("pg:enum_all_values")
+const DatabaseTimeZone = abstract.PropertyKey("pg:database_timezone")
 
 func GetPropertyEnumAllValues(in *abstract.ColSchema) []string {
 	if in == nil {

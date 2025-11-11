@@ -1,5 +1,3 @@
-//go:build !disable_datadog_provider
-
 package datadog
 
 import (
@@ -29,7 +27,7 @@ func destinationModelFactory() model.Destination {
 
 const ProviderType = abstract.ProviderType("datadog")
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ providers.Sinker = (*Provider)(nil)
 )

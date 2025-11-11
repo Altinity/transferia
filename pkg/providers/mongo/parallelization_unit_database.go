@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -102,6 +100,7 @@ func (p ParallelizationUnitDatabase) getClusterTime(ctx context.Context, client 
 	}
 	result := tr.Time
 	return &result, nil
+
 }
 
 func MakeParallelizationUnitDatabase(technicalDatabase, slotID, dbName string) ParallelizationUnitDatabase {

@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package yt
 
 import (
@@ -24,7 +22,7 @@ var (
 	exeVersion string
 )
 
-// InitExe uploads exe and initializes related variables.
+// InitExe uploads exe and initializes related variables
 func InitExe() {
 	if !env.IsTest() {
 		return

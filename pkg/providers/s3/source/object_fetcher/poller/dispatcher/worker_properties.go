@@ -1,5 +1,3 @@
-//go:build !disable_s3_provider
-
 package dispatcher
 
 import "github.com/transferia/transferia/library/go/core/xerrors"

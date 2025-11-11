@@ -282,7 +282,7 @@ func (t *TableDescription) String() string {
 	return fmt.Sprintf("%s [filter %q offset %d]", t.Fqtn(), t.Filter, t.Offset)
 }
 
-// TableIDsIntersection returns an intersection of two lists of TableIDs.
+// TableIDsIntersection returns an intersection of two lists of TableIDs
 func TableIDsIntersection(a []TableID, b []TableID) []TableID {
 	if len(b) == 0 {
 		return a
@@ -321,7 +321,7 @@ type Storage interface {
 	TableExists(table TableID) (bool, error)
 }
 
-// PositionalStorage some storages may provide specific position for snapshot consistency.
+// PositionalStorage some storages may provide specific position for snapshot consistency
 type PositionalStorage interface {
 	// Position provide info about snapshot read position
 	Position(ctx context.Context) (*LogPosition, error)
@@ -333,12 +333,12 @@ type LogPosition struct {
 	TxID string
 }
 
-// SchemaStorage allow to resolve DB Schema from storage.
+// SchemaStorage allow to resolve DB Schema from storage
 type SchemaStorage interface {
 	LoadSchema() (DBSchema, error)
 }
 
-// SampleableStorage is for dataplane tests.
+// SampleableStorage is for dataplane tests
 type SampleableStorage interface {
 	Storage
 
@@ -349,7 +349,7 @@ type SampleableStorage interface {
 	TableAccessible(table TableDescription) bool
 }
 
-// ShardingStorage is for in table sharding.
+// ShardingStorage is for in table sharding
 type ShardingStorage interface {
 	ShardTable(ctx context.Context, table TableDescription) ([]TableDescription, error)
 }
@@ -404,4 +404,14 @@ type NextArrTableDescriptionGetter interface {
 type NextArrTableDescriptionGetterBuilder interface {
 	ShardingContextStorage
 	BuildNextArrTableDescriptionGetter(operationID string, tables []TableDescription) (NextArrTableDescriptionGetter, error)
+}
+
+// This is special workaround for partitioned_tables in postgres
+// see FulfilledIncludes
+//
+// load_snapshot expects TableList should return all tables,
+// but for partitioned_tables with CollapseInheritTables we skip partitioned_table in TableList
+// then in SnapshotLoader.CheckIncludeDirectives made handling of this case via 'SkippableStorage' interface
+type SkippableStorage interface {
+	Skipped(tID TableID) (bool, error)
 }

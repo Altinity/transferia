@@ -1,5 +1,3 @@
-//go:build !disable_docker
-
 package container
 
 import (

@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package tests
 
 import (
@@ -73,6 +71,7 @@ func TestShardingStorage_ShardTable(t *testing.T) {
 			"Snapshot lsn from sharding context differs from original!")
 		require.Equal(t, snapshotCtime.In(time.UTC), storage.ShardedStateTS.In(time.UTC),
 			"Snapshot timestamp from sharding context differs from original!")
+
 	})
 	t.Run("bigserial", func(t *testing.T) {
 		tables, err := storage.ShardTable(ctx, abstract.TableDescription{

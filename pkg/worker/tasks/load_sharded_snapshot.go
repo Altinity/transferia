@@ -56,7 +56,7 @@ func (l *SnapshotLoader) ReadFromCPShardState(ctx context.Context) (string, erro
 	return shared_memory.GetShardStateNoWait(ctx, l.cp, l.operationID)
 }
 
-// OperationStateExists returns true if the state of the operation of the given task exists (is not nil).
+// OperationStateExists returns true if the state of the operation of the given task exists (is not nil)
 func (l *SnapshotLoader) OperationStateExists(ctx context.Context) (bool, error) {
 	result, err := backoff.RetryNotifyWithData(
 		func() (bool, error) {

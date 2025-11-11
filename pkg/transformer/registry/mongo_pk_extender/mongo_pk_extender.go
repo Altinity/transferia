@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo_pk_extender
 
 import (
@@ -172,8 +170,8 @@ func (t *MongoPKExtenderTransformer) collapseValue(value interface{}) (interface
 }
 
 func (t *MongoPKExtenderTransformer) createOldKeys(item abstract.ChangeItem) (abstract.OldKeysType, string) {
-	switch item.Kind {
-	case abstract.InsertKind:
+	switch {
+	case item.Kind == abstract.InsertKind:
 		keyNames := make([]string, 0, 1)
 		keyTypes := make([]string, 0, 1)
 		keyValues := make([]interface{}, 0, 1)
@@ -193,8 +191,8 @@ func (t *MongoPKExtenderTransformer) createOldKeys(item abstract.ChangeItem) (ab
 			KeyTypes:  keyTypes,
 			KeyValues: keyValues,
 		}, item.Schema
-	case abstract.DeleteKind, abstract.UpdateKind:
-		schema := item.Schema
+	case item.Kind == abstract.DeleteKind || item.Kind == abstract.UpdateKind:
+		var schema = item.Schema
 		keyValues := make([]interface{}, len(item.OldKeys.KeyValues))
 		for i, keyValue := range item.OldKeys.KeyValues {
 			if t.expand {

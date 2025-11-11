@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package clickhouse
 
 import (
@@ -40,7 +38,7 @@ func init() {
 
 const ProviderType = abstract.ProviderType("ch")
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ providers.Snapshot          = (*Provider)(nil)
 	_ providers.Abstract2Provider = (*Provider)(nil)

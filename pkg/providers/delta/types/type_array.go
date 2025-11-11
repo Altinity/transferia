@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package types
 
 type ArrayType struct {

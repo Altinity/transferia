@@ -1,5 +1,3 @@
-//go:build !disable_s3_coordinator
-
 package s3coordinator
 
 import (
@@ -121,7 +119,7 @@ func (c *CoordinatorS3) RemoveTransferState(transferID string, keys []string) er
 	return nil
 }
 
-// GetOperationProgress do nothing.
+// GetOperationProgress do nothing
 func (c *CoordinatorS3) GetOperationProgress(operationID string) (*model.AggregatedProgress, error) {
 	return model.NewAggregatedProgress(), nil
 }

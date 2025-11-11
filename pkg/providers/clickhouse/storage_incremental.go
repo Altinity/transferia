@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package clickhouse
 
 import (
@@ -13,7 +11,9 @@ import (
 	"github.com/transferia/transferia/pkg/abstract"
 )
 
-var _ abstract.IncrementalStorage = new(Storage)
+var (
+	_ abstract.IncrementalStorage = new(Storage)
+)
 
 func (s *Storage) GetNextIncrementalState(ctx context.Context, incremental []abstract.IncrementalTable) ([]abstract.IncrementalState, error) {
 	var res []abstract.IncrementalState

@@ -1,5 +1,3 @@
-//go:build !disable_kinesis_provider
-
 package kinesis
 
 import (
@@ -203,7 +201,7 @@ func (s *Source) makeRawChangeItem(msg *consumer.Record) abstract.ChangeItem {
 		s.config.Stream,
 		splitShard(msg.ShardID),
 		hash(*msg.SequenceNumber),
-		msg.Data,
+		msg.Record.Data,
 	)
 }
 

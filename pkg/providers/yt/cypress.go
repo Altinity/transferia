@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package yt
 
 import (
@@ -43,8 +41,7 @@ func GetNodeInfo(ctx context.Context, client yt.CypressClient, path ypath.Path) 
 func GetNodeAttrs(ctx context.Context, client yt.CypressClient, path ypath.Path) (*NodeAttrs, error) {
 	attrs := new(NodeAttrs)
 	if err := client.GetNode(ctx, path.Attrs(), &attrs, &yt.GetNodeOptions{
-		Attributes: []string{"type", "dynamic", "tablet_state", "schema", "optimize_for", "atomicity"},
-	}); err != nil {
+		Attributes: []string{"type", "dynamic", "tablet_state", "schema", "optimize_for", "atomicity"}}); err != nil {
 		return nil, xerrors.Errorf("unable to get node: %w", err)
 	}
 	return attrs, nil

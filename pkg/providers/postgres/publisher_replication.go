@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -59,7 +57,7 @@ type replication struct {
 	objects         *model.DataObjects
 	sequencer       *sequencer2.Sequencer
 	parseQ          *parsequeue.ParseQueue[[]abstract.ChangeItem]
-	objectsMap      map[abstract.TableID]bool // tables to include in transfer
+	objectsMap      map[abstract.TableID]bool //tables to include in transfer
 
 	skippedTables map[abstract.TableID]bool
 }
@@ -74,7 +72,7 @@ const BufferLimit = 16 * humanize.MiByte
 
 func (p *replication) Run(sink abstract.AsyncSink) error {
 	var err error
-	// level of parallelism combined with hardcoded buffer size in receiver(16mb) prevent OOM in parsequeue
+	//level of parallelism combined with hardcoded buffer size in receiver(16mb) prevent OOM in parsequeue
 	p.parseQ = parsequeue.New(p.logger, 10, sink, p.WithIncludeFilter, p.ack)
 
 	p.wg.Add(1)
@@ -187,7 +185,7 @@ func (p *replication) reloadSchema() error {
 	defer storage.Close()
 	storage.IsHomo = true // exclude VIEWs. This is a nasty solution which should be replaced when an Accessor is introduced instead of the jack of all trades Storage
 
-	tableMap, err := storage.TableList(nil)
+	tableMap, err := storage.TableListWithoutSkips(nil) // to collect 'child' tables, when CollapseInheritTables=true
 	if err != nil {
 		return xerrors.Errorf("failed to list tables (with schema) at source endpoint: %w", err)
 	}
@@ -233,7 +231,7 @@ func (p *replication) reloadSchema() error {
 
 const FakeParentPKeyStatusMessageCategory string = "fake_primary_key_parent"
 
-// tableMapToDBSchemaForTables converts one type of schema to another ONLY for tables (dropping VIEWs).
+// tableMapToDBSchemaForTables converts one type of schema to another ONLY for tables (dropping VIEWs)
 func tableMapToDBSchemaForTables(tableMap abstract.TableMap) abstract.DBSchema {
 	result := make(abstract.DBSchema)
 	for id, info := range tableMap {

@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -12,7 +10,7 @@ import (
 	"github.com/transferia/transferia/pkg/util"
 )
 
-// TimeZoneParameterStatusKey is the identifier of the PostgreSQL connection property containing time zone.
+// TimeZoneParameterStatusKey is the identifier of the PostgreSQL connection property containing time zone
 const TimeZoneParameterStatusKey string = "TimeZone"
 
 type Timestamp struct {
@@ -25,7 +23,7 @@ var _ TextDecoderAndValuerWithHomo = (*Timestamp)(nil)
 
 // NewTimestamp constructs a TIMESTAMP WITHOUT TIME ZONE representation which supports BC years
 //
-// TODO: this type must become significantly simpler after https://st.yandex-team.ru/TM-5127 is done.
+// TODO: this type must become significantly simpler after https://st.yandex-team.ru/TM-5127 is done
 func NewTimestamp(tz *time.Location) *Timestamp {
 	return &Timestamp{
 		Timestamp: *(new(pgtype.Timestamp)),
@@ -44,13 +42,13 @@ func (t *Timestamp) DecodeText(ci *pgtype.ConnInfo, src []byte) error {
 		t.Timestamp = pgtype.Timestamp{Time: tim, Status: pgtype.Present, InfinityModifier: infmod}
 	}
 
-	if t.Status != pgtype.Present || t.InfinityModifier != pgtype.None {
+	if t.Timestamp.Status != pgtype.Present || t.Timestamp.InfinityModifier != pgtype.None {
 		return nil
 	}
 
 	// https://st.yandex-team.ru/TM-5092 - timestamps without time zone must be parsed in the source database's time zone
-	parsed := t.Time
-	t.Time = time.Date(actualYear(parsed), parsed.Month(), parsed.Day(), parsed.Hour(), parsed.Minute(), parsed.Second(), parsed.Nanosecond(), t.location)
+	parsed := t.Timestamp.Time
+	t.Timestamp.Time = time.Date(actualYear(parsed), parsed.Month(), parsed.Day(), parsed.Hour(), parsed.Minute(), parsed.Second(), parsed.Nanosecond(), t.location)
 
 	return nil
 }
@@ -60,7 +58,7 @@ func (t *Timestamp) Value() (driver.Value, error) {
 }
 
 func (t *Timestamp) HomoValue() any {
-	switch t.Status {
+	switch t.Timestamp.Status {
 	case pgtype.Null:
 		return nil
 	case pgtype.Undefined:
@@ -77,7 +75,7 @@ func actualYear(t time.Time) int {
 	return result
 }
 
-// MinusToBC checks if the given string starts with a minus and if so, trims it and adds a "BC" suffix.
+// MinusToBC checks if the given string starts with a minus and if so, trims it and adds a "BC" suffix
 func MinusToBC(v string) string {
 	if strings.HasPrefix(v, "-") {
 		return strings.TrimPrefix(v, "-") + " BC"

@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package delta
 
 import (
@@ -24,7 +22,7 @@ func init() {
 	abstract.RegisterProviderName(ProviderType, "Delta Lake")
 }
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ providers.Snapshot = (*Provider)(nil)
 )

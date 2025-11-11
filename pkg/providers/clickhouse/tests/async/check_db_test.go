@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package snapshot
 
 import (

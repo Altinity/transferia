@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package model
 
 import (
@@ -74,7 +72,6 @@ func (w connConfigWrapper) User() string {
 func (w connConfigWrapper) Password() string {
 	return w.p.ConnectionParams.Password
 }
-
 func (w connConfigWrapper) ResolvePassword() (string, error) {
 	params := w.p.ConnectionParams
 	password, err := ResolvePassword(params.ClusterID, params.User, params.Password)
@@ -143,7 +140,7 @@ func resolveShardsAndHosts(shardList []ClickHouseShard, nativePort, httpPort int
 func resolveConnection(connectionID string) (*clickhouse.Connection, error) {
 	connCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	// DP agent token here
+	//DP agent token here
 	conn, err := connection.Resolver().ResolveConnection(connCtx, connectionID, "ch")
 	if err != nil {
 		return nil, err

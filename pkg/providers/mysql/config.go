@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package mysql
 
 import (
@@ -7,7 +5,7 @@ import (
 	"time"
 )
 
-// TODO: remove.
+// TODO: remove
 type Config struct {
 	Addr     string
 	User     string

@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -18,7 +16,7 @@ var _ TextDecoderAndValuerWithHomo = (*Date)(nil)
 
 // NewDate constructs a DATE representation which supports BC years
 //
-// TODO: remove this when https://st.yandex-team.ru/TM-5127 is done.
+// TODO: remove this when https://st.yandex-team.ru/TM-5127 is done
 func NewDate() *Date {
 	return &Date{
 		Date: *new(pgtype.Date),
@@ -43,7 +41,7 @@ func (t *Date) Value() (driver.Value, error) {
 }
 
 func (t *Date) HomoValue() any {
-	switch t.Status {
+	switch t.Date.Status {
 	case pgtype.Null:
 		return nil
 	case pgtype.Undefined:

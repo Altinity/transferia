@@ -56,12 +56,11 @@ func (pg *PgHA) hostByRole(role dbaas.Role) (*string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	var err error
-	switch role {
-	case dbaas.ANY:
+	if role == dbaas.ANY {
 		node, err = pg.cluster.WaitForPrimaryPreferred(ctx)
-	case dbaas.REPLICA:
+	} else if role == dbaas.REPLICA {
 		node, err = pg.cluster.WaitForStandby(ctx)
-	default:
+	} else {
 		node, err = pg.cluster.WaitForPrimary(ctx)
 	}
 	if err != nil {

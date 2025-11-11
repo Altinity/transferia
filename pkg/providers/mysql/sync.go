@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package mysql
 
 import (
@@ -139,7 +137,7 @@ func (c *Canal) runSyncBinlog() error {
 			// we only focus row based event
 			err = c.handleRowsEvent(ev, rowsQuery)
 			if err != nil {
-				isFailure := !xerrors.Is(err, ErrExcludedTable) && !xerrors.Is(err, schema.ErrTableNotExist) && !xerrors.Is(err, schema.ErrMissingTableMeta)
+				isFailure := !(xerrors.Is(err, ErrExcludedTable) || xerrors.Is(err, schema.ErrTableNotExist) || xerrors.Is(err, schema.ErrMissingTableMeta))
 				if isFailure {
 					c.logger.Errorf("handle rows event at (%s, %d) error %v", pos.Name, curPos, err)
 					return xerrors.Errorf("failed to handle row event: %w", err)

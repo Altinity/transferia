@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -16,6 +14,7 @@ import (
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/changeitem"
 	"go.ytsaurus.tech/library/go/core/log"
+	"golang.org/x/exp/maps"
 )
 
 func timescaleDBSchemas() []string {
@@ -40,22 +39,24 @@ func pgSystemTableNames() []string {
 }
 
 type SchemaExtractor struct {
-	excludeViews      bool
-	useFakePrimaryKey bool
-	forbiddenSchemas  []string
-	forbiddenTables   []string
-	flavour           DBFlavour
-	logger            log.Logger
+	excludeViews          bool
+	useFakePrimaryKey     bool
+	forbiddenSchemas      []string
+	forbiddenTables       []string
+	flavour               DBFlavour
+	collapseInheritTables bool
+	logger                log.Logger
 }
 
 func NewSchemaExtractor() *SchemaExtractor {
 	return &SchemaExtractor{
-		excludeViews:      false,
-		useFakePrimaryKey: false,
-		forbiddenSchemas:  pgSystemSchemas(),
-		forbiddenTables:   pgSystemTableNames(),
-		flavour:           NewPostgreSQLFlavour(),
-		logger:            logger.Log,
+		excludeViews:          false,
+		useFakePrimaryKey:     false,
+		forbiddenSchemas:      pgSystemSchemas(),
+		forbiddenTables:       pgSystemTableNames(),
+		flavour:               NewPostgreSQLFlavour(),
+		collapseInheritTables: false,
+		logger:                logger.Log,
 	}
 }
 
@@ -84,12 +85,17 @@ func (e *SchemaExtractor) WithFlavour(flavour DBFlavour) *SchemaExtractor {
 	return e
 }
 
+func (e *SchemaExtractor) WithCollapseInheritTables(collapseInheritTables bool) *SchemaExtractor {
+	e.collapseInheritTables = collapseInheritTables
+	return e
+}
+
 func (e *SchemaExtractor) WithLogger(logger log.Logger) *SchemaExtractor {
 	e.logger = logger
 	return e
 }
 
-// LoadSchema returns a settings-customized schema(s) of table(s) in PostgreSQL.
+// LoadSchema returns a settings-customized schema(s) of table(s) in PostgreSQL
 func (e *SchemaExtractor) LoadSchema(ctx context.Context, conn *pgx.Conn, specificTable *abstract.TableID) (abstract.DBSchema, error) {
 	tableColumns, err := e.tableToColumnsMapping(ctx, conn, specificTable)
 	if err != nil {
@@ -125,10 +131,66 @@ func (e *SchemaExtractor) LoadSchema(ctx context.Context, conn *pgx.Conn, specif
 		result[k] = abstract.NewTableSchema(ts)
 	}
 
+	if e.collapseInheritTables {
+		result, err = e.handleSchemasCollapasInheritTables(ctx, conn, result)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to load collapsed tables: %w", err)
+		}
+	}
+
 	return result, nil
 }
 
-// listSchemaQuery returns a SQL query without placeholders when the given table is `nil`, or with two placeholders otherwise.
+func (e *SchemaExtractor) handleSchemasCollapasInheritTables(ctx context.Context, conn *pgx.Conn, in abstract.DBSchema) (abstract.DBSchema, error) {
+	result := in
+
+	childToParent, err := MakeChildParentMap(ctx, conn)
+	if err != nil {
+		return nil, xerrors.Errorf("handleSchemasCollapasInheritTables - failed to make MakeChildParentMap, err: %w", err)
+	}
+
+	keys := maps.Keys(result)
+	for _, currTableID := range keys {
+		tableInfo, err := newTableInformationSchema(ctx, conn, abstract.TableDescription{
+			Schema: currTableID.Namespace,
+			Name:   currTableID.Name,
+			Filter: abstract.NoFilter,
+			EtaRow: uint64(0),
+			Offset: uint64(0),
+		})
+		if err != nil {
+			return nil, xerrors.Errorf("handleSchemasCollapasInheritTables - failed to create table information schema for table: %s, err: %w", currTableID.Fqtn(), err)
+		}
+		if tableInfo == nil {
+			return nil, xerrors.Errorf("handleSchemasCollapasInheritTables - newTableInformationSchema returned nil for table:%s", currTableID.Fqtn())
+		}
+		if !tableInfo.IsInherited {
+			continue
+		}
+
+		e.logger.Infof("handleSchemasCollapasInheritTables - table %s is a child, will take schema from parent table", currTableID.Fqtn())
+
+		parentTableID, ok := childToParent[currTableID]
+		if !ok {
+			return nil, xerrors.Errorf("handleSchemasCollapasInheritTables - failed to find parent table for table %s", currTableID.Fqtn())
+		}
+		parentDBSchema, err := e.LoadSchema(ctx, conn, &parentTableID)
+		if err != nil {
+			return nil, xerrors.Errorf("handleSchemasCollapasInheritTables - LoadSchema returned error for table: %s, err: %w", parentTableID.Fqtn(), err)
+		}
+		parentSchema := parentDBSchema[parentTableID]
+		if parentSchema == nil {
+			return nil, xerrors.Errorf("handleSchemasCollapasInheritTables - LoadSchema returned map without schema of parent table: %s", parentTableID.Fqtn())
+		}
+
+		e.logger.Infof("handleSchemasCollapasInheritTables - successfully changed schema for child table: %s for schema of parent table: %s", currTableID.Fqtn(), parentTableID.Fqtn())
+
+		result[currTableID] = parentSchema
+	}
+	return result, nil
+}
+
+// listSchemaQuery returns a SQL query without placeholders when the given table is `nil`, or with two placeholders otherwise
 func (e *SchemaExtractor) listSchemaQuery(specificTable *abstract.TableID) string {
 	return e.flavour.ListSchemaQuery(e.excludeViews, specificTable != nil, e.forbiddenSchemas, e.forbiddenTables)
 }
@@ -235,7 +297,7 @@ func (e *SchemaExtractor) tableToColumnsMapping(ctx context.Context, conn *pgx.C
 	return result, nil
 }
 
-// listPKeysQuery returns a SQL query without placeholders when the given table is `nil`, or with two placeholders otherwise.
+// listPKeysQuery returns a SQL query without placeholders when the given table is `nil`, or with two placeholders otherwise
 func (e *SchemaExtractor) listPKeysQuery(specificTable *abstract.TableID) string {
 	// See documentation on PostgreSQL service relations and views used in this query:
 	// https://www.postgresql.org/docs/9.4/catalog-pg-class.html
@@ -366,7 +428,7 @@ func (e *SchemaExtractor) tableToPKColumnsMapping(ctx context.Context, conn *pgx
 	return result, nil
 }
 
-// replicaIdentityFullListTablesQuery returns a SQL query without placeholders when the given table is `nil`, or with two placeholders otherwise.
+// replicaIdentityFullListTablesQuery returns a SQL query without placeholders when the given table is `nil`, or with two placeholders otherwise
 func (e *SchemaExtractor) replicaIdentityFullListTablesQuery(specificTable *abstract.TableID) string {
 	// See documentation on PostgreSQL service relations and views used in this query:
 	// https://www.postgresql.org/docs/9.4/catalog-pg-class.html

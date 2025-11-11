@@ -1,5 +1,3 @@
-//go:build !disable_ydb_provider
-
 package ydb
 
 import (
@@ -11,8 +9,10 @@ import (
 	"github.com/transferia/transferia/pkg/abstract/typesystem"
 )
 
-//go:embed typesystem.md
-var canonDoc string
+var (
+	//go:embed typesystem.md
+	canonDoc string
+)
 
 func TestTypeSystem(t *testing.T) {
 	rules := typesystem.RuleFor(ProviderType)

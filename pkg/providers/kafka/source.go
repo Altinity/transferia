@@ -1,5 +1,3 @@
-//go:build !disable_kafka_provider
-
 package kafka
 
 import (
@@ -27,7 +25,9 @@ import (
 	"go.ytsaurus.tech/library/go/core/log"
 )
 
-var noDataErr = xerrors.NewSentinel("no data")
+var (
+	noDataErr = xerrors.NewSentinel("no data")
+)
 
 type reader interface {
 	CommitMessages(ctx context.Context, msgs ...kgo.Record) error
@@ -517,10 +517,9 @@ func newSourceWithCallbacks(cfg *KafkaSource, logger log.Logger, registry metric
 		}),
 		kgo.ConsumeTopics(topics...),
 	)
-	switch cfg.OffsetPolicy {
-	case AtStartOffsetPolicy:
+	if cfg.OffsetPolicy == AtStartOffsetPolicy {
 		opts = append(opts, kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()))
-	case AtEndOffsetPolicy:
+	} else if cfg.OffsetPolicy == AtEndOffsetPolicy {
 		opts = append(opts, kgo.ConsumeResetOffset(kgo.NewOffset().AtEnd()))
 	}
 

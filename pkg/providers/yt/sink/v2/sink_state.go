@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package staticsink
 
 import (
@@ -11,7 +9,9 @@ import (
 	"go.ytsaurus.tech/yt/go/ypath"
 )
 
-var SinkYtState = "static_dynamic_sink_yt_state"
+var (
+	SinkYtState = "static_dynamic_sink_yt_state"
+)
 
 type ytState struct {
 	Tables []ypath.Path `json:"tx_id"`

@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -54,7 +52,7 @@ func (w *MongoClientWrapper) Close(ctx context.Context) error {
 var tmMongoConnectID atomic.Int64
 
 // Connect function should be one and only one valid method of creation mongo client
-// this method logs into 'lgr' about connection options.
+// this method logs into 'lgr' about connection options
 func Connect(ctx context.Context, opts MongoConnectionOptions, lgr log.Logger) (*MongoClientWrapper, error) {
 	if lgr == nil {
 		lgr = logger.Log

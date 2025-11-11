@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package model
 
 import (
@@ -67,10 +65,8 @@ func TestResolveHostsFromMDBCluster(t *testing.T) {
 
 	hosts, shards, err = ResolveHostsFromMDBCluster("cluster_id", "", 9000, 9001)
 	require.NoError(t, err)
-	require.ElementsMatch(t, hosts, []*clickhouse.Host{
-		{
-			Name: "host1", ShardName: "shard1", HTTPPort: 9001, NativePort: 9000,
-		},
+	require.ElementsMatch(t, hosts, []*clickhouse.Host{{
+		Name: "host1", ShardName: "shard1", HTTPPort: 9001, NativePort: 9000},
 		{Name: "host2", ShardName: "shard2", HTTPPort: 9001, NativePort: 9000},
 		{Name: "host3", ShardName: "shard3", HTTPPort: 9001, NativePort: 9000},
 	})

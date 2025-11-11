@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -32,7 +30,7 @@ func VerifyPostgresTables(src *PgSource, transfer *model.Transfer, lgr log.Logge
 		return xerrors.Errorf("unable to create storage: %w", err)
 	}
 	defer storage.Close()
-	tables, err := storage.TableList(nil)
+	tables, err := storage.TableListWithoutSkips(nil)
 	if err != nil {
 		return xerrors.Errorf("unable to get table map from storage: %w", err)
 	}

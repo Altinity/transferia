@@ -52,7 +52,10 @@ func CleanupTables(sink abstract.AsyncSink, tables abstract.TableMap, cleanupTyp
 		logger.Log.Infof("bulk cleanup (%v) done", string(cleanupType))
 		return nil
 	}
-	for len(toDelete) != 0 && len(toDelete) != prevToDelete {
+	for {
+		if len(toDelete) == 0 || len(toDelete) == prevToDelete {
+			break
+		}
 
 		i += 1
 		logger.Log.Infof("start %v iteration to cleanup (%v) tables", i, string(cleanupType))

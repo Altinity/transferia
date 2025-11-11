@@ -1,5 +1,3 @@
-//go:build !disable_s3_provider
-
 package storage
 
 import (
@@ -16,7 +14,7 @@ import (
 	"github.com/transferia/transferia/pkg/providers/s3/s3util"
 )
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ abstract.ShardingStorage = (*Storage)(nil)
 )

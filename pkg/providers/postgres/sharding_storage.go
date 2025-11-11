@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -25,6 +23,7 @@ import (
 //   - tables with non-empty 'Filter' (dolivochki or ad-hoc upload_table) - sharded
 //   - views where filled explicitKeys - sharded
 func (s *Storage) ShardTable(ctx context.Context, table abstract.TableDescription) ([]abstract.TableDescription, error) {
+
 	// prerequisites
 
 	if table.Offset != 0 {
@@ -39,7 +38,7 @@ func (s *Storage) ShardTable(ctx context.Context, table abstract.TableDescriptio
 		return nil, xerrors.Errorf("unexpected desired table size: %v, expect > 0", s.Config.DesiredTableSize)
 	}
 
-	if s.loadDescending {
+	if s.Config.CollapseInheritTables {
 		childs, err := s.getChildTables(ctx, table)
 		if err != nil {
 			logger.Log.Warnf("unable to load child tables: %v", err)
@@ -74,6 +73,7 @@ func (s *Storage) ShardTable(ctx context.Context, table abstract.TableDescriptio
 	splittedTableMetadata, err := currSharder.Split(ctx, table)
 	// dataSizeInBytes - can be 0 - for example for views, of if statistics for table is empty
 	// dataSizeInRows - can be 0 - for example for views & increments fullscan timeouted
+
 	if err != nil {
 		return nil, xerrors.Errorf("table splitter returned an error, err: %w", err)
 	}

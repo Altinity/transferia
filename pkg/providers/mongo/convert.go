@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -10,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ValueInMongoFormat extracts the column value at the given index and converts it to MongoDB format.
+// ValueInMongoFormat extracts the column value at the given index and converts it to MongoDB format
 func ValueInMongoFormat(item *abstract.ChangeItem, index int) (interface{}, error) {
 	if item == nil {
 		return nil, abstract.NewFatalError(xerrors.New("impossible to extract value from a nil item"))

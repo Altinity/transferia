@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package sink
 
 import (
@@ -83,7 +81,7 @@ func (b *bigRow) toValues() []interface{} {
 	}
 }
 
-// initializes YT client and sinker config.
+// initializes YT client and sinker config
 func initYt(t *testing.T, path string) (testCfg yt2.YtDestinationModel, client yt.Client) {
 	cfg := yt2.NewYtDestinationV1(yt2.YtDestination{
 		Path:          path,
@@ -254,8 +252,7 @@ func wrongOrderOfValuesInChangeItem(t *testing.T) {
 			Table:        tableID.Name,
 			ColumnNames:  bigRowSchema.Columns().ColumnNames(),
 			ColumnValues: values,
-		},
-	})
+		}})
 	require.ErrorContains(t, err, "unaccepted value false for yt type int64")
 	err = statTable.Push([]abstract.ChangeItem{{
 		TableSchema: bigRowSchema,

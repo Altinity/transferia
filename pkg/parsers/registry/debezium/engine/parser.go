@@ -29,7 +29,7 @@ type DebeziumImpl struct {
 
 // DoOne message with multiple debezium events inside.
 // Contains multiple debezium events only if messages are
-// serialized using schema registry and started with magic zero-byte.
+// serialized using schema registry and started with magic zero-byte
 func (p *DebeziumImpl) DoOne(partition abstract.Partition, buf []byte, offset uint64, writeTime time.Time) ([]byte, abstract.ChangeItem) {
 	msgLen := len(buf)
 	if len(buf) != 0 {
@@ -59,8 +59,10 @@ func (p *DebeziumImpl) DoOne(partition abstract.Partition, buf []byte, offset ui
 func (p *DebeziumImpl) DoBuf(partition abstract.Partition, buf []byte, offset uint64, writeTime time.Time) []abstract.ChangeItem {
 	result := make([]abstract.ChangeItem, 0, 1)
 	leastBuf := buf
-	for len(leastBuf) != 0 {
-
+	for {
+		if len(leastBuf) == 0 {
+			break
+		}
 		var changeItem abstract.ChangeItem
 		leastBuf, changeItem = p.DoOne(partition, leastBuf, offset, writeTime)
 		result = append(result, changeItem)
@@ -101,7 +103,7 @@ func (p *DebeziumImpl) Do(msg parsers.Message, partition abstract.Partition) []a
 	return result
 }
 
-// It's important to warn-up Schema-Registry cache single-thread, to not to DDoS Schema-Registry.
+// It's important to warn-up Schema-Registry cache single-thread, to not to DDoS Schema-Registry
 func (p *DebeziumImpl) warmUpSRCache(batch parsers.MessageBatch) {
 	type SRClient interface {
 		SchemaRegistryClient() *confluent.SchemaRegistryClient

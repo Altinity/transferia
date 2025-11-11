@@ -1,5 +1,3 @@
-//go:build !disable_s3_provider
-
 package list
 
 import (
@@ -20,7 +18,7 @@ import (
 
 const listSize = 1000
 
-// ListNewMyFiles - saves matched && new files into dispatcher.
+// ListNewMyFiles - saves matched && new files into dispatcher
 func ListNewMyFiles(
 	ctx context.Context,
 	logger log.Logger,

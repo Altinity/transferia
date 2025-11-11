@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package mysql
 
 import (
@@ -25,7 +23,6 @@ func TestNotMasterErrorWrapping(t *testing.T) {
 		return new(NotMasterError)
 	})
 }
-
 func TestTimezoneOffset(t *testing.T) {
 	tests := []struct {
 		name        string

@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 // Used only in sorted_table
 package sink
 
@@ -7,10 +5,8 @@ import (
 	"github.com/transferia/transferia/pkg/abstract"
 )
 
-type (
-	columnName  = string
-	columnIndex = int
-)
+type columnName = string
+type columnIndex = int
 
 type tableColumns struct {
 	columns []abstract.ColSchema

@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 // Used only in sorted_table
 package sink
 

@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package async
 
 import (
@@ -228,7 +226,7 @@ func NewPart(
 		shardsMu:    sync.RWMutex{},
 		dbName:      dbName,
 		id:          partID,
-		lgr:         log.With(lgr, log.String("partID", partID.PartID), log.String("table", partID.Fqtn())),
+		lgr:         log.With(lgr, log.String("partID", partID.PartID), log.String("table", partID.TableID.Fqtn())),
 		query:       "",
 		transferID:  transferID,
 		tableCols:   make(map[abstract.TableID]columntypes.TypeMapping),

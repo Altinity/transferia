@@ -1,5 +1,3 @@
-//go:build !disable_greenplum_provider
-
 package gpfdist
 
 import (

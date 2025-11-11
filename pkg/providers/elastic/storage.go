@@ -1,5 +1,3 @@
-//go:build !disable_elastic_provider
-
 package elastic
 
 import (
@@ -38,7 +36,7 @@ func (s *Storage) Close() {
 }
 
 func (s *Storage) Ping() error {
-	res, err := s.Client.Ping()
+	res, err := s.Client.API.Ping()
 	if err != nil {
 		return xerrors.Errorf("unable to ping cluster: %w", err)
 	}

@@ -1,13 +1,10 @@
 package dbt
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"os"
-	"sync"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/mount"
@@ -85,7 +82,7 @@ func (r *runner) dockerImageTag() string {
 }
 
 func (r *runner) initializeConfiguration(ctx context.Context) error {
-	if err := os.MkdirAll(dataDirectory(), (os.ModeDir | 0o700)); err != nil {
+	if err := os.MkdirAll(dataDirectory(), (os.ModeDir | 0700)); err != nil {
 		return xerrors.Errorf("failed to create the DBT data directory %q: %w", dataDirectory(), err)
 	}
 
@@ -106,7 +103,7 @@ func (r *runner) initializeConfiguration(ctx context.Context) error {
 	if err != nil {
 		return xerrors.Errorf("failed to marshal the DBT configuration of the destination database into YAML: %w", err)
 	}
-	if err := os.WriteFile(pathProfiles(), marshalledDestinationConfiguration, 0o644); err != nil {
+	if err := os.WriteFile(pathProfiles(), marshalledDestinationConfiguration, 0644); err != nil {
 		return xerrors.Errorf("failed to write the profile file to '%s': %w", pathProfiles(), err)
 	}
 
@@ -176,11 +173,11 @@ func (r *runner) run(ctx context.Context) error {
 		},
 		Namespace:     "",
 		RestartPolicy: v1.RestartPolicyNever,
-		PodName:       "dbt-runner",
+		PodName:       "",
 		Image:         r.fullImageID(),
 		LogDriver:     "local",
 		Network:       "host",
-		ContainerName: "runner",
+		ContainerName: "",
 		Volumes: []container.Volume{
 			{
 				Name:          "project",
@@ -195,83 +192,18 @@ func (r *runner) run(ctx context.Context) error {
 				ContainerPath: "/root/.dbt/profiles.yml",
 			},
 		},
-		Command: nil,
-		Args: []string{
+		Command: []string{
 			r.cfg.Operation,
 		},
-		// FIXME: make this configurable
-		Timeout:      12 * time.Hour,
+		Args:         nil,
+		Timeout:      0,
 		AttachStdout: true,
 		AttachStderr: true,
 		AutoRemove:   true,
 	}
 
-	stdoutReader, stderrReader, err := r.cw.Run(ctx, opts)
-	if err != nil {
+	if _, _, err := r.cw.Run(ctx, opts); err != nil {
 		return xerrors.Errorf("docker run failed: %w", err)
-	}
-	defer stdoutReader.Close()
-	if stderrReader != nil {
-		defer stderrReader.Close()
-	}
-
-	// Use WaitGroup to read both streams concurrently until EOF
-	var wg sync.WaitGroup
-
-	// Channel for collecting errors
-	errCh := make(chan error, 2)
-
-	// Read stdout line by line
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		scanner := bufio.NewScanner(stdoutReader)
-		for scanner.Scan() {
-			// Log each line as it's read
-			logger.Log.Info("stdout: " + scanner.Text())
-		}
-		if err := scanner.Err(); err != nil {
-			errCh <- xerrors.Errorf("error scanning stdout: %w", err)
-		}
-	}()
-
-	if stderrReader != nil {
-		wg.Add(1)
-		// Read stderr line by line
-		go func() {
-			defer wg.Done()
-			scanner := bufio.NewScanner(stderrReader)
-			for scanner.Scan() {
-				// Log each line as it's read
-				logger.Log.Warn("stderr: " + scanner.Text())
-			}
-			if err := scanner.Err(); err != nil {
-				errCh <- xerrors.Errorf("error scanning stderr: %w", err)
-			}
-		}()
-	}
-
-	// Wait for both streams to be fully read
-	wg.Wait()
-	close(errCh)
-
-	// Collect any errors
-	var errs []error
-	for e := range errCh {
-		errs = append(errs, e)
-	}
-
-	// Return combined error if any
-	if len(errs) > 0 {
-		var combinedErr error
-		for _, e := range errs {
-			if combinedErr == nil {
-				combinedErr = e
-			} else {
-				combinedErr = xerrors.Errorf("%v; %w", combinedErr, e)
-			}
-		}
-		return combinedErr
 	}
 
 	return nil

@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -66,12 +64,7 @@ type Storage struct {
 	typeNameToOID       TypeNameToOIDMap
 	ShardedStateLSN     string
 	ShardedStateTS      time.Time
-	loadDescending      bool
 	sExTime             time.Time
-}
-
-func (s *Storage) SetLoadDescending(loadDescending bool) {
-	s.loadDescending = loadDescending
 }
 
 func (s *Storage) SnapshotLSN() string {
@@ -278,22 +271,95 @@ func (s *Storage) OrderedRead(
 func (s *Storage) Ping() error {
 	return nil
 }
-func (s *Storage) TableList(filter abstract.IncludeTableList) (abstract.TableMap, error) {
+
+func (s *Storage) handleSkips(inTableMap abstract.TableMap) (abstract.TableMap, error) {
+	ctx := context.Background()
+
+	// handle partitioned tables
+
+	result, err := func(in abstract.TableMap) (abstract.TableMap, error) {
+		childToParent, err := s.GetInheritedTables(ctx)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to GetInheritedTables, err: %w", err)
+		}
+		if s.Config.CollapseInheritTables {
+			result, err := handlePartitionedTables(logger.Log, in, childToParent)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to handlePartitionedTables, err: %w", err)
+			}
+			return result, nil
+		} else {
+			result, err := handleNotPartitionedTables(logger.Log, in, childToParent)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to handleNotPartitionedTables, err: %w", err)
+			}
+			return result, nil
+		}
+	}(inTableMap)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to handle partitioned tables, err: %w", err)
+	}
+
+	// handle view
+
+	if s.IsHomo {
+		conn, err := s.Conn.Acquire(ctx)
+		if err != nil {
+			return nil, xerrors.Errorf("unable to acquire conn: %w", err)
+		}
+		defer conn.Release()
+
+		result = func(in abstract.TableMap) abstract.TableMap {
+			currResult := abstract.TableMap{}
+			for tableID, tableInfo := range in {
+				if skipViewIfHomogeneous(s.IsHomo, tableInfo.IsView) {
+					logger.Log.Infof("skip table %s, bcs it's a view", tableID.Fqtn())
+					continue
+				}
+				currResult[tableID] = tableInfo
+			}
+			return currResult
+		}(result)
+	}
+
+	return result, nil
+}
+
+func (s *Storage) tableList(filter abstract.IncludeTableList, applySkips bool) (abstract.TableMap, error) {
 	var tableMapResult abstract.TableMap
 	err := s.tx(func(ctx context.Context, tx pgx.Tx) error {
-		tableMapTemporary, err := s.tableList(ctx, tx, filter)
+		tableMapTemporary, err := s.tableListImpl(ctx, tx, filter)
 		if err != nil {
 			return err
 		}
 		tableMapResult = tableMapTemporary
 		return nil
 	}, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	if err != nil {
+		return nil, xerrors.Errorf("failed to tableList, err: %w", err)
+	}
 
+	if applySkips {
+		tableMapResult, err = s.handleSkips(tableMapResult)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to handleSkips, err: %w", err)
+		}
+	}
+
+	logger.Log.Info("Extracted tables (filtered)", log.String("tables", tableIDWithInfos(tableMapToArr(tableMapResult)).String()))
 	return tableMapResult, err
 }
 
+func (s *Storage) TableList(filter abstract.IncludeTableList) (abstract.TableMap, error) {
+	return s.tableList(filter, true)
+}
+
+func (s *Storage) TableListWithoutSkips(filter abstract.IncludeTableList) (abstract.TableMap, error) {
+	return s.tableList(filter, false)
+}
+
 // TableList in PostgreSQL returns a table map with schema
-func (s *Storage) tableList(ctx context.Context, tx pgx.Tx, filter abstract.IncludeTableList) (abstract.TableMap, error) {
+func (s *Storage) tableListImpl(ctx context.Context, tx pgx.Tx, filter abstract.IncludeTableList) (abstract.TableMap, error) {
 	warnTooLongExec := util.DelayFunc(
 		func() {
 			logger.Log.Warn("Schema retrieval takes longer than usual. Check the list of tables included in the transfer and the load of source database.")
@@ -307,7 +373,8 @@ func (s *Storage) tableList(ctx context.Context, tx pgx.Tx, filter abstract.Incl
 		WithExcludeViews(s.IsHomo).
 		WithForbiddenSchemas(s.ForbiddenSchemas).
 		WithForbiddenTables(s.ForbiddenTables).
-		WithFlavour(s.Flavour)
+		WithFlavour(s.Flavour).
+		WithCollapseInheritTables(s.Config.CollapseInheritTables)
 
 	tablesListUnfiltered, ts, err := sEx.TablesList(ctx, tx)
 	if err != nil {
@@ -330,7 +397,6 @@ func (s *Storage) tableList(ctx context.Context, tx pgx.Tx, filter abstract.Incl
 			}
 			tablesListFiltered = append(tablesListFiltered, tIDWithInfo)
 		}
-		logger.Log.Info("Extracted tables (filtered)", log.String("tables", tableIDWithInfos(tablesListFiltered).String()))
 		for _, table := range tablesListFiltered {
 			if err := loadIntoTableMapForTable(ctx, table, sEx, tx.Conn(), result); err != nil {
 				return nil, xerrors.Errorf("failed to load schema for table %s: %w", table.ID.Fqtn(), err)
@@ -373,6 +439,7 @@ func loadIntoTableMapForTable(ctx context.Context, table tableIDWithInfo, extrac
 
 func (s *Storage) GetInheritedTables(ctx context.Context) (map[abstract.TableID]abstract.TableID, error) {
 	tablesParents, err := MakeChildParentMap(ctx, s.Conn)
+
 	if err != nil {
 		logger.Log.Error("failed query for extraction pg inherits", log.Error(err))
 		return nil, xerrors.Errorf("failed query for extraction pg inherits: %w", err)
@@ -480,7 +547,7 @@ func (s *Storage) TableExists(table abstract.TableID) (bool, error) {
 	return exists, nil
 }
 
-// RowCount queries the storage and returns the exact number of rows in the given table.
+// RowCount queries the storage and returns the exact number of rows in the given table
 func RowCount(ctx context.Context, conn *pgx.Conn, table *abstract.TableDescription) (uint64, error) {
 	query := exactCountQuery(table)
 	var count uint64
@@ -496,32 +563,17 @@ func MakeSetSQL(key string, value string) string {
 }
 
 type loadTableMode struct {
-	table          abstract.TableDescription
-	tableInfo      tableInformationSchema
-	isHomo         bool
-	loadDescending bool // show whether we should load all child tables with parent table ID
+	table     abstract.TableDescription
+	tableInfo tableInformationSchema
+	isHomo    bool
 }
 
-func (m *loadTableMode) ExcludeDescendants() (exclude bool, reason string) {
-	if m.tableInfo.HasSubclass && !m.loadDescending {
+func (m *loadTableMode) ExcludeDescendants(collapseInheritTables bool) (exclude bool, reason string) {
+	if m.tableInfo.HasSubclass && !collapseInheritTables {
 		exclude = true
 		reason = fmt.Sprintf("Table %v is parent, use ONLY statement for selecting from it", m.table.Fqtn())
 	}
 	return exclude, reason
-}
-
-func (m *loadTableMode) SkipLoading() (skip bool, reason string) {
-	if m.tableInfo.IsView && m.isHomo {
-		skip = true
-		reason = fmt.Sprintf("Table %s is a view, skipping it", m.table.Fqtn())
-	} else if m.tableInfo.IsPartitioned && !m.loadDescending {
-		skip = true
-		reason = fmt.Sprintf("Table %v is partitioned, skipping it because it is empty and all data is in partitions", m.table.Fqtn())
-	} else if m.tableInfo.IsInherited && m.loadDescending {
-		skip = true
-		reason = fmt.Sprintf("Table %v is child, but we load all in all-descending mode, skipping it because we may duplicate data within descendings", m.table.Fqtn())
-	}
-	return skip, reason
 }
 
 func (s *Storage) discoverTableLoadMode(ctx context.Context, conn pgxtype.Querier, table abstract.TableDescription) (*loadTableMode, error) {
@@ -530,10 +582,9 @@ func (s *Storage) discoverTableLoadMode(ctx context.Context, conn pgxtype.Querie
 		return nil, xerrors.Errorf("failed to discover table information: %w", err)
 	}
 	return &loadTableMode{
-		table:          table,
-		tableInfo:      *tableInfo,
-		isHomo:         s.IsHomo,
-		loadDescending: s.loadDescending,
+		table:     table,
+		tableInfo: *tableInfo,
+		isHomo:    s.IsHomo,
 	}, nil
 }
 
@@ -610,12 +661,7 @@ func (s *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 		return xerrors.Errorf("failed to discover table %v loading mode: %w", table.Fqtn(), err)
 	}
 
-	if skip, reason := loadMode.SkipLoading(); skip {
-		logger.Log.Infof("Skip load table %v: %v", table.Fqtn(), reason)
-		return nil
-	}
-
-	excludeDescendants, reason := loadMode.ExcludeDescendants()
+	excludeDescendants, reason := loadMode.ExcludeDescendants(s.Config.CollapseInheritTables)
 	if excludeDescendants {
 		logger.Log.Infof("Use ONLY statement for selecting from table %v: %v", table.Fqtn(), reason)
 	}
@@ -685,6 +731,7 @@ func (s *Storage) LoadSchemaForTable(ctx context.Context, conn *pgx.Conn, table 
 		WithForbiddenSchemas(s.ForbiddenSchemas).
 		WithForbiddenTables(s.ForbiddenTables).
 		WithFlavour(s.Flavour).
+		WithCollapseInheritTables(s.Config.CollapseInheritTables).
 		LoadSchema(ctx, conn, &tableID)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to query schema from the source database: %w", err)
@@ -765,12 +812,7 @@ func (s *Storage) LoadRandomSample(table abstract.TableDescription, pusher abstr
 		return xerrors.Errorf("failed to discover table %v loading mode: %w", table.Fqtn(), err)
 	}
 
-	if skip, reason := loadMode.SkipLoading(); skip {
-		logger.Log.Infof("Skip load table %v: %v", table.Fqtn(), reason)
-		return nil
-	}
-
-	excludeDescendants, reason := loadMode.ExcludeDescendants()
+	excludeDescendants, reason := loadMode.ExcludeDescendants(s.Config.CollapseInheritTables)
 	if excludeDescendants {
 		logger.Log.Infof("Use ONLY statement for selecting from table %v: %v", table.Fqtn(), reason)
 	}
@@ -779,9 +821,7 @@ func (s *Storage) LoadRandomSample(table abstract.TableDescription, pusher abstr
 	if err != nil {
 		return xerrors.Errorf("unable to begin transaction: %w", err)
 	}
-	defer func() {
-		_ = tx.Commit(ctx)
-	}()
+	defer tx.Commit(ctx)
 
 	schema, err := NewSchemaExtractor().
 		WithUseFakePrimaryKey(s.Config.UseFakePrimaryKey).
@@ -821,12 +861,7 @@ func (s *Storage) loadSampleBySet(ctx context.Context, tx pgx.Tx, startTime time
 		return xerrors.Errorf("failed to discover table %v loading mode: %w", table.Fqtn(), err)
 	}
 
-	if skip, reason := loadMode.SkipLoading(); skip {
-		logger.Log.Infof("Skip load table %v: %v", table.Fqtn(), reason)
-		return nil
-	}
-
-	excludeDescendants, reason := loadMode.ExcludeDescendants()
+	excludeDescendants, reason := loadMode.ExcludeDescendants(s.Config.CollapseInheritTables)
 	if excludeDescendants {
 		logger.Log.Infof("Use ONLY statement for selecting from table %v: %v", table.Fqtn(), reason)
 	}
@@ -894,12 +929,7 @@ func (s *Storage) loadTopBottomSample(ctx context.Context, tx pgx.Tx, startTime 
 		return xerrors.Errorf("failed to discover table %v loading mode: %w", table.Fqtn(), err)
 	}
 
-	if skip, reason := loadMode.SkipLoading(); skip {
-		logger.Log.Infof("Skip load table %v: %v", table.Fqtn(), reason)
-		return nil
-	}
-
-	excludeDescendants, reason := loadMode.ExcludeDescendants()
+	excludeDescendants, reason := loadMode.ExcludeDescendants(s.Config.CollapseInheritTables)
 	if excludeDescendants {
 		logger.Log.Infof("Use ONLY statement for selecting from table %v: %v", table.Fqtn(), reason)
 	}
@@ -978,7 +1008,7 @@ func ParseLsn(lsn string) uint64 {
 	return outputLsn
 }
 
-// go-sumtype:decl StorageOpt.
+// go-sumtype:decl StorageOpt
 type StorageOpt interface {
 	isStorageOpt()
 }
@@ -1008,7 +1038,7 @@ func (s *Storage) RunSlotMonitor(ctx context.Context, serverSource interface{}, 
 	}
 }
 
-// Named BeginPGSnapshot to NOT match abstract.SnapshotableStorage.
+// Named BeginPGSnapshot to NOT match abstract.SnapshotableStorage
 func (s *Storage) BeginPGSnapshot(ctx context.Context) error {
 	rb := util.Rollbacks{}
 	defer rb.Do()
@@ -1073,7 +1103,7 @@ func isAurora(ctx context.Context, conn pgxtype.Querier, lgr log.Logger) bool {
 	return true
 }
 
-// Named EndPGSnapshot to NOT match abstract.SnapshotableStorage.
+// Named EndPGSnapshot to NOT match abstract.SnapshotableStorage
 func (s *Storage) EndPGSnapshot(ctx context.Context) error {
 	if s.snapshotConnection == nil || s.snapshotTransaction == nil {
 		return nil
@@ -1144,7 +1174,7 @@ func (s *Storage) LoadQueryTable(ctx context.Context, tableQuery tablequery.Tabl
 		return xerrors.Errorf("failed to discover table %v loading mode: %w", tableDescription.Fqtn(), err)
 	}
 
-	excludeDescendants, reason := loadMode.ExcludeDescendants()
+	excludeDescendants, reason := loadMode.ExcludeDescendants(s.Config.CollapseInheritTables)
 	if excludeDescendants {
 		logger.Log.Infof("Use ONLY statement for selecting from table %v: %v", tableDescription.Fqtn(), reason)
 	}
@@ -1247,11 +1277,6 @@ func (s *Storage) loadTable(
 	schema *abstract.TableSchema,
 	startTime time.Time,
 ) error {
-	if skip, reason := loadMode.SkipLoading(); skip {
-		logger.Log.Infof("Skip load table %v: %v", table.Fqtn(), reason)
-		return nil
-	}
-
 	if _, err := conn.Exec(ctx, MakeSetSQL("statement_timeout", "0")); err != nil {
 		return xerrors.Errorf("failed to SET statement_timeout: %w", err)
 	}
@@ -1369,7 +1394,6 @@ func NewStorage(config *PgStorageParams, opts ...StorageOpt) (*Storage, error) {
 		typeNameToOID:       typeNameToOID,
 		ShardedStateLSN:     "",
 		ShardedStateTS:      time.Time{},
-		loadDescending:      false,
 		sExTime:             time.Time{},
 	}
 	return storage, nil

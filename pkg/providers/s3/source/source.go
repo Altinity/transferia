@@ -1,5 +1,3 @@
-//go:build !disable_s3_provider
-
 package source
 
 import (
@@ -45,8 +43,10 @@ func (s *S3Source) Run(sink abstract.AsyncSink) error {
 }
 
 func (s *S3Source) waitPusherEmpty() {
-	for !s.pusher.IsEmpty() {
-
+	for {
+		if s.pusher.IsEmpty() {
+			break
+		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }

@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package lfstaging
 
 import (
@@ -74,4 +72,5 @@ func TestIntermediateWriterRotatesOnBytes(t *testing.T) {
 	require.NoError(t, err, "Write throws")
 
 	require.Equal(t, int64(6), iw.writtenBytes)
+
 }

@@ -1,5 +1,3 @@
-//go:build !disable_kafka_provider
-
 package kafka
 
 import (
@@ -83,7 +81,7 @@ func (o *KafkaConnectionOptions) TLSConfig() (*tls.Config, error) {
 	}, nil
 }
 
-// BrokersHostnames returns a list of brokers' hostnames.
+// BrokersHostnames returns a list of brokers' hostnames
 func (o *KafkaConnectionOptions) BrokersHostnames() ([]string, error) {
 	result := make([]string, len(o.Brokers))
 	for i, b := range o.Brokers {

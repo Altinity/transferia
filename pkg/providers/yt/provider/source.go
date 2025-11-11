@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package provider
 
 import (
@@ -31,7 +29,7 @@ type source struct {
 	metrics *stats.SourceStats
 }
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ base.SnapshotProvider = (*source)(nil)
 )

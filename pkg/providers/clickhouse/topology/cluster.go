@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package topology
 
 import "github.com/transferia/transferia/pkg/connection/clickhouse"

@@ -1,5 +1,3 @@
-//go:build !disable_kafka_provider
-
 package kafka
 
 import (
@@ -59,7 +57,7 @@ func ResolveOnPremBrokers(connectionOpt *KafkaConnectionOptions, kafkaAuth *Kafk
 	if err != nil {
 		return nil, xerrors.Errorf("Can't get brokers: %w", err)
 	}
-	brokerList := make([]string, 0, len(gotBrokers))
+	var brokerList = make([]string, 0, len(gotBrokers))
 	for _, broker := range gotBrokers {
 		brokerList = append(brokerList, broker.Host)
 	}

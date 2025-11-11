@@ -1,5 +1,3 @@
-//go:build !disable_ydb_provider
-
 package ydb
 
 import (
@@ -96,6 +94,7 @@ func (s *YdbSource) ServiceAccountIDs() []string {
 func (s *YdbSource) IsSource() {}
 
 func (s *YdbSource) WithDefaults() {
+
 	if s.ChangeFeedMode == "" {
 		s.ChangeFeedMode = ChangeFeedModeNewImage
 	}

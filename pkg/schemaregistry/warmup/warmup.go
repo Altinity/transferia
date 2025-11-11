@@ -16,7 +16,7 @@ import (
 )
 
 // It's important to warn-up Schema-Registry cache single-thread, to not to DDoS Schema-Registry
-// mutex we need not bcs of something is thread-unsafe, but to reduce schema-registry RPS.
+// mutex we need not bcs of something is thread-unsafe, but to reduce schema-registry RPS
 func WarmUpSRCache(logger log.Logger, mutex *sync.Mutex, batch parsers.MessageBatch, schemaRegistryClient *confluent.SchemaRegistryClient, notFoundIsOk bool) {
 	extractSchemaID := func(buf []byte) (uint32, []byte) {
 		msgLen := len(buf)
@@ -35,8 +35,10 @@ func WarmUpSRCache(logger log.Logger, mutex *sync.Mutex, batch parsers.MessageBa
 	var schemaID uint32 = 0
 	for _, currMsg := range batch.Messages {
 		leastBuf := currMsg.Value
-		for len(leastBuf) != 0 {
-
+		for {
+			if len(leastBuf) == 0 {
+				break
+			}
 			schemaID, leastBuf = extractSchemaID(leastBuf)
 			schemaIDs.Add(schemaID)
 		}

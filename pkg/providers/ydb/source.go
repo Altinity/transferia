@@ -1,5 +1,3 @@
-//go:build !disable_ydb_provider
-
 package ydb
 
 import (
@@ -113,7 +111,7 @@ func (s *Source) run(parseQ *parsequeue.WaitableParseQueue[[]batchWithSize]) err
 			messagesCount += len(ydbBatch.Messages)
 		}
 
-		if !s.memThrottler.ExceededLimits() && (time.Since(lastPushTime) < bufferFlushingInterval || bufSize <= 0) {
+		if !s.memThrottler.ExceededLimits() && !(time.Since(lastPushTime) >= bufferFlushingInterval && bufSize > 0) {
 			continue
 		}
 
@@ -301,6 +299,7 @@ func discoverChangeFeedMode(ydbClient *ydb.Driver, tablePath, changeFeedName str
 		}
 		return nil
 	}, table.WithIdempotent()) // User already created changefeed and specified its name, so we only try to get it's mode.
+
 	if err != nil {
 		return "", xerrors.Errorf("failed to define ChangeFeed Mode: %w", err)
 	}

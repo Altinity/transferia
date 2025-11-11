@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -62,7 +60,7 @@ func (d *PgDestination) GetConnectionID() string {
 
 func (d *PgDestination) IsAlterable() {}
 
-// AllHosts - function to move from legacy 'Host' into modern 'Hosts'.
+// AllHosts - function to move from legacy 'Host' into modern 'Hosts'
 func (d *PgDestination) AllHosts() []string {
 	return utils.HandleHostAndHosts(d.Host, d.Hosts)
 }
@@ -224,6 +222,7 @@ func (d *PgDestination) ToStorageParams() *PgStorageParams {
 		ClusterID:                   d.ClusterID,
 		TLSFile:                     d.TLSFile,
 		EnableTLS:                   d.EnableTLS,
+		CollapseInheritTables:       false,
 		UseFakePrimaryKey:           false,
 		DBFilter:                    nil,
 		IgnoreUserTypes:             false,

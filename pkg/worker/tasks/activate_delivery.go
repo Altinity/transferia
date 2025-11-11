@@ -156,7 +156,9 @@ func ActivateDelivery(ctx context.Context, task *model.TransferOperation, cp coo
 				return snapshotLoader.UploadTables(ctx, tables.ConvertToTableDescriptions(), true)
 			},
 			CheckIncludes: func(tables abstract.TableMap) error {
-				return snapshotLoader.CheckIncludeDirectives(tables.ConvertToTableDescriptions())
+				return snapshotLoader.CheckIncludeDirectives(tables.ConvertToTableDescriptions(), func() (abstract.Storage, error) {
+					return storage.NewStorage(snapshotLoader.transfer, coordinator.NewFakeClient(), snapshotLoader.registry)
+				})
 			},
 			Rollbacks: &rollbacks,
 		}); err != nil {
@@ -173,7 +175,7 @@ func ActivateDelivery(ctx context.Context, task *model.TransferOperation, cp coo
 	return nil
 }
 
-// ObtainAllSrcTables uses a temporary Storage for transfer source to obtain a list of tables.
+// ObtainAllSrcTables uses a temporary Storage for transfer source to obtain a list of tables
 func ObtainAllSrcTables(transfer *model.Transfer, registry metrics.Registry) (abstract.TableMap, error) {
 	srcStorage, err := storage.NewStorage(transfer, coordinator.NewFakeClient(), registry)
 	if err != nil {

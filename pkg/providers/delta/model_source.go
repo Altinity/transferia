@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package delta
 
 import (
@@ -8,7 +6,7 @@ import (
 	s3_provider "github.com/transferia/transferia/pkg/providers/s3"
 )
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ model.Source = (*DeltaSource)(nil)
 )

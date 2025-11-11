@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package yt
 
 import (
@@ -19,7 +17,9 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-var defaultHandleParams = NewHandleParams(50)
+var (
+	defaultHandleParams = NewHandleParams(50)
+)
 
 type ColumnSchema struct {
 	Name    string      `yson:"name" json:"name"`
@@ -263,8 +263,7 @@ func MountUnmountWrapper(
 	ctx context.Context,
 	ytClient yt.Client,
 	path ypath.Path,
-	f func(context.Context, yt.Client, ypath.Path) error,
-) error {
+	f func(context.Context, yt.Client, ypath.Path) error) error {
 	customCtx, cancel := context.WithTimeout(ctx, time.Minute*5)
 	defer cancel()
 	return f(customCtx, ytClient, path)

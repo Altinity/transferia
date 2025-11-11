@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -18,7 +16,7 @@ import (
 )
 
 // namespaceOnlyWatcher subscribes for changes in database
-// this is a default watcher (old behaviour).
+// this is a default watcher (old behaviour)
 type databaseFullDocumentWatcher struct {
 	logger       log.Logger
 	database     *mongo.Database

@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package sink
 
 import (
@@ -262,7 +260,7 @@ func unionSchemas(current, expected schema.Schema) (schema.Schema, error) {
 		}
 	}
 
-	// preserve order of deleted non key columns to avoid unnecessary alters if old rows would be inserted
+	//preserve order of deleted non key columns to avoid unnecessary alters if old rows would be inserted
 	for _, col := range current.Columns {
 		_, notAdded := currentColumns[col.Name]
 		if notAdded {
@@ -566,7 +564,7 @@ func doTextConversion(val interface{}, ytType string) (string, error) {
 	return "", xerrors.Errorf("unaccepted value %v for yt type %v", val, ytType)
 }
 
-// TODO: Completely remove this legacy hack.
+// TODO: Completely remove this legacy hack
 func fixDatetime(c *abstract.ColSchema) schema.Type {
 	return schema.Type(strings.ToLower(c.DataType))
 }

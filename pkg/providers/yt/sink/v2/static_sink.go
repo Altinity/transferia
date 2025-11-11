@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package staticsink
 
 import (
@@ -24,12 +22,14 @@ import (
 	"go.ytsaurus.tech/yt/go/yt"
 )
 
-var expectedKinds = set.New(
-	abstract.InitShardedTableLoad,
-	abstract.InitTableLoad,
-	abstract.InsertKind,
-	abstract.DoneTableLoad,
-	abstract.DoneShardedTableLoad,
+var (
+	expectedKinds = set.New(
+		abstract.InitShardedTableLoad,
+		abstract.InitTableLoad,
+		abstract.InsertKind,
+		abstract.DoneTableLoad,
+		abstract.DoneShardedTableLoad,
+	)
 )
 
 type staticTableWriter interface {

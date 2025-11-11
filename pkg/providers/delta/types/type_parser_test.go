@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package types
 
 import (
@@ -35,6 +33,7 @@ func Test_parseDataType(t *testing.T) {
 }
 
 func TestDataTypeSerde(t *testing.T) {
+
 	check := func(dataType DataType) {
 		j, err := ToJSON(dataType)
 		require.NoError(t, err)
@@ -76,6 +75,7 @@ func TestDataTypeSerde(t *testing.T) {
 }
 
 func TestDataTypeSerde_fieldMetadata(t *testing.T) {
+
 	emptyMetadata := map[string]interface{}{}
 	singleStringMetadata := map[string]interface{}{"test": "test_value"}
 	singleBooleanMetadata := map[string]interface{}{"test": true}

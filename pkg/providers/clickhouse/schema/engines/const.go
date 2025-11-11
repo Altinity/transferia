@@ -19,7 +19,7 @@ const (
 	replicatedVersionedCollapsingMergeTree = engineType("ReplicatedVersionedCollapsingMergeTree")
 	replicatedGraphiteMergeTree            = engineType("ReplicatedGraphiteMergeTree")
 
-	// SharedMergeTree family is available on ch.inc exclusively.
+	// SharedMergeTree family is available on ch.inc exclusively
 	sharedMergeTree                    = engineType("SharedMergeTree")
 	sharedReplacingMergeTree           = engineType("SharedReplacingMergeTree")
 	sharedSummingMergeTree             = engineType("SharedSummingMergeTree")

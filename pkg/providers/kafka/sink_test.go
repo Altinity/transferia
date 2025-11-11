@@ -1,5 +1,3 @@
-//go:build !disable_kafka_provider
-
 package kafka
 
 import (
@@ -20,13 +18,11 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-var (
-	sinkTestTypicalChangeItem *abstract.ChangeItem
-	sinkTestMirrorChangeItem  *abstract.ChangeItem
-)
+var sinkTestTypicalChangeItem *abstract.ChangeItem
+var sinkTestMirrorChangeItem *abstract.ChangeItem
 
 func init() {
-	testChangeItem := `{"id":601,"nextlsn":25051056,"commitTime":1643660670333075000,"txPosition":0,"kind":"insert","schema":"public","table":"basic_types15","columnnames":["id","val"],"columnvalues":[1,-8388605],"table_schema":[{"path":"","name":"id","type":"int32","key":true,"required":false,"original_type":"pg:integer","original_type_params":null},{"path":"","name":"val","type":"int32","key":false,"required":false,"original_type":"pg:integer","original_type_params":null}],"oldkeys":{},"tx_id":"","query":""}`
+	var testChangeItem = `{"id":601,"nextlsn":25051056,"commitTime":1643660670333075000,"txPosition":0,"kind":"insert","schema":"public","table":"basic_types15","columnnames":["id","val"],"columnvalues":[1,-8388605],"table_schema":[{"path":"","name":"id","type":"int32","key":true,"required":false,"original_type":"pg:integer","original_type_params":null},{"path":"","name":"val","type":"int32","key":false,"required":false,"original_type":"pg:integer","original_type_params":null}],"oldkeys":{},"tx_id":"","query":""}`
 	sinkTestTypicalChangeItem, _ = abstract.UnmarshalChangeItem([]byte(testChangeItem))
 
 	sinkTestMirrorChangeItemTmp := abstract.MakeRawMessage([]byte("my_key"), "foo_bar", time.Time{}, "foo_bar", 0, 0, []byte("blablabla"))

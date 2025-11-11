@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package mysql
 
 import (
@@ -22,7 +20,8 @@ type EventHandler interface {
 	String() string
 }
 
-type DummyEventHandler struct{}
+type DummyEventHandler struct {
+}
 
 func (h *DummyEventHandler) OnRotate(*replication.RotateEvent) error          { return nil }
 func (h *DummyEventHandler) OnTableChanged(schema string, table string) error { return nil }

@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package mysql
 
 import (
@@ -148,7 +146,6 @@ func TestDropTableExp(t *testing.T) {
 		}
 	}
 }
-
 func TestWithoutSchemeExp(t *testing.T) {
 	cases := []replication.QueryEvent{
 		{

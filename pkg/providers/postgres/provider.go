@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -59,7 +57,9 @@ const (
 	TableLSN            = abstract.TableLSN            // "__data_transfer_lsn"
 )
 
-// To verify providers contract implementation.
+const ProviderType = abstract.ProviderType("pg")
+
+// To verify providers contract implementation
 var (
 	_ providers.Sampleable  = (*Provider)(nil)
 	_ providers.Snapshot    = (*Provider)(nil)
@@ -316,9 +316,6 @@ func (p *Provider) Storage() (abstract.Storage, error) {
 		return nil, xerrors.Errorf("failed to create a PostgreSQL storage: %w", err)
 	}
 	storage.IsHomo = src.IsHomo
-	if p.transfer.DataObjects != nil && len(p.transfer.DataObjects.IncludeObjects) > 0 {
-		storage.loadDescending = src.CollapseInheritTables // For include objects we force to load parent table with all their children
-	}
 	return storage, nil
 }
 

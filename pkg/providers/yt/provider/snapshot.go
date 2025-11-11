@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package provider
 
 import (
@@ -22,13 +20,13 @@ import (
 	"go.ytsaurus.tech/yt/go/yt"
 )
 
-// 16k batches * 2 MiByte per batch should be enough to fill buffer of size 32GiB.
+// 16k batches * 2 MiByte per batch should be enough to fill buffer of size 32GiB
 const (
 	PushBatchSize    = 2 * humanize.MiByte
 	MaxInflightCount = 16384 // Max number of successfuly AsyncPush'd batches for which we may wait response from pusher
 )
 
-// Parallel table reader settings. These values are taken from YT python wrapper default config.
+// Parallel table reader settings. These values are taken from YT python wrapper default config
 const (
 	parallelReadBatchSize = 8 * humanize.MiByte
 	parallelTableReaders  = 10

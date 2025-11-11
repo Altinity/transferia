@@ -1,5 +1,3 @@
-//go:build !disable_greenplum_provider
-
 package greenplum
 
 import (
@@ -23,10 +21,8 @@ import (
 
 const tableIsShardedKey = "Offset column used as worker index"
 
-type (
-	checkConnectionFunc func(ctx context.Context, pgs *postgres.Storage, expectedSP GPSegPointer) error
-	newFlavorFunc       func(in *Storage) postgres.DBFlavour
-)
+type checkConnectionFunc func(ctx context.Context, pgs *postgres.Storage, expectedSP GPSegPointer) error
+type newFlavorFunc func(in *Storage) postgres.DBFlavour
 
 type Storage struct {
 	// config is NOT read-only and can change during execution
@@ -406,7 +402,7 @@ func (s *Storage) SetShardingContext(shardedState []byte) error {
 }
 
 // Named BeginGPSnapshot to NOT match abstract.SnapshotableStorage;
-// BeginGPSnapshot starts a Greenplum cluster-global transaction;.
+// BeginGPSnapshot starts a Greenplum cluster-global transaction;
 func (s *Storage) BeginGPSnapshot(ctx context.Context, tables []abstract.TableDescription) error {
 	if err := s.ensureCoordinatorTx(ctx); err != nil {
 		return xerrors.Errorf("failed to start a transaction on Greenplum %s: %w", Coordinator().String(), err)
@@ -458,7 +454,7 @@ func (s *Storage) ensureCoordinatorTx(ctx context.Context) error {
 }
 
 // Named EndGPSnapshot to NOT match abstract.SnapshotableStorage;
-// EndGPSnapshot ceases a Greenplum cluster-global transaction;.
+// EndGPSnapshot ceases a Greenplum cluster-global transaction;
 func (s *Storage) EndGPSnapshot(ctx context.Context) error {
 	s.livenessMonitor.Close()
 
@@ -564,7 +560,7 @@ func (s *Storage) RunSlotMonitor(ctx context.Context, serverSource interface{}, 
 		return &abstract.StubSlotKiller{}, s.livenessMonitor.C(), nil
 	}
 
-	if s.workersCount <= 1 {
+	if !(s.workersCount > 1) {
 		return &abstract.StubSlotKiller{}, make(chan error), nil
 	}
 	return nil, nil, abstract.NewFatalError(xerrors.New("liveness monitor is not running, probably because a snapshot has not begun yet"))

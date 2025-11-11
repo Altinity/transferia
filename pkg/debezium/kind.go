@@ -6,14 +6,13 @@ import (
 )
 
 func kindToOp(kind abstract.Kind, snapshot bool, emitType emitType) (string, error) {
-	switch kind {
-	case abstract.InsertKind:
+	if kind == abstract.InsertKind {
 		if snapshot {
 			return "r", nil
 		} else {
 			return "c", nil
 		}
-	case abstract.UpdateKind:
+	} else if kind == abstract.UpdateKind {
 		switch emitType {
 		case regularEmitType:
 			return "u", nil
@@ -24,9 +23,9 @@ func kindToOp(kind abstract.Kind, snapshot bool, emitType emitType) (string, err
 		default:
 			return "", xerrors.Errorf("unsupported emitType: %d", emitType)
 		}
-	case abstract.DeleteKind:
+	} else if kind == abstract.DeleteKind {
 		return "d", nil
-	default:
+	} else {
 		return "", xerrors.Errorf("unsupported kind: %s", kind)
 	}
 }

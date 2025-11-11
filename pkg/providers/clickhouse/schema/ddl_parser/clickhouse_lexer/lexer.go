@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package clickhouse_lexer
 
 import "github.com/antlr4-go/antlr/v4"

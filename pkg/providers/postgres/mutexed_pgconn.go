@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -60,6 +58,7 @@ func (m *mutexedPgConn) ReceiveMessage(ctx context.Context, slotMonitor *SlotMon
 		receiveCtx, cancel := context.WithTimeout(ctx, currentCtxInterval)
 		defer cancel()
 		msg, err := m.pgconn.ReceiveMessage(receiveCtx)
+
 		if err != nil {
 			if validateErr := slotMonitor.validateSlot(ctx); validateErr != nil {
 				err = validateErr

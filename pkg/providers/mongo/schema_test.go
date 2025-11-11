@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -16,8 +14,7 @@ import (
 func TestRepack(t *testing.T) {
 	t.Run("no-homo", func(t *testing.T) {
 		res, err := repack(bson.D{{Key: "a", Value: 123}, {Key: "b", Value: bson.D{
-			{Key: "nan", Value: math.NaN()}, {Key: "str", Value: "str"},
-		}}}, false, false)
+			{Key: "nan", Value: math.NaN()}, {Key: "str", Value: "str"}}}}, false, false)
 		require.NoError(t, err)
 		data, err := json.Marshal(res)
 		require.NoError(t, err)
@@ -25,8 +22,7 @@ func TestRepack(t *testing.T) {
 	})
 	t.Run("no-homo without repack", func(t *testing.T) {
 		res, err := repack(bson.D{{Key: "a", Value: 123}, {Key: "b", Value: bson.D{
-			{Key: "b", Value: "asd"}, {Key: "str", Value: "str"},
-		}}}, false, true)
+			{Key: "b", Value: "asd"}, {Key: "str", Value: "str"}}}}, false, true)
 		require.NoError(t, err)
 		data, err := json.Marshal(res)
 		require.NoError(t, err)
@@ -34,8 +30,7 @@ func TestRepack(t *testing.T) {
 	})
 	t.Run("no-homo without repack but very bad no-homo", func(t *testing.T) {
 		res, err := repack(bson.D{{Key: "a", Value: 123}, {Key: "b", Value: bson.D{
-			{Key: "b", Value: math.NaN()}, {Key: "str", Value: "str"},
-		}}}, false, true)
+			{Key: "b", Value: math.NaN()}, {Key: "str", Value: "str"}}}}, false, true)
 		require.NoError(t, err)
 		_, err = json.Marshal(res)
 		require.Error(t, err)

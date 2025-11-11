@@ -1,5 +1,3 @@
-//go:build !disable_elastic_provider
-
 package elastic
 
 import (
@@ -180,7 +178,7 @@ func makeIndexBodyFromChangeItem(changeItem abstract.ChangeItem) ([]byte, error)
 }
 
 // json.Marshal converts []byte to base64 form.
-// bytesToStringInMapValues should fix it.
+// bytesToStringInMapValues should fix it
 func bytesToStringInMapValues(itemMap map[string]interface{}) {
 	if itemMap == nil {
 		return

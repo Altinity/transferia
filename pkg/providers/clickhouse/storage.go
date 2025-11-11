@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package clickhouse
 
 import (
@@ -225,7 +223,7 @@ func (s *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 		}
 	}()
 
-	// get tables schema []abstract.ColSchema (as in ListTable)
+	//get tables schema []abstract.ColSchema (as in ListTable)
 	tableAllColumns, tableFilteredColumns, err := s.getTableSchema(table.ID(), s.IsHomo)
 	if err != nil {
 		return xerrors.Errorf("unable to discover table schema in storage: %w", err)
@@ -240,7 +238,7 @@ func (s *Storage) LoadTable(ctx context.Context, table abstract.TableDescription
 
 	chunkSize := s.inferDesiredChunkSize(table)
 
-	// build read query with filter and offset
+	//build read query with filter and offset
 	readQ := buildSelectQuery(&table, tableAllColumns.Columns(), s.IsHomo, deletable, "")
 	s.logger.Info("built select query", log.Any("query", readQ))
 
@@ -378,7 +376,7 @@ func (s *Storage) inferDesiredChunkSize(table abstract.TableDescription) uint64 
 }
 
 // in fact - it's estimate, and it's enough to be estimate
-// works only for 20+ clickhouse version.
+// works only for 20+ clickhouse version
 func (s *Storage) getTableSize(tableID abstract.TableID) (rows uint64, bytes uint64, err error) {
 	if s.version.Major < 20 {
 		return 0, 0, nil
@@ -416,7 +414,6 @@ func (s *Storage) GetRowsCount(tableID abstract.TableID) (uint64, error) {
 		if deletable {
 			maybeFinal = "FINAL"
 		}
-		//nolint:gosec
 		query := fmt.Sprintf("SELECT COUNT(*) FROM `%s`.`%s` %s WHERE 1=1 %s;", tableID.Namespace, tableID.Name, maybeFinal, getDeleteTimeFilterExpr(deletable))
 		res := s.db.QueryRow(query)
 		err = res.Scan(&rows)
@@ -458,7 +455,7 @@ func (t *table) ToTableID() abstract.TableID {
 }
 
 func (s *Storage) BuildTableQuery(table abstract.TableDescription) (*abstract.TableSchema, string, string, error) {
-	// get tables schema []abstract.ColSchema (as in ListTable)
+	//get tables schema []abstract.ColSchema (as in ListTable)
 	tableAllColumns, readCols, err := s.getTableSchema(table.ID(), s.IsHomo)
 	if err != nil {
 		return nil, "", "", xerrors.Errorf("unable to discover table schema in storage: %w", err)
@@ -467,7 +464,7 @@ func (s *Storage) BuildTableQuery(table abstract.TableDescription) (*abstract.Ta
 	if err != nil {
 		return nil, "", "", xerrors.Errorf("failed to determine deletable table %s: %w", table.Fqtn(), err)
 	}
-	// build read query with filter and offset
+	//build read query with filter and offset
 	readQ := buildSelectQuery(&table, tableAllColumns.Columns(), s.IsHomo, deletable, "")
 	s.logger.Info("built select query", log.Any("query", readQ))
 	countQ := buildCountQuery(&table, deletable, "")
@@ -668,7 +665,6 @@ func makeFilters(tables []abstract.TableID) (string, string) {
 
 func (s *Storage) LoadTablesDDL(tables []abstract.TableID) ([]*schema.TableDDL, error) {
 	dbFilter, nameFilter := makeFilters(tables)
-	//nolint:gosec
 	q := fmt.Sprintf("select database, name, create_table_query, engine from system.tables where database in %v and name in %v", dbFilter, nameFilter)
 	foundDdls := make(map[abstract.TableID]*schema.TableDDL)
 	if err := backoff.Retry(func() error {

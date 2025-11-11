@@ -1,5 +1,3 @@
-//go:build !disable_greenplum_provider
-
 package greenplum
 
 import (
@@ -41,9 +39,9 @@ const (
 )
 
 const (
-	// TotalTest is the number of rows in the current partition.
+	// TotalTest is the number of rows in the current partition
 	TotalTest uint64 = 12
-	// EtaRowTest is the total number of rows (in all partitions).
+	// EtaRowTest is the total number of rows (in all partitions)
 	EtaRowTest uint64 = 120
 )
 

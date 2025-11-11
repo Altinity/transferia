@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package types
 
 import (
@@ -105,6 +103,7 @@ func dataTypeToJSON(d DataType) interface{} {
 	default:
 		panic(fmt.Sprintf("can not marshal %v to json", v))
 	}
+
 }
 
 func structFieldToJSON(f *StructField) map[string]interface{} {

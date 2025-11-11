@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package mysql
 
 import (
@@ -62,7 +60,9 @@ func isSystemTable(tableName string) bool {
 	return false
 }
 
-// To verify providers contract implementation.
+const ProviderType = abstract.ProviderType("mysql")
+
+// To verify providers contract implementation
 var (
 	_ providers.Snapshot    = (*Provider)(nil)
 	_ providers.Replication = (*Provider)(nil)

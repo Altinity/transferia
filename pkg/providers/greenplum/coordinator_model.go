@@ -1,5 +1,3 @@
-//go:build !disable_greenplum_provider
-
 package greenplum
 
 type GreenplumHostPort struct {

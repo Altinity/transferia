@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package store
 
 import (
@@ -7,7 +5,9 @@ import (
 	"github.com/transferia/transferia/pkg/util/iter"
 )
 
-var ErrFileNotFound = xerrors.New("file not found")
+var (
+	ErrFileNotFound = xerrors.New("file not found")
+)
 
 type StoreConfig interface {
 	isStoreConfig()

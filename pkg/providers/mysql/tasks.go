@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package mysql
 
 import (
@@ -125,7 +123,7 @@ func isFailOnDecimal(transfer *model.Transfer) bool {
 	return true
 }
 
-// See TM-4581.
+// See TM-4581
 func checkRestrictedColumnTypes(transfer *model.Transfer, tables abstract.TableMap) error {
 	if !isFailOnDecimal(transfer) {
 		return nil

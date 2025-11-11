@@ -1,5 +1,3 @@
-//go:build !disable_s3_provider
-
 package sink
 
 import "github.com/transferia/transferia/pkg/serializer"

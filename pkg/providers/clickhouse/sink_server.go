@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 // Package ch
 //
 // SinkServer - it's like master (in multi-master system) destination
@@ -328,7 +326,7 @@ func resolveServerTimezone(db *sql.DB) (*time.Location, error) {
 	return loc, nil
 }
 
-// separate "shalow" constructor needed for tests only.
+// separate "shalow" constructor needed for tests only
 func NewSinkServerImpl(
 	cfg model.ChSinkServerParams,
 	db *sql.DB,

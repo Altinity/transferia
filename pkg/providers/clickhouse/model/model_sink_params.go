@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package model
 
 import (
@@ -15,17 +13,15 @@ const (
 	// BufferTriggingSizeDefault is a recommended default value for bufferer trigging size
 	// Default value assume that we have 4 thread writer in 3gb box (default runtime box)
 	// so each thread would consume at most 256 * 2 (one time for source one time for target) mb + some constant memory
-	// in total it would eat 512 * 4 = 2gb, which is less than 3gb.
+	// in total it would eat 512 * 4 = 2gb, which is less than 3gb
 	BufferTriggingSizeDefault uint64 = 256 * humanize.MiByte
 )
 
 //---
 // ch
 
-var (
-	_ ChSinkServerParams = (*ChDestinationWrapper)(nil)
-	_ ChSinkServerParams = (*ChSourceWrapper)(nil)
-)
+var _ ChSinkServerParams = (*ChDestinationWrapper)(nil)
+var _ ChSinkServerParams = (*ChSourceWrapper)(nil)
 
 type ChSinkServerParams interface {
 	MdbClusterID() string
@@ -95,10 +91,8 @@ func (w ChSinkServerParamsWrapper) GetConnectionID() string {
 	return (*w.Model).GetConnectionID()
 }
 
-var (
-	_ ChSinkClusterParams = (*ChDestinationWrapper)(nil)
-	_ ChSinkClusterParams = (*ChSourceWrapper)(nil)
-)
+var _ ChSinkClusterParams = (*ChDestinationWrapper)(nil)
+var _ ChSinkClusterParams = (*ChSourceWrapper)(nil)
 
 type ChSinkClusterParams interface {
 	ChSinkServerParams
@@ -135,10 +129,8 @@ func (w ChSinkClusterParamsWrapper) GetConnectionID() string {
 	return (*w.Model).GetConnectionID()
 }
 
-var (
-	_ ChSinkShardParams = (*ChDestinationWrapper)(nil)
-	_ ChSinkShardParams = (*ChSourceWrapper)(nil)
-)
+var _ ChSinkShardParams = (*ChDestinationWrapper)(nil)
+var _ ChSinkShardParams = (*ChSourceWrapper)(nil)
 
 type ChSinkShardParams interface {
 	ChSinkClusterParams
@@ -165,10 +157,8 @@ func (w ChSinkShardParamsWrapper) GetConnectionID() string {
 	return (*w.Model).GetConnectionID()
 }
 
-var (
-	_ ChSinkParams = (*ChDestinationWrapper)(nil)
-	_ ChSinkParams = (*ChSourceWrapper)(nil)
-)
+var _ ChSinkParams = (*ChDestinationWrapper)(nil)
+var _ ChSinkParams = (*ChSourceWrapper)(nil)
 
 type ChSinkParams interface {
 	ChSinkShardParams

@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -20,13 +18,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	defaultUser     = "root"
-	defaultPassword = "password"
-	defaultImage    = "mongo:6"
-	defaultRS       = "rs01"
-	defaultPort     = nat.Port("27017/tcp")
-)
+const defaultUser = "root"
+const defaultPassword = "password"
+const defaultImage = "mongo:6"
+const defaultRS = "rs01"
+const defaultPort = nat.Port("27017/tcp")
 
 type recipeOpts struct {
 	prefix     string
@@ -144,7 +140,7 @@ func GetIntFromEnv(varName string) int {
 	return val
 }
 
-// PostgresContainer represents the postgres container type used in the module.
+// PostgresContainer represents the postgres container type used in the module
 type MongoContainer struct {
 	testcontainers.Container
 	user        string
@@ -174,7 +170,7 @@ func StartMongoContainer(ctx context.Context, opts ...testcontainers.ContainerCu
 	for _, opt := range opts {
 		_ = opt.Customize(&genericContainerReq)
 	}
-	if req.Dockerfile != "" {
+	if req.FromDockerfile.Dockerfile != "" {
 		req.Image = ""
 	}
 

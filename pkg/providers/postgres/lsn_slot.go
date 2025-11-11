@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package postgres
 
 import (
@@ -16,7 +14,9 @@ import (
 	"go.ytsaurus.tech/library/go/core/log"
 )
 
-var SelectLsnForSlot = `select restart_lsn from pg_replication_slots where slot_name = $1;`
+var (
+	SelectLsnForSlot = `select restart_lsn from pg_replication_slots where slot_name = $1;`
+)
 
 type LsnTrackedSlot struct {
 	logger    log.Logger

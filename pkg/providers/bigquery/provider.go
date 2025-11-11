@@ -1,5 +1,3 @@
-//go:build !disable_bigquery_provider
-
 package bigquery
 
 import (
@@ -27,7 +25,7 @@ func destinationModelFactory() model.Destination {
 
 const ProviderType = abstract.ProviderType("bigquery")
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ providers.Sinker = (*Provider)(nil)
 )

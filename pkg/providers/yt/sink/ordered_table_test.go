@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package sink
 
 import (
@@ -22,11 +20,13 @@ import (
 	ytsdk "go.ytsaurus.tech/yt/go/yt"
 )
 
-var tableSchema = abstract.NewTableSchema([]abstract.ColSchema{
-	{ColumnName: "_partition", DataType: "string"},
-	{ColumnName: "_offset", DataType: "uint64"},
-	{ColumnName: "value", DataType: "string"},
-})
+var (
+	tableSchema = abstract.NewTableSchema([]abstract.ColSchema{
+		{ColumnName: "_partition", DataType: "string"},
+		{ColumnName: "_offset", DataType: "uint64"},
+		{ColumnName: "value", DataType: "string"},
+	})
+)
 
 var (
 	testDirPath   = ypath.Path("//home/cdc/test/ordered")

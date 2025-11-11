@@ -1,5 +1,3 @@
-//go:build !disable_ydb_provider
-
 package ydb
 
 import (
@@ -154,16 +152,15 @@ func (s *Storage) listaAllTablesToTransfer(ctx context.Context) ([]string, error
 				return nil, xerrors.Errorf("unable to describe path, path:%s, err:%w", currPath, err)
 			}
 
-			switch entry.Type {
-			case scheme.EntryDirectory:
+			if entry.Type == scheme.EntryDirectory {
 				subTraverse, err := s.traverse(currPath)
 				if err != nil {
 					return nil, xerrors.Errorf("Cannot traverse YDB database from root, db: %s, err: %w", s.config.Database, err)
 				}
 				allTables = append(allTables, subTraverse...)
-			case scheme.EntryTable:
+			} else if entry.Type == scheme.EntryTable {
 				allTables = append(allTables, currPath)
-			default:
+			} else {
 				return nil, xerrors.Errorf("unknown node type, path:%s, type:%s", currPath, entry.Type.String())
 			}
 		}
@@ -264,6 +261,7 @@ func (s *Storage) LoadTable(ctx context.Context, tableDescr abstract.TableDescri
 		schema = abstract.NewTableSchema(FromYdbSchema(tableColumns, tableDescription.PrimaryKey))
 		return nil
 	})
+
 	if err != nil {
 		if s.canSkipError(err) {
 			logger.Log.Warn("skip load table", log.String("table", tablePath), log.Error(err))
@@ -363,6 +361,7 @@ func (s *Storage) EstimateTableRowsCount(tid abstract.TableID) (uint64, error) {
 		}
 		return nil
 	})
+
 	if err != nil {
 		return 0, xerrors.Errorf("unable to descirbe table: %w", err)
 	}
@@ -391,6 +390,7 @@ func (s *Storage) ExactTableRowsCount(tid abstract.TableID) (uint64, error) {
 		}
 		return nil
 	})
+
 	if err != nil {
 		return 0, xerrors.Errorf("unable to descirbe table: %w", err)
 	}
@@ -442,11 +442,10 @@ func (s *scanner) UnmarshalYDB(raw types.RawValue) error {
 		s.resultVal = nil
 		return nil
 	}
-	switch s.originalType {
-	case "ydb:Decimal":
+	if s.originalType == "ydb:Decimal" {
 		decimalVal := raw.UnwrapDecimal()
 		s.resultVal = decimalVal.String()
-	case "ydb:Json", "ydb:JsonDocument":
+	} else if s.originalType == "ydb:Json" || s.originalType == "ydb:JsonDocument" {
 		var valBytes []byte
 		if s.originalType == "ydb:Json" {
 			valBytes = raw.JSON()
@@ -458,7 +457,7 @@ func (s *scanner) UnmarshalYDB(raw types.RawValue) error {
 			return xerrors.Errorf("unable to unmarshal JSON '%s': %w", string(valBytes), err)
 		}
 		s.resultVal = valDecoded
-	case "ydb:Yson":
+	} else if s.originalType == "ydb:Yson" {
 		valBytes := raw.YSON()
 		var unmarshalled interface{}
 		if len(valBytes) > 0 {
@@ -467,9 +466,9 @@ func (s *scanner) UnmarshalYDB(raw types.RawValue) error {
 			}
 		}
 		s.resultVal = unmarshalled
-	case "ydb:Uuid":
+	} else if s.originalType == "ydb:Uuid" {
 		s.resultVal = raw.UUIDTyped().String()
-	default:
+	} else {
 		switch schema.Type(s.dataType) {
 		case schema.TypeDate:
 			s.resultVal = raw.Date().UTC()

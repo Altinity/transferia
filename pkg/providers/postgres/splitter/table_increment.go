@@ -1,5 +1,3 @@
-//go:build !disable_postgres_provider
-
 package splitter
 
 import (
@@ -20,6 +18,7 @@ type TableIncrement struct {
 }
 
 func (t *TableIncrement) Split(ctx context.Context, table abstract.TableDescription) (*SplittedTableMetadata, error) {
+
 	// whole table info
 
 	tableFull := NewTableFull(t.storage, t.desiredTableSize, t.snapshotDegreeOfParallelism)

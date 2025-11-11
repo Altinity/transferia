@@ -1,5 +1,3 @@
-//go:build !disable_coralogix_provider
-
 package coralogix
 
 import (
@@ -19,7 +17,7 @@ import (
 
 type Severity int
 
-// 1 – Debug, 2 – Verbose, 3 – Info, 4 – Warn, 5 – Error, 6 – Critical.
+// 1 – Debug, 2 – Verbose, 3 – Info, 4 – Warn, 5 – Error, 6 – Critical
 const (
 	Debug    = Severity(1)
 	Verbose  = Severity(2)

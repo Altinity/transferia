@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package types
 
 import (
@@ -13,18 +11,16 @@ import (
 	"github.com/transferia/transferia/pkg/providers/postgres/sqltimestamp"
 )
 
-// Temporal enables to scan any temporal value with a date from []byte.
+// Temporal enables to scan any temporal value with a date from []byte
 type Temporal struct {
 	location *time.Location
 	isNull   bool
 	raw      string
 }
 
-var (
-	_ driver.Valuer       = (*Temporal)(nil)
-	_ sql.Scanner         = (*Temporal)(nil)
-	_ abstract.HomoValuer = (*Temporal)(nil)
-)
+var _ driver.Valuer = (*Temporal)(nil)
+var _ sql.Scanner = (*Temporal)(nil)
+var _ abstract.HomoValuer = (*Temporal)(nil)
 
 func NewTemporal() *Temporal {
 	return &Temporal{

@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package fallback
 
 import (
@@ -23,6 +21,7 @@ func patchTableSchema(ci *abstract.ChangeItem) *abstract.TableSchema {
 }
 
 func getCachedPatchedSchema(ci *abstract.ChangeItem, cache map[string]*abstract.TableSchema) (schema *abstract.TableSchema, err error) {
+
 	originalTableSchema := ci.TableSchema
 	originalTableSchemaHash, err := originalTableSchema.Hash()
 	if err != nil {

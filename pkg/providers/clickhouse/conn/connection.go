@@ -1,5 +1,3 @@
-//go:build !disable_clickhouse_provider
-
 package conn
 
 import (
@@ -18,17 +16,7 @@ func ConnectNative(host *chconn.Host, cfg ConnParams, hosts ...*chconn.Host) (*s
 	if err != nil {
 		return nil, err
 	}
-
-	db := clickhouse.OpenDB(opts)
-
-	// OpenDB suggests it's the caller's responsibility to configure the connection pool, so we must set it to reasonable defaults for long-running jobs.
-	// FIXME: make these configurable
-	db.SetMaxOpenConns(50)
-	db.SetMaxIdleConns(20)
-	db.SetConnMaxLifetime(30 * time.Minute)
-	db.SetConnMaxIdleTime(10 * time.Minute)
-
-	return db, nil
+	return clickhouse.OpenDB(opts), nil
 }
 
 func GetClickhouseOptions(cfg ConnParams, hosts []*chconn.Host) (*clickhouse.Options, error) {

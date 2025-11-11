@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -19,9 +17,11 @@ func must(version semver.Version, err error) semver.Version {
 	return version
 }
 
-var MongoVersion4_0 = must(semver.ParseTolerant("4.0"))
+var (
+	MongoVersion4_0 = must(semver.ParseTolerant("4.0"))
+)
 
-// GetVersion tries to get version from database authSource. If authSource is empty string, default will be used.
+// GetVersion tries to get version from database authSource. If authSource is empty string, default will be used
 func GetVersion(ctx context.Context, client *MongoClientWrapper, authSource string) (*semver.Version, error) {
 	if authSource == "" {
 		authSource = DefaultAuthSource

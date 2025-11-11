@@ -28,15 +28,7 @@ func RunHealthCheckOnPort(port int) {
 	rootMux := http.NewServeMux()
 	rootMux.HandleFunc("/ping", PingFunc)
 	logger.Log.Infof("healthcheck is upraising on port 80")
-
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", port),
-		ReadTimeout:  60 * time.Second,
-		WriteTimeout: 60 * time.Second,
-		Handler:      rootMux,
-	}
-
-	if err := server.ListenAndServe(); err != nil { // it must be on 80 port - bcs of dataplane instance-group
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), rootMux); err != nil { // it must be on 80 port - bcs of dataplane instance-group
 		logger.Log.Error("failed to serve health check", log.Error(err))
 	}
 }
@@ -48,16 +40,12 @@ func RunPprof(port int) {
 		logger.Log.Info(fmt.Sprintf("failed to serve pprof on %d, try random port", port), log.Error(err))
 		server, err = NewServer("tcp", ":0", logger.Log)
 		if err != nil {
-			logger.Log.Info("failed to serve pprof on 8080, try random port", log.Error(err))
-			server, err = debugtools.NewServer("tcp", ":0", logger.Log)
-			if err != nil {
-				logger.Log.Error("failed to add listener for pprof", log.Error(err))
-				return
-			}
-			logger.Log.Infof("pprof listen on: %v", server.Addr().String())
+			logger.Log.Error("failed to add listener for pprof", log.Error(err))
+			return
 		}
-		if err := server.Serve(); err != nil {
-			logger.Log.Error("failed to serve pprof", log.Error(err))
-		}
-	*/
+		logger.Log.Infof("pprof listen on: %v", server.Addr().String())
+	}
+	if err := server.Serve(); err != nil {
+		logger.Log.Error("failed to serve pprof", log.Error(err))
+	}
 }

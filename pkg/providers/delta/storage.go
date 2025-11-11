@@ -1,5 +1,3 @@
-//go:build !disable_delta_provider
-
 package delta
 
 import (
@@ -28,13 +26,13 @@ import (
 	"go.ytsaurus.tech/yt/go/schema"
 )
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ abstract.Storage = (*Storage)(nil)
 )
 
 // defaultReadBatchSize is magic number by in-leskin
-// we need to push rather small chunks so our bufferer can buffer effectively.
+// we need to push rather small chunks so our bufferer can buffer effectively
 const defaultReadBatchSize = 128
 
 type Storage struct {

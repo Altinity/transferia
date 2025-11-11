@@ -1,5 +1,3 @@
-//go:build !disable_kafka_provider
-
 package kafka
 
 import (
@@ -24,7 +22,7 @@ func (r *franzReader) CommitMessages(ctx context.Context, msgs ...kgo.Record) er
 	return r.client.CommitRecords(ctx, forCommit...)
 }
 
-// FetchMessage doesn't return pointer to struct, because franz-go has no guarantees about the returning values.
+// FetchMessage doesn't return pointer to struct, because franz-go has no guarantees about the returning values
 func (r *franzReader) FetchMessage(ctx context.Context) (kgo.Record, error) {
 	fetcher := r.client.PollRecords(ctx, 1)
 	err := fetcher.Err()

@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package sink
 
 import (
@@ -231,7 +229,7 @@ func indexRowDeleter(ctx context.Context, tx yt.TabletTx, tablePath ypath.Path, 
 	return tx.DeleteRows(ctx, tablePath, keys, nil)
 }
 
-// Write accept input which will be collapsed as very first step.
+// Write accept input which will be collapsed as very first step
 func (t *SortedTable) Write(input []abstract.ChangeItem) error {
 	input = abstract.Collapse(input)
 	if len(t.config.Index()) > 0 {

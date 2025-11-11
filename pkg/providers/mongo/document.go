@@ -1,5 +1,3 @@
-//go:build !disable_mongo_provider
-
 package mongo
 
 import (
@@ -203,13 +201,15 @@ func copyDocument(orig any) (any, error) {
 	}
 }
 
-var complexKinds = map[reflect.Kind]bool{
-	reflect.Array:  true,
-	reflect.Map:    true,
-	reflect.Slice:  true,
-	reflect.String: true,
-	reflect.Struct: true,
-}
+var (
+	complexKinds = map[reflect.Kind]bool{
+		reflect.Array:  true,
+		reflect.Map:    true,
+		reflect.Slice:  true,
+		reflect.String: true,
+		reflect.Struct: true,
+	}
+)
 
 func copyAny(orig any) (any, error) {
 	copyComplex := func(in, out any) error {

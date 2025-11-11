@@ -1,5 +1,3 @@
-//go:build !disable_mysql_provider
-
 package sharding
 
 import (

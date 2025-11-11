@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package provider
 
 import (
@@ -94,8 +92,7 @@ func (r *readerWrapper) Row() (*lazyYSON, error) {
 func (s *snapshotSource) readTableRange(
 	ctx context.Context,
 	lowerIdx, upperIdx uint64,
-	stopCh <-chan bool,
-) error {
+	stopCh <-chan bool) error {
 	rd := readerWrapper{
 		ctx:        ctx,
 		tblPath:    s.part.NodeID().YPath(),

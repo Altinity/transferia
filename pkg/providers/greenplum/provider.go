@@ -1,5 +1,3 @@
-//go:build !disable_greenplum_provider
-
 package greenplum
 
 import (
@@ -61,7 +59,7 @@ const (
 	ProviderType = abstract.ProviderType("gp")
 )
 
-// To verify providers contract implementation.
+// To verify providers contract implementation
 var (
 	_ providers.Snapshot = (*Provider)(nil)
 	_ providers.Sinker   = (*Provider)(nil)

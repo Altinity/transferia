@@ -1,5 +1,3 @@
-//go:build !disable_yt_provider
-
 package statictable
 
 import (
@@ -24,7 +22,9 @@ const (
 	retriesCount = 5
 )
 
-var subTxTimeout = yson.Duration(time.Minute * 5)
+var (
+	subTxTimeout = yson.Duration(time.Minute * 5)
+)
 
 func makeTablePath(path ypath.Path, infix, postfix string) ypath.Path {
 	return ypath.Path(fmt.Sprintf("%s_%s_%s", path.String(), infix, postfix))
@@ -42,6 +42,7 @@ func createNodeOptions(scheme schema.Schema, optimizeFor string, customAttribute
 		Recursive:      true,
 		IgnoreExisting: false,
 	}
+
 }
 
 func transactionOptions(id yt.TxID) *yt.TransactionOptions {

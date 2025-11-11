@@ -1,5 +1,3 @@
-//go:build !disable_kinesis_provider
-
 package kinesis
 
 import (
@@ -17,8 +15,7 @@ func PutRecord(src *KinesisSource, data []byte, key string) error {
 	if _, err = client.
 		DescribeStream(
 			&kinesis.DescribeStreamInput{
-				StreamName: &src.Stream,
-			}); err != nil {
+				StreamName: &src.Stream}); err != nil {
 		return xerrors.Errorf("No stream exists with the provided name: %w", err)
 	}
 	// put data to stream
