@@ -1,0 +1,21 @@
+{{- if eq .Values.transferSpec.type "SNAPSHOT_ONLY" }}
+{{ include "snapshot-job" . }}
+---
+{{ include "snapshot-regular-cronjob" . }}
+---
+{{- end }}
+
+{{- if eq .Values.transferSpec.type "INCREMENT_ONLY" }}
+{{ include "replication-statefulset" . }}
+---
+{{ include "snapshot-regular-cronjob" . }}
+---
+{{- end }}
+
+{{- if eq .Values.transferSpec.type "SNAPSHOT_AND_INCREMENT" }}
+{{ include "snapshot-job" . }}
+---
+{{ include "snapshot-regular-cronjob" . }}
+---
+{{ include "replication-statefulset" . }}
+{{- end }}

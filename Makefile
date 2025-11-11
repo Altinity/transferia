@@ -8,11 +8,10 @@ clean:
 
 # Define the `build` target
 API ?= trcli
-BUILD_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 .PHONY: build
 build:
-	go build -buildvcs=true -ldflags="-X 'main.date=$(BUILD_DATE)'" -o binaries/$(API) ./cmd/trcli
+	go build -o  binaries/$(API) ./cmd/trcli/*.go
 
 docker: build
 	cp binaries/$(API) . && docker build -t transfer

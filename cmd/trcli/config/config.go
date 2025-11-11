@@ -17,14 +17,11 @@ import (
 )
 
 func TransferFromYaml(params *string) (*model.Transfer, error) {
-	// Don't override BASE_DIR if it's already set
-	if _, ok := os.LookupEnv("BASE_DIR"); !ok {
-		dir, err := os.MkdirTemp("", "shared-volume")
-		if err != nil {
-			return nil, xerrors.Errorf("unable to create base dir: %w", err)
-		}
-		_ = os.Setenv("BASE_DIR", dir)
+	dir, err := os.MkdirTemp("", "shared-volume")
+	if err != nil {
+		return nil, xerrors.Errorf("unable to create base dir: %w", err)
 	}
+	_ = os.Setenv("BASE_DIR", dir)
 
 	transferRaw, err := os.ReadFile(*params)
 	if err != nil {

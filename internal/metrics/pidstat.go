@@ -58,8 +58,7 @@ func parseFloat(val string) float64 {
 
 func stat(pid int, statType string) (*SysInfo, error) {
 	_history := history[pid]
-	switch statType {
-	case "ps":
+	if statType == "ps" {
 		args := "-o pcpu,rss -p"
 		if platform == "aix" {
 			args = "-o pcpu,rssize -p"
@@ -74,7 +73,7 @@ func stat(pid int, statType string) (*SysInfo, error) {
 			Memory:      parseFloat(ret[1]) * 1024,
 			Descriptors: 0,
 		}, nil
-	case "proc":
+	} else if statType == "proc" {
 		// default clkTck and pageSize
 		var clkTck float64 = 100
 		var pageSize float64 = 4096
@@ -155,7 +154,7 @@ func getOpenFilesCount(pid int, platform string) (float64, error) {
 	return float64(bytes.Count(stdout, []byte(eol)) - 1), nil
 }
 
-// GetStat may return incomplete result (with some fields unfilled).
+// GetStat may return incomplete result (with some fields unfilled)
 func GetStat(pid int) (*SysInfo, error) {
 	platform = runtime.GOOS
 	if eol = "\n"; strings.Index(platform, "win") == 0 {

@@ -110,7 +110,6 @@ require (
 	cloud.google.com/go/storage v1.51.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible // indirect
 	github.com/Azure/go-amqp v0.17.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -188,7 +187,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
-	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -213,8 +212,8 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
-	github.com/moby/sys/sequential v0.6.0 // indirect
-	github.com/moby/sys/user v0.4.0 // indirect
+	github.com/moby/sys/sequential v0.5.0 // indirect
+	github.com/moby/sys/user v0.3.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -373,11 +372,9 @@ replace github.com/prometheus/common => github.com/prometheus/common v0.62.0
 
 replace github.com/distribution/reference => github.com/distribution/reference v0.5.0
 
-replace github.com/jackc/pgconn => github.com/jackc/pgconn v1.14.2
+replace github.com/jackc/pgconn => github.com/jackc/pgconn v1.14.0
 
-replace github.com/jackc/pgproto3/v2 => github.com/jackc/pgproto3/v2 v2.3.3
-
-replace github.com/jackc/pglogrepl => github.com/Altinity/pglogrepl v0.0.0-20250612163008-95bb70c06110
+replace github.com/jackc/pgproto3/v2 => github.com/jackc/pgproto3/v2 v2.3.2
 
 replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.24
 
