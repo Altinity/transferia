@@ -47,13 +47,13 @@ case $(uname -m) in
 esac
 
 for PKG in clickhouse-common-static clickhouse-client; do
-  curl -f0 "https://github.com/ClickHouse/ClickHouse/releases/download/\${TAG}/\${PKG}-\${VERSION}-\${ARCH}.tgz"
+  curl -L -o ${PKG}.tgz "https://github.com/ClickHouse/ClickHouse/releases/download/\${TAG}/\${PKG}-\${VERSION}-\${ARCH}.tgz"
 done
 
-tar -xzvf "clickhouse-common-static-\${VERSION}-\${ARCH}.tgz"
+tar -xzvf "clickhouse-common-static.tgz"
 clickhouse-common-static-\${VERSION}/install/doinst.sh
 
-tar -xzvf "clickhouse-client-\${VERSION}-\${ARCH}.tgz"
+tar -xzvf "clickhouse-client.tgz"
 clickhouse-client-\${VERSION}/install/doinst.sh
 EOF
 
