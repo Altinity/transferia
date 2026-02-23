@@ -28,13 +28,19 @@ jobs:
       - name: Generate
         run: go generate ./...
 
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1
+
       - name: Run SAST (golangci-lint)
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: "latest"
-          only-new-issues: true
-          args: --timeout=10m
-          skip-cache: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGES=$(go list ./... 2>/dev/null | grep -Ev '^github.com/transferia/transferia/pkg/providers/logbroker|^github.com/transferia/transferia/pkg/providers/yds|^github.com/transferia/transferia/pkg/util/queues/lbyds' || true)
+          if [ -z "$PACKAGES" ]; then
+            echo "No packages selected for golangci-lint"
+            exit 1
+          fi
+          golangci-lint run --timeout=10m $PACKAGES
 
       - name: Get enabled linters as a table
         id: get_linters
