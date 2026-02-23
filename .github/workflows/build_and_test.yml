@@ -231,10 +231,9 @@ jobs:
         run: exit 1
 
   test-report:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && always() && !contains(needs.*.result, 'skipped')
     needs: [generic-tests, e2e-tests]
     name: test-report
-    if: always() && !contains(needs.*.result, 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
