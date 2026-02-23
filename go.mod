@@ -15,7 +15,7 @@ require (
 	github.com/alecthomas/participle v0.4.1
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/araddon/dateparse v0.0.0-20190510211750-d2ba70357e92
-	github.com/aws/aws-sdk-go v1.55.6
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/blang/semver/v4 v4.0.0
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -311,8 +311,6 @@ replace go.temporal.io/sdk => go.temporal.io/sdk v1.33.0
 replace go.temporal.io/server => go.temporal.io/server v1.27.2
 
 replace github.com/jackc/pgtype => github.com/jackc/pgtype v1.12.0
-
-replace github.com/aws/aws-sdk-go => github.com/aws/aws-sdk-go v1.46.7
 
 replace k8s.io/api => k8s.io/api v0.26.1
 

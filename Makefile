@@ -13,8 +13,9 @@ API ?= trcli
 build:
 	go build -o  binaries/$(API) ./cmd/trcli/*.go
 
-docker: build
-	cp binaries/$(API) . && docker build -t transfer
+.PHONY: docker
+docker:
+	docker build -t transfer .
 
 .PHONY: test
 test:

@@ -1,3 +1,18 @@
+FROM golang:1.24.6-alpine3.22 AS builder
+
+WORKDIR /src
+
+ARG TARGETOS
+ARG TARGETARCH
+
+RUN apk add --no-cache git ca-certificates
+
+COPY . .
+
+RUN go mod download
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -o /out/trcli ./cmd/trcli
+
 FROM alpine:3.22
 
 # Environment variables
@@ -17,12 +32,12 @@ RUN apk add --no-cache \
   dirmngr \
   nano \
   vim \
-  busybox-extras \ 
+  busybox-extras \
   less \
   tcpdump \
   net-tools \
   lsof \
-  libaio \   
+  libaio \
   unzip \
   git && \
   ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime && \
@@ -64,8 +79,8 @@ RUN chmod +x /usr/local/bin/install-clickhouse.sh && /usr/local/bin/install-clic
 RUN addgroup -S trcligroup && \
   adduser -S -G trcligroup trcliuser
 
-# Copy the Go binary 
-COPY trcli /usr/local/bin/trcli
+# Copy the Go binary built for the target platform
+COPY --from=builder /out/trcli /usr/local/bin/trcli
 
 # Set executable permission
 RUN chmod +x /usr/local/bin/trcli
