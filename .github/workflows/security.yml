@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PACKAGES=$(go list ./... 2>/dev/null | grep -Ev '^github.com/transferia/transferia/pkg/providers/logbroker|^github.com/transferia/transferia/pkg/providers/yds|^github.com/transferia/transferia/pkg/util/queues/lbyds' || true)
+          PACKAGES=$(go list ./... 2>/dev/null | grep -Ev '^github.com/transferia/transferia/pkg/providers/logbroker|^github.com/transferia/transferia/pkg/providers/yds|^github.com/transferia/transferia/pkg/util/queues/lbyds' | sed 's#^github.com/transferia/transferia#.#' || true)
           if [ -z "$PACKAGES" ]; then
             echo "No packages selected for golangci-lint"
             exit 1
