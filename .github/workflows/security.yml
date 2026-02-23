@@ -33,6 +33,8 @@ jobs:
 
       - name: Run SAST (golangci-lint)
         shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           set -euo pipefail
           PACKAGES=$(go list ./... 2>/dev/null | grep -Ev '^github.com/transferia/transferia/pkg/providers/logbroker|^github.com/transferia/transferia/pkg/providers/yds|^github.com/transferia/transferia/pkg/util/queues/lbyds' | sed 's#^github.com/transferia/transferia#.#' || true)
@@ -40,7 +42,11 @@ jobs:
             echo "No packages selected for golangci-lint"
             exit 1
           fi
-          golangci-lint run --timeout=10m $PACKAGES
+          if [ -n "${BASE_SHA:-}" ] && [ "$BASE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            golangci-lint run --timeout=10m --tests=false --new-from-rev="$BASE_SHA" $PACKAGES
+          else
+            golangci-lint run --timeout=10m --tests=false --new-from-rev="HEAD~1" $PACKAGES
+          fi
 
       - name: Get enabled linters as a table
         id: get_linters
