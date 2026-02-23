@@ -58,6 +58,9 @@ linters:
       - examples$
       - tests/
       - recipe/
+      - pkg/providers/logbroker/
+      - pkg/providers/yds/
+      - pkg/util/queues/lbyds/
 formatters:
   exclusions:
     generated: lax

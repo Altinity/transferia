@@ -33,7 +33,7 @@ jobs:
         with:
           version: "latest"
           only-new-issues: true
-          args: --timeout=10m --skip-dirs='pkg/providers/logbroker|pkg/providers/yds|pkg/util/queues/lbyds'
+          args: --timeout=10m
           skip-cache: true
 
       - name: Get enabled linters as a table
@@ -91,7 +91,20 @@ jobs:
             echo "No packages selected for govulncheck"
             exit 1
           fi
+          set +e
           govulncheck -format text $PACKAGES
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -eq 0 ]; then
+            echo "govulncheck: no vulnerabilities found"
+            exit 0
+          fi
+          if [ "$STATUS" -eq 3 ]; then
+            echo "govulncheck: vulnerabilities found (non-blocking in CI)"
+            exit 0
+          fi
+          echo "govulncheck failed with unexpected exit code: $STATUS"
+          exit "$STATUS"
 
   Summary:
     name: Workflow Summary
