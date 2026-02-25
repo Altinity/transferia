@@ -51,6 +51,7 @@ const (
 	ValueConverterBasicAuthUserInfo                 = "value.converter.basic.auth.user.info"
 	ValueConverterSslCa                             = "value.converter.ssl.ca"
 	ValueConverterDTJSONGenerateClosedContentSchema = "value.converter.dt.json.generate.closed.content.schema"
+	ValueConverterYSRNamespaceID                    = "value.converter.ysr.namespace.id"
 
 	KeySubjectNameStrategy   = "key.converter.key.subject.name.strategy"
 	ValueSubjectNameStrategy = "value.converter.value.subject.name.strategy"
@@ -113,10 +114,21 @@ var converterParams = set.New([]string{
 	ValueConverterBasicAuthCredentialsSource,
 	ValueConverterBasicAuthUserInfo,
 	ValueConverterSslCa,
+	ValueConverterYSRNamespaceID,
+}...)
+
+var sensitiveParameters = set.New([]string{
+	KeyConverterBasicAuthUserInfo,
+
+	ValueConverterBasicAuthUserInfo,
 }...)
 
 func IsConverterParam(param string) bool {
 	return converterParams.Contains(param)
+}
+
+func IsSensitiveParam(param string) bool {
+	return sensitiveParameters.Contains(param)
 }
 
 type connectorSetting struct {
@@ -276,4 +288,7 @@ func GetKeyConverterDTJSONGenerateClosedContentSchema(in map[string]string) bool
 }
 func GetValueConverterDTJSONGenerateClosedContentSchema(in map[string]string) bool {
 	return in[ValueConverterDTJSONGenerateClosedContentSchema] == BoolTrue
+}
+func GetYSRNamespaceID(in map[string]string) string {
+	return in[ValueConverterYSRNamespaceID]
 }
