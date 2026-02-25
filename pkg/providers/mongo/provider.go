@@ -18,10 +18,10 @@ func init() {
 	gobwrapper.RegisterName("*server.MongoCollection", new(MongoCollection))
 	gobwrapper.RegisterName("*server.MongoSource", new(MongoSource))
 	gobwrapper.RegisterName("*server.MongoDestination", new(MongoDestination))
-	model.RegisterDestination(ProviderType, func() model.LoggableDestination {
+	model.RegisterDestination(ProviderType, func() model.Destination {
 		return new(MongoDestination)
 	})
-	model.RegisterSource(ProviderType, func() model.LoggableSource {
+	model.RegisterSource(ProviderType, func() model.Source {
 		return new(MongoSource)
 	})
 
@@ -178,7 +178,7 @@ func (p *Provider) Type() abstract.ProviderType {
 	return ProviderType
 }
 
-func New(lgr log.Logger, registry metrics.Registry, cp coordinator.Coordinator, transfer *model.Transfer, _ *model.TransferOperation) providers.Provider {
+func New(lgr log.Logger, registry metrics.Registry, cp coordinator.Coordinator, transfer *model.Transfer) providers.Provider {
 	return &Provider{
 		logger:   lgr,
 		registry: registry,

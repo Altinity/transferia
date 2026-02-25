@@ -27,10 +27,10 @@ import (
 func init() {
 	gobwrapper.RegisterName("*server.PgSource", new(PgSource))
 	gobwrapper.RegisterName("*server.PgDestination", new(PgDestination))
-	model.RegisterDestination(ProviderType, func() model.LoggableDestination {
+	model.RegisterDestination(ProviderType, func() model.Destination {
 		return new(PgDestination)
 	})
-	model.RegisterSource(ProviderType, func() model.LoggableSource {
+	model.RegisterSource(ProviderType, func() model.Source {
 		return new(PgSource)
 	})
 
@@ -335,7 +335,6 @@ func (p *Provider) srcParamsFromTransfer() (*PgSource, error) {
 	if src.NoHomo {
 		src.IsHomo = false
 	}
-
 	return &src, nil
 }
 

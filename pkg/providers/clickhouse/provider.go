@@ -25,10 +25,10 @@ import (
 func init() {
 	gobwrapper.RegisterName("*server.ChSource", new(model.ChSource))
 	gobwrapper.RegisterName("*server.ChDestination", new(model.ChDestination))
-	dp_model.RegisterDestination(ProviderType, func() dp_model.LoggableDestination {
+	dp_model.RegisterDestination(ProviderType, func() dp_model.Destination {
 		return new(model.ChDestination)
 	})
-	dp_model.RegisterSource(ProviderType, func() dp_model.LoggableSource {
+	dp_model.RegisterSource(ProviderType, func() dp_model.Source {
 		return new(model.ChSource)
 	})
 
@@ -225,7 +225,7 @@ func (p *Provider) Test(ctx context.Context) *abstract.TestResult {
 	return tr
 }
 
-func New(lgr log.Logger, registry metrics.Registry, cp coordinator.Coordinator, transfer *dp_model.Transfer, _ *dp_model.TransferOperation) providers.Provider {
+func New(lgr log.Logger, registry metrics.Registry, cp coordinator.Coordinator, transfer *dp_model.Transfer) providers.Provider {
 	return &Provider{
 		logger:   lgr,
 		registry: registry,
