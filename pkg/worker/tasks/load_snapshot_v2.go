@@ -623,7 +623,7 @@ func (l *SnapshotLoader) doUploadTablesV2(ctx context.Context, snapshotProvider 
 				l.progressUpdateMutex.Lock()
 				nextTablePart.Completed = true
 				l.progressUpdateMutex.Unlock()
-				progressTracker.Flush(tppGetter.SharedMemory())
+					progressTracker.Flush(true)
 
 				logger.Log.Info(
 					fmt.Sprintf("Finish load table '%v' progress %v / %v (%.2f%%)", nextTablePart, nextTablePart.CompletedRows, nextTablePart.ETARows, nextTablePart.CompletedPercent()),

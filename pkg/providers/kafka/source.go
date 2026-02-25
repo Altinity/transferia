@@ -529,7 +529,11 @@ type PartitionDescription struct {
 	Partition int32
 }
 
-func NewSource(transferID string, cfg *KafkaSource, partitionDesc *PartitionDescription, logger log.Logger, registry metrics.Registry) (*Source, error) {
+func NewSource(transferID string, cfg *KafkaSource, logger log.Logger, registry metrics.Registry) (*Source, error) {
+	return NewSourceWithPartition(transferID, cfg, nil, logger, registry)
+}
+
+func NewSourceWithPartition(transferID string, cfg *KafkaSource, partitionDesc *PartitionDescription, logger log.Logger, registry metrics.Registry) (*Source, error) {
 	tlsConfig, err := cfg.Connection.TLSConfig()
 	if err != nil {
 		return nil, xerrors.Errorf("unable to get TLS config: %w", err)

@@ -27,7 +27,7 @@ func asyncLoadParts(
 ) error {
 	logger.Log.Info("Starting async load leastParts with table_part_provider")
 
-	asyncTPPStorage, err := storage.BuildNextArrTableDescriptionGetter(operationID, inTables)
+	asyncTPPStorage, err := storage.BuildNextArrTableDescriptionGetter(inTables)
 	if err != nil {
 		return xerrors.Errorf("unable to create async leastParts provider, err: %w", err)
 	}

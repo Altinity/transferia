@@ -43,6 +43,20 @@ func BuildIncludeMap(objects []string) (map[TableID]bool, error) {
 	return includeObjects, nil
 }
 
+func BuildIncludeableFromObjects(objects []string) (Includeable, error) {
+	includeObjects, err := BuildIncludeMap(objects)
+	if err != nil {
+		return nil, xerrors.Errorf("unable to build include map: %w", err)
+	}
+	return IncludeableFunc(func(tID TableID) bool {
+		if len(includeObjects) == 0 {
+			return true
+		}
+		_, ok := includeObjects[tID]
+		return ok
+	}), nil
+}
+
 func SchemaFilterByObjects(schema DBSchema, objects []string) (DBSchema, error) {
 	if objects == nil {
 		return schema, nil
@@ -259,6 +273,11 @@ func (t *TableDescription) GeneratePartID() string {
 	return util.Hash(asJSONString)
 }
 
+// PartID is a compatibility alias for legacy call sites.
+func (t *TableDescription) PartID() string {
+	return t.GeneratePartID()
+}
+
 func (t *TableDescription) Same(table string) bool {
 	if t.Name == table {
 		return true
@@ -339,15 +358,37 @@ type SchemaStorage interface {
 	LoadSchema() (DBSchema, error)
 }
 
-// SampleableStorage is for dataplane tests
+type SizeableStorage interface {
+	Storage
+	TableSizeInBytes(table TableID) (uint64, error)
+}
+
+type Sampleable interface {
+	LoadRandomSample(table TableDescription, pusher Pusher) error
+}
+
+type AccessCheckable interface {
+	TableAccessible(table TableDescription) bool
+}
+
+// SampleableStorage keeps backward compatibility for components that still
+// depend on the legacy sampling/storage contract.
 type SampleableStorage interface {
 	Storage
-
 	TableSizeInBytes(table TableID) (uint64, error)
 	LoadTopBottomSample(table TableDescription, pusher Pusher) error
 	LoadRandomSample(table TableDescription, pusher Pusher) error
 	LoadSampleBySet(table TableDescription, keySet []map[string]interface{}, pusher Pusher) error
 	TableAccessible(table TableDescription) bool
+}
+
+// ChecksumableStorage is for dataplane tests
+type ChecksumableStorage interface {
+	SizeableStorage
+	Sampleable
+
+	LoadTopBottomSample(table TableDescription, pusher Pusher) error
+	LoadSampleBySet(table TableDescription, keySet []map[string]interface{}, pusher Pusher) error
 }
 
 // ShardingStorage is for in table sharding
@@ -391,7 +432,7 @@ type CustomCheckSecondaryWorkersDone interface {
 	// startTime stores time, when main-worker started waiting secondary workers.
 	// so, when all workers are done, 'time.Now()-startTime' will show snapshotting time.
 	// startTime needed here just for intermediate logging.
-	CheckSecondaryWorkersDone(startTime time.Time, cp any, transfer any) (bool, error)
+	CheckSecondaryWorkersDone(startTime time.Time, cp any, transfer any, operationID string) (bool, error)
 }
 
 //---------------------------------------------------------------------------------------------------------------------

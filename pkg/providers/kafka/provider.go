@@ -19,12 +19,12 @@ import (
 )
 
 func init() {
-	destinationFactory := func() model.LoggableDestination {
+	destinationFactory := func() model.Destination {
 		return new(KafkaDestination)
 	}
 	gobwrapper.RegisterName("*server.KafkaSource", new(KafkaSource))
 	gobwrapper.RegisterName("*server.KafkaDestination", new(KafkaDestination))
-	model.RegisterSource(ProviderType, func() model.LoggableSource {
+	model.RegisterSource(ProviderType, func() model.Source {
 		return new(KafkaSource)
 	})
 	model.RegisterDestination(ProviderType, destinationFactory)
@@ -129,7 +129,7 @@ func (p *Provider) Source() (abstract.Source, error) {
 	if len(p.transfer.DataObjects.GetIncludeObjects()) > 0 && len(src.GroupTopics) == 0 { // infer topics from transfer
 		src.GroupTopics = p.transfer.DataObjects.GetIncludeObjects()
 	}
-	return NewSource(p.transfer.ID, src, nil, p.logger, p.registry)
+	return NewSource(p.transfer.ID, src, p.logger, p.registry)
 }
 
 func (p *Provider) Sink(middlewares.Config) (abstract.Sinker, error) {

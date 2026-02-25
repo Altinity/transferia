@@ -1058,7 +1058,7 @@ func (l *SnapshotLoader) DoUploadTables(
 				l.progressUpdateMutex.Lock()
 				nextPart.Completed = true
 				l.progressUpdateMutex.Unlock()
-				progressTracker.Flush(tppGetter.SharedMemory())
+					progressTracker.Flush(true)
 
 				logger.Log.Info(
 					fmt.Sprintf(

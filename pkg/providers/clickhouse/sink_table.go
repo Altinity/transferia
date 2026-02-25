@@ -649,7 +649,7 @@ func doOperation(t *sinkTable, tx *sql.Tx, items []abstract.ChangeItem) (err err
 		strings.Join(colVals, ","),
 	)
 
-	insertCtx := clickhouse.Context(context.Background(), t.config.InsertSettings().ToQueryOption())
+	insertCtx := clickhouse.Context(context.Background(), t.config.InsertSettings().ToQueryOption(t.version))
 	insertQuery, err := tx.PrepareContext(insertCtx, q)
 	if err != nil {
 		if err.Error() == "Decimal128 is not supported" {
