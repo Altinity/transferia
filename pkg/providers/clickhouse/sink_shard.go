@@ -253,8 +253,9 @@ func (s *sinkShard) pushBatch(input []abstract.ChangeItem) error {
 		s.metrics.Table(table, "rows_deleted", stat.deleted)
 		ops += len(rows)
 
-		s.logger.Debug(
+		s.logger.Info(
 			"Committed",
+			log.Any("source_table", rows[0].TableID().Fqtn()),
 			log.Any("table", table),
 			log.Any("elapsed", time.Since(before)),
 			log.Any("ops", len(rows)),
@@ -271,6 +272,7 @@ func (s *sinkShard) execMetrikaDDL(row abstract.ChangeItem) error {
 		if err != nil {
 			return xerrors.Errorf("error building metrika DDL: %w", err)
 		}
+		s.logger.Info("Executing metrica DDL", log.String("query", ddl))
 		return s.cluster.bestSinkServer().ExecDDL(context.Background(), ddl)
 	})
 }
