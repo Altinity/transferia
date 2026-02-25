@@ -42,9 +42,11 @@ func (f *CoordinatorInMemory) GetTransferState(transferID string) (map[string]*T
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	logger.Log.Info("CoordinatorInMemory.SetTransferState", log.Any("transfer_id", transferID))
+	result := f.state[transferID]
 
-	return f.state[transferID], nil
+	logger.Log.Info("CoordinatorInMemory.GetTransferState", log.Any("transfer_id", transferID), log.Any("state", result))
+
+	return result, nil
 }
 
 func (f *CoordinatorInMemory) SetTransferState(transferID string, state map[string]*TransferStateData) error {
@@ -153,11 +155,12 @@ func (f *CoordinatorInMemory) UpdateOperationTablesParts(operationID string, tab
 }
 
 func (f *CoordinatorInMemory) CreateOperationWorkers(operationID string, workersCount int) error {
+	logger.Log.Infof("CreateOperationWorkers operationID: %s, workersCount: %d", operationID, workersCount)
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
 	arr := make([]*model.OperationWorker, 0)
-	for i := 0; i < workersCount; i++ {
+	for i := 1; i <= workersCount; i++ {
 		arr = append(arr, &model.OperationWorker{
 			OperationID: operationID,
 			WorkerIndex: i,
@@ -177,7 +180,7 @@ func (f *CoordinatorInMemory) GetOperationWorkers(operationID string) ([]*model.
 	return f.operationIdToWorkers[operationID], nil
 }
 
-func (f *CoordinatorInMemory) FinishOperation(operationID, _ string, shardIndex int, _ error) error {
+func (f *CoordinatorInMemory) FinishOperation(operationID, _, _ string, shardIndex int, _ error) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
