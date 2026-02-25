@@ -27,10 +27,10 @@ import (
 func init() {
 	gobwrapper.RegisterName("*server.PgSource", new(PgSource))
 	gobwrapper.RegisterName("*server.PgDestination", new(PgDestination))
-	model.RegisterDestination(ProviderType, func() model.Destination {
+	model.RegisterDestination(ProviderType, func() model.LoggableDestination {
 		return new(PgDestination)
 	})
-	model.RegisterSource(ProviderType, func() model.Source {
+	model.RegisterSource(ProviderType, func() model.LoggableSource {
 		return new(PgSource)
 	})
 
@@ -122,7 +122,7 @@ func (p *Provider) Deactivate(ctx context.Context, task *model.TransferOperation
 		if err != nil {
 			return xerrors.Errorf("failed to extract schema from source: %w", err)
 		}
-		if err := ApplyPgDumpPostSteps(pgdump, p.transfer, p.registry); err != nil {
+		if err := ApplyPgDumpPostSteps(pgdump, p.transfer, task, p.registry); err != nil {
 			return xerrors.Errorf("failed to apply pre-steps to transfer schema: %w", err)
 		}
 	}
@@ -176,7 +176,7 @@ func (p *Provider) Activate(ctx context.Context, task *model.TransferOperation, 
 		if err != nil {
 			return xerrors.Errorf("failed to extract schema from source: %w", err)
 		}
-		if err := ApplyPgDumpPreSteps(pgdump, p.transfer, p.registry); err != nil {
+		if err := ApplyPgDumpPreSteps(pgdump, p.transfer, task, p.registry); err != nil {
 			return xerrors.Errorf("failed to apply pre-steps to transfer schema: %w", err)
 		}
 	}
@@ -187,7 +187,7 @@ func (p *Provider) Activate(ctx context.Context, task *model.TransferOperation, 
 
 		if src.DBLogEnabled {
 			logger.Log.Info("DBLog enabled")
-			if err := p.DBLogUpload(ctx, tables); err != nil {
+			if err := p.DBLogUpload(ctx, tables, task); err != nil {
 				return xerrors.Errorf("DBLog snapshot loading failed: %w", err)
 			}
 		} else {
@@ -201,7 +201,7 @@ func (p *Provider) Activate(ctx context.Context, task *model.TransferOperation, 
 		if err != nil {
 			return xerrors.Errorf("failed to extract schema from source: %w", err)
 		}
-		if err := ApplyPgDumpPostSteps(pgdump, p.transfer, p.registry); err != nil {
+		if err := ApplyPgDumpPostSteps(pgdump, p.transfer, task, p.registry); err != nil {
 			return xerrors.Errorf("failed to apply post-steps to transfer schema: %w", err)
 		}
 	}
@@ -335,6 +335,7 @@ func (p *Provider) srcParamsFromTransfer() (*PgSource, error) {
 	if src.NoHomo {
 		src.IsHomo = false
 	}
+
 	return &src, nil
 }
 
@@ -414,7 +415,7 @@ func (p *Provider) DBLogCreateSlotAndInit(ctx context.Context, tracker *Tracker)
 	return nil
 }
 
-func (p *Provider) DBLogUpload(ctx context.Context, tables abstract.TableMap) error {
+func (p *Provider) DBLogUpload(ctx context.Context, tables abstract.TableMap, task *model.TransferOperation) error {
 	src, ok := p.transfer.Src.(*PgSource)
 	if !ok {
 		return xerrors.Errorf("unexpected type: %T", p.transfer.Src)
@@ -431,6 +432,7 @@ func (p *Provider) DBLogUpload(ctx context.Context, tables abstract.TableMap) er
 		}
 		asyncSink, err := abstract_sink.MakeAsyncSink(
 			p.transfer,
+			task,
 			logger.Log,
 			p.registry,
 			p.cp,
@@ -482,7 +484,7 @@ func (p *Provider) DBLogCleanup(ctx context.Context, src *PgSource) error {
 	return dblog.DeleteWatermarks(ctx, conn, src.KeeperSchema, p.transfer.ID)
 }
 
-func New(lgr log.Logger, registry metrics.Registry, cp coordinator.Coordinator, transfer *model.Transfer) providers.Provider {
+func New(lgr log.Logger, registry metrics.Registry, cp coordinator.Coordinator, transfer *model.Transfer, _ *model.TransferOperation) providers.Provider {
 	return &Provider{
 		logger:   lgr,
 		registry: registry,
