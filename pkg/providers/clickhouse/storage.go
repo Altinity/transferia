@@ -289,7 +289,7 @@ func (s *Storage) readRowsAndPushByChunks(reader *rowsReader, pusher abstract.Pu
 		colsNames[i] = col.ColumnName
 	}
 
-	partID := tDescr.PartID()
+	partID := tDescr.GeneratePartID()
 
 	rowsCount := uint64(0)
 	inflightBytes := uint64(0)
@@ -499,6 +499,7 @@ func (s *Storage) listTables(schema, name string) ([]table, error) {
 	}
 	defer tablesRes.Close()
 
+	systemSchema := systemDBs.Contains(schema)
 	tables := make([]table, 0)
 	for tablesRes.Next() {
 		var database, name, pkeys, engine string
@@ -509,7 +510,7 @@ func (s *Storage) listTables(schema, name string) ([]table, error) {
 			return nil, xerrors.Errorf("unable to parse table list query result: %w", err)
 		}
 
-		if systemDBs.Contains(database) {
+		if !systemSchema && systemDBs.Contains(database) {
 			continue
 		}
 		if totalRows != nil {
@@ -565,10 +566,6 @@ func (s *Storage) TableList(includeTableFilter abstract.IncludeTableList) (abstr
 	sortedTablesForLog := make([]string, 0)
 
 	for _, table := range allTables {
-		if table.database == "system" {
-			continue
-		}
-
 		id := abstract.TableID{
 			Namespace: table.database,
 			Name:      table.name,

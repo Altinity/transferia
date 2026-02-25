@@ -887,9 +887,7 @@ func (l *SnapshotLoader) sendTableControlEvent(
 
 		logger.Log.Info(
 			fmt.Sprintf("Sent control event '%v' for table '%v' on worker %v", kind, fqtn, l.workerIndex),
-			log.String("kind", string(kind)),
-			log.String("table", fqtn),
-			log.Int("worker_index", l.workerIndex),
+			log.String("kind", string(kind)), log.String("table", fqtn), log.Int("worker_index", l.workerIndex),
 		)
 	}
 	return nil
@@ -908,9 +906,7 @@ func (l *SnapshotLoader) sendTablePartControlEvent(event []abstract.ChangeItem, 
 
 	logger.Log.Info(
 		fmt.Sprintf("Sent control event '%v' for table '%v' on worker %v", kind, part, l.workerIndex),
-		log.String("kind", string(kind)),
-		log.Any("table_part", part),
-		log.Int("worker_index", l.workerIndex),
+		log.String("kind", string(kind)), log.Any("table_part", part), log.Int("worker_index", l.workerIndex),
 	)
 
 	return nil
@@ -939,22 +935,21 @@ func (l *SnapshotLoader) DoUploadTables(
 			continue
 		}
 
-		nextPartPtr, err := tppGetter.NextOperationTablePart(ctx)
+		nextPart, err := tppGetter.NextOperationTablePart(ctx)
 		if err != nil {
 			parallelismSemaphore.Release(1)
 			logger.Log.Error("Unable to get next table to upload", log.Int("worker_index", l.workerIndex), log.Error(ctx.Err()))
 			return errors.CategorizedErrorf(categories.Internal, "unable to get next table to upload: %w", err)
 		}
-		if nextPartPtr == nil {
+		if nextPart == nil {
 			parallelismSemaphore.Release(1)
 			break // No more tables to transfer
 		}
 
 		waitToComplete.Add(1)
 		logger.Log.Info(
-			fmt.Sprintf("Assigned table part '%v' to worker %v", nextPartPtr, l.workerIndex),
-			log.Any("table_part", nextPartPtr),
-			log.Int("worker_index", l.workerIndex),
+			fmt.Sprintf("Assigned table part '%v' to worker %v", nextPart, l.workerIndex),
+			log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex),
 		)
 
 		go func() {
@@ -964,27 +959,25 @@ func (l *SnapshotLoader) DoUploadTables(
 			upload := func() error {
 				if ctx.Err() != nil {
 					logger.Log.Warn(
-						fmt.Sprintf("Context is canceled while upload table '%v'", nextPartPtr),
-						log.Any("table_part", nextPartPtr),
-						log.Error(ctx.Err()),
+						fmt.Sprintf("Context is canceled while upload table '%v'", nextPart),
+						log.Any("table_part", nextPart), log.Error(ctx.Err()),
 					)
 					return nil
 				}
 
 				logger.Log.Info(
-					fmt.Sprintf("Start load table '%v' on worker %v", nextPartPtr, l.workerIndex),
-					log.Any("table_part", nextPartPtr),
-					log.Int("worker_index", l.workerIndex),
+					fmt.Sprintf("Start load table '%v' on worker %v", nextPart, l.workerIndex),
+					log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex),
 				)
 
 				l.progressUpdateMutex.Lock()
-				nextPartPtr.CompletedRows = 0
-				nextPartPtr.Completed = false
+				nextPart.CompletedRows = 0
+				nextPart.Completed = false
 				l.progressUpdateMutex.Unlock()
 
-				progressTracker.Add(nextPartPtr)
+				progressTracker.Add(nextPart)
 
-				progress := NewLoadProgress(l.workerIndex, nextPartPtr, &l.progressUpdateMutex)
+				progress := NewLoadProgress(l.workerIndex, nextPart, &l.progressUpdateMutex)
 				currSink, err := sink.MakeAsyncSink(
 					l.transfer,
 					logger.Log,
@@ -995,10 +988,8 @@ func (l *SnapshotLoader) DoUploadTables(
 				)
 				if err != nil {
 					logger.Log.Error(
-						fmt.Sprintf("Failed to create currSink for load table '%v' on worker %v", nextPartPtr, l.workerIndex),
-						log.Any("table_part", nextPartPtr),
-						log.Int("worker_index", l.workerIndex),
-						log.Error(err),
+						fmt.Sprintf("Failed to create currSink for load table '%v' on worker %v", nextPart, l.workerIndex),
+						log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex), log.Error(err),
 					)
 					if abstract.IsFatal(err) {
 						err = backoff.Permanent(err)
@@ -1008,10 +999,8 @@ func (l *SnapshotLoader) DoUploadTables(
 				closeSink := func() {
 					if err := currSink.Close(); err != nil {
 						logger.Log.Warn(
-							fmt.Sprintf("Failed to close currSink after load table '%v' on worker %v", nextPartPtr, l.workerIndex),
-							log.Any("table_part", nextPartPtr),
-							log.Int("worker_index", l.workerIndex),
-							log.Error(err),
+							fmt.Sprintf("Failed to close currSink after load table '%v' on worker %v", nextPart, l.workerIndex),
+							log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex), log.Error(err),
 						)
 					}
 				}
@@ -1020,9 +1009,9 @@ func (l *SnapshotLoader) DoUploadTables(
 				state := newAsynchronousSnapshotState(currSink)
 				pusher := state.SnapshotPusher()
 				timestampTz := util.GetTimestampFromContextOrNow(ctx)
-				schema, err := l.tableSchema(ctx, *nextPartPtr.ToTableID(), source)
+				schema, err := l.tableSchema(ctx, *nextPart.ToTableID(), source)
 				if err != nil {
-					return xerrors.Errorf("unable to load table: %s schema:%w", nextPartPtr.String(), err)
+					return xerrors.Errorf("unable to load table: %s schema:%w", nextPart.String(), err)
 				}
 
 				var logPosition abstract.LogPosition
@@ -1034,57 +1023,49 @@ func (l *SnapshotLoader) DoUploadTables(
 					logPosition = *pos
 				}
 
-				initTableLoad := abstract.MakeInitTableLoad(logPosition, *nextPartPtr.ToTableDescription(), timestampTz, schema)
-				if err := l.sendTablePartControlEvent(initTableLoad, pusher, nextPartPtr); err != nil {
+				initTableLoad := abstract.MakeInitTableLoad(logPosition, *nextPart.ToTableDescription(), timestampTz, schema)
+				if err := l.sendTablePartControlEvent(initTableLoad, pusher, nextPart); err != nil {
 					return errors.CategorizedErrorf(categories.Target, "unable to start loading table: %w", err)
 				}
 
-				if err := source.LoadTable(ctx, *nextPartPtr.ToTableDescription(), pusher); err != nil {
+				if err := source.LoadTable(ctx, *nextPart.ToTableDescription(), pusher); err != nil {
 					logger.Log.Error(
-						fmt.Sprintf("Failed to load table '%v' on worker %v", nextPartPtr, l.workerIndex),
-						log.Any("table_part", nextPartPtr),
-						log.Int("worker_index", l.workerIndex),
-						log.Error(err),
+						fmt.Sprintf("Failed to load table '%v' on worker %v", nextPart, l.workerIndex),
+						log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex), log.Error(err),
 					)
 					if abstract.IsFatal(err) {
 						err = backoff.Permanent(err)
 					}
-					return errors.CategorizedErrorf(categories.Source, "failed to load table '%s': %w", nextPartPtr, err)
+					return errors.CategorizedErrorf(categories.Source, "failed to load table '%s': %w", nextPart, err)
 				}
 
-				doneTableLoad := abstract.MakeDoneTableLoad(logPosition, *nextPartPtr.ToTableDescription(), timestampTz, schema)
-				if err := l.sendTablePartControlEvent(doneTableLoad, pusher, nextPartPtr); err != nil {
+				doneTableLoad := abstract.MakeDoneTableLoad(logPosition, *nextPart.ToTableDescription(), timestampTz, schema)
+				if err := l.sendTablePartControlEvent(doneTableLoad, pusher, nextPart); err != nil {
 					return errors.CategorizedErrorf(categories.Target, "unable to finish table loading: %w", err)
 				}
 
 				if err := state.Close(); err != nil {
 					logger.Log.Error(
-						fmt.Sprintf("Failed to deliver items to destination while loading table '%v' on worker %v", nextPartPtr, l.workerIndex),
-						log.Any("table_part", nextPartPtr),
-						log.Int("worker_index", l.workerIndex),
-						log.Error(err),
+						fmt.Sprintf("Failed to deliver items to destination while loading table '%v' on worker %v", nextPart, l.workerIndex),
+						log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex), log.Error(err),
 					)
 					if abstract.IsFatal(err) {
 						err = backoff.Permanent(err)
 					}
-					return errors.CategorizedErrorf(categories.Target, "failed to deliver items to destination while loading table '%v': %w", nextPartPtr, err)
+					return errors.CategorizedErrorf(categories.Target, "failed to deliver items to destination while loading table '%v': %w", nextPart, err)
 				}
 
 				l.progressUpdateMutex.Lock()
-				nextPartPtr.Completed = true
+				nextPart.Completed = true
 				l.progressUpdateMutex.Unlock()
-				err = progressTracker.Flush(true)
-				if err != nil {
-					return errors.CategorizedErrorf(categories.Internal, "failed to flush progressTracker: %w", err)
-				}
+				progressTracker.Flush(tppGetter.SharedMemory())
 
 				logger.Log.Info(
 					fmt.Sprintf(
 						"Finish load table '%v' on worker %v, progress %v / %v (%.2f%%)",
-						nextPartPtr, l.workerIndex, nextPartPtr.CompletedRows, nextPartPtr.ETARows, nextPartPtr.CompletedPercent(),
+						nextPart, l.workerIndex, nextPart.CompletedRows, nextPart.ETARows, nextPart.CompletedPercent(),
 					),
-					log.Any("table_part", nextPartPtr),
-					log.Int("worker_index", l.workerIndex),
+					log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex),
 				)
 
 				return nil
@@ -1094,20 +1075,16 @@ func (l *SnapshotLoader) DoUploadTables(
 			expBackoff.MaxElapsedTime = 0
 			notify := func(err error, dur time.Duration) {
 				logger.Log.Error(
-					fmt.Sprintf("Upload table '%v' on worker %v failed, will retry after %s", nextPartPtr, l.workerIndex, dur),
-					log.Any("table_part", nextPartPtr),
-					log.Int("worker_index", l.workerIndex),
-					log.Error(err),
+					fmt.Sprintf("Upload table '%v' on worker %v failed, will retry after %s", nextPart, l.workerIndex, dur),
+					log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex), log.Error(err),
 				)
 			}
 			if err := backoff.RetryNotify(upload, backoff.WithMaxRetries(expBackoff, 3), notify); err != nil {
 				errorOnce.Do(func() { tableUploadErr = err })
 				cancel()
 				logger.Log.Error(
-					fmt.Sprintf("Upload table '%v' on worker %v, max retries exceeded", nextPartPtr, l.workerIndex),
-					log.Any("table_part", nextPartPtr),
-					log.Int("worker_index", l.workerIndex),
-					log.Error(err),
+					fmt.Sprintf("Upload table '%v' on worker %v, max retries exceeded", nextPart, l.workerIndex),
+					log.Any("table_part", nextPart), log.Int("worker_index", l.workerIndex), log.Error(err),
 				)
 			}
 		}()
