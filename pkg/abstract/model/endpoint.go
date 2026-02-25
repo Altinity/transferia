@@ -5,6 +5,7 @@ import (
 
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/pkg/abstract"
+	"go.uber.org/zap/zapcore"
 )
 
 type EndpointParams interface {
@@ -12,12 +13,39 @@ type EndpointParams interface {
 	Validate() error
 
 	// WithDefaults sets default values for MISSING parameters of the endpoint
+	// generally withDefauts is called in 3 situation types:
+	// 1) to correctly display missing params in UI
+	// 2) to fill important params which are not specified and save it to db - WithEssentialDefaults
+	// 3) during actual usage in DP: to use default param values if empty
+	// this method covers all 3 situations
 	WithDefaults()
+}
+
+// sometimes we save default param values in db, sometimes we do not want that
+// this interface only populates essential defaults
+type EndpointParamsDbDefaults interface {
+	EndpointParams
+
+	// WithEssentialDefaults sets only essential defaults which will be saved to db
+	WithEssentialDefaults()
+}
+
+func WithEssentialDefaults(params EndpointParams) {
+	if dbDefaults, ok := params.(EndpointParamsDbDefaults); ok {
+		dbDefaults.WithEssentialDefaults()
+	} else {
+		params.WithDefaults()
+	}
 }
 
 type Source interface {
 	EndpointParams
 	IsSource()
+}
+
+type LoggableSource interface {
+	Source
+	zapcore.ObjectMarshaler
 }
 
 type Describable interface {
@@ -33,6 +61,11 @@ type Destination interface {
 	EndpointParams
 	CleanupMode() CleanupType
 	IsDestination()
+}
+
+type LoggableDestination interface {
+	Destination
+	zapcore.ObjectMarshaler
 }
 
 type AlterableDestination interface {
@@ -172,7 +205,7 @@ type SourceCompatibility interface {
 
 // DestinationCompatibility for source to check is it compatible with transfer destination
 type DestinationCompatibility interface {
-	Compatible(dst Destination) error
+	Compatible(dst Destination, transferType abstract.TransferType) error
 }
 
 // AsyncPartSource designates that source:
