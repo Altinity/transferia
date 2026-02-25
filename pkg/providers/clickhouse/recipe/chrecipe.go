@@ -175,6 +175,7 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		NativePort:              nativePort,
 		TTL:                     "",
 		InferSchema:             false,
+		MigrationOptions:        nil,
 		ForceJSONMode:           false,
 		ProtocolUnspecified:     true,
 		AnyAsString:             false,

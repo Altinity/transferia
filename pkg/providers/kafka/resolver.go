@@ -8,11 +8,13 @@ import (
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	yslices "github.com/transferia/transferia/library/go/slices"
+	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/connection"
 	"github.com/transferia/transferia/pkg/connection/kafka"
 	"github.com/transferia/transferia/pkg/dbaas"
 	"github.com/transferia/transferia/pkg/providers/kafka/client"
+	"github.com/transferia/transferia/pkg/util"
 )
 
 func ResolveBrokers(s *KafkaConnectionOptions) ([]string, error) {
@@ -29,7 +31,7 @@ func ResolveBrokers(s *KafkaConnectionOptions) ([]string, error) {
 		brokers = s.Brokers
 	}
 	if len(brokers) == 0 {
-		return nil, xerrors.New("unable to connect, no brokers found")
+		return nil, abstract.NewFatalError(xerrors.New("unable to connect, no brokers found"))
 	}
 	return brokers, nil
 }
@@ -106,12 +108,13 @@ func ResolveConnectionOptions(connection *KafkaConnectionOptions, kafkaConnectio
 	}
 
 	kafkaOptions := &KafkaConnectionOptions{
-		ClusterID:    kafkaConnection.ClusterID,
-		TLS:          tls,
-		TLSFile:      kafkaConnection.CACertificates,
-		Brokers:      kafkaConnection.ToBrokersUrls(),
-		SubNetworkID: connection.SubNetworkID,
-		ConnectionID: connection.ConnectionID,
+		ClusterID:      kafkaConnection.ClusterID,
+		TLS:            tls,
+		TLSFile:        kafkaConnection.CACertificates,
+		UserEnabledTls: util.BoolPtr(kafkaConnection.CACertificates != ""),
+		Brokers:        kafkaConnection.ToBrokersUrls(),
+		SubNetworkID:   connection.SubNetworkID,
+		ConnectionID:   connection.ConnectionID,
 	}
 
 	return kafkaOptions
