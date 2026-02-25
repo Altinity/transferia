@@ -698,7 +698,6 @@ func restoreVals(vals []interface{}, cols []abstract.ColSchema) []interface{} {
 
 func (t *sinkTable) ApplySchemaDiffToDB(oldSchema []abstract.ColSchema, newSchema []abstract.ColSchema) error {
 	added, removed := compareColumnSets(oldSchema, newSchema)
-	modified := compareColumnTypes(oldSchema, newSchema)
 	if len(removed) != 0 {
 		removedNames := make([]string, 0, len(removed))
 		for _, col := range removed {
@@ -706,11 +705,11 @@ func (t *sinkTable) ApplySchemaDiffToDB(oldSchema []abstract.ColSchema, newSchem
 		}
 		t.logger.Warnf("Some columns missed: %s. Hope, it's ok", strings.Join(removedNames, ","))
 	}
-	if len(added) == 0 && len(modified) == 0 {
+	if len(added) == 0 {
 		return nil
 	}
 	return t.cluster.execDDL(func(distributed bool) error {
-		return t.alterTable(added, nil, modified, distributed)
+		return t.alterTable(added, nil, distributed)
 	})
 }
 
@@ -788,30 +787,20 @@ func compareColumnSets(currentSchema []abstract.ColSchema, newSchema []abstract.
 	return added, removed
 }
 
-func generateAlterTableDDL(
-	tableName, clusterName string, addCols, dropCols, modifyCols []abstract.ColSchema, distributed bool,
-) string {
-	ddl := fmt.Sprintf("ALTER TABLE `%s` ", tableName)
-	if distributed && clusterName != "" {
-		ddl += fmt.Sprintf("ON CLUSTER `%s` ", clusterName)
+func (t *sinkTable) alterTable(addCols, dropCols []abstract.ColSchema, distributed bool) error {
+	ddl := fmt.Sprintf("ALTER TABLE `%s` ", t.tableName)
+	if distributed {
+		ddl += fmt.Sprintf(" ON CLUSTER `%s` ", t.cluster.topology.ClusterName())
 	}
 
-	ddlItems := make([]string, 0, len(addCols)+len(dropCols)+len(modifyCols))
+	ddlItems := make([]string, 0, len(addCols)+len(dropCols))
 	for _, col := range addCols {
 		ddlItems = append(ddlItems, fmt.Sprintf("ADD COLUMN IF NOT EXISTS %s", chColumnDefinitionWithExpression(&col)))
 	}
 	for _, col := range dropCols {
 		ddlItems = append(ddlItems, fmt.Sprintf("DROP COLUMN IF EXISTS `%s`", col.ColumnName))
 	}
-	for _, col := range modifyCols {
-		ddlItems = append(ddlItems, fmt.Sprintf("MODIFY COLUMN %s", chColumnDefinitionWithExpression(&col)))
-	}
-	return ddl + strings.Join(ddlItems, ", ")
-}
-
-func (t *sinkTable) alterTable(addCols, dropCols, modifyCols []abstract.ColSchema, distributed bool) error {
-	clusterName := t.cluster.topology.ClusterName()
-	ddl := generateAlterTableDDL(t.tableName, clusterName, addCols, dropCols, modifyCols, distributed)
+	ddl += strings.Join(ddlItems, ", ")
 
 	t.logger.Info("ALTER DDL start", log.Any("ddl", ddl), log.Any("table", t.tableName))
 	if err := t.server.ExecDDL(context.Background(), ddl); err != nil {
@@ -822,29 +811,4 @@ func (t *sinkTable) alterTable(addCols, dropCols, modifyCols []abstract.ColSchem
 		return xerrors.Errorf("failed to infer columns: %w", err)
 	}
 	return nil
-}
-
-// compareColumnTypes returns columns for which ClickHouse type has been changed in allowed way.
-func compareColumnTypes(oldSchema []abstract.ColSchema, newSchema []abstract.ColSchema) []abstract.ColSchema {
-	oldCols := make(map[string]abstract.ColSchema, len(oldSchema))
-	for _, col := range oldSchema {
-		oldCols[col.ColumnName] = col
-	}
-	var modified []abstract.ColSchema
-	for _, newCol := range newSchema {
-		oldCol, ok := oldCols[newCol.ColumnName]
-		if !ok {
-			continue
-		}
-		if chColumnType(oldCol) == chColumnType(newCol) {
-			continue
-		}
-		if err := isAlterPossible(oldCol, newCol); err != nil {
-			logger.Log.Infof("alter of column %s (table %s) is not possible: %s",
-				oldCol.ColumnName, oldCol.TableID().String(), err.Error())
-		} else {
-			modified = append(modified, newCol)
-		}
-	}
-	return modified
 }

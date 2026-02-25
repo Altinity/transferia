@@ -121,6 +121,7 @@ func Source(opts ...Option) (*model.ChSource, error) {
 		IOHomoFormat:     model.ClickhouseIOFormatCSV,
 		RootCACertPaths:  nil,
 		ConnectionID:     "",
+		UserEnabledTls:   nil,
 	}
 	res.WithDefaults()
 	return res, nil
@@ -174,7 +175,6 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		NativePort:              nativePort,
 		TTL:                     "",
 		InferSchema:             false,
-		MigrationOptions:        nil,
 		ForceJSONMode:           false,
 		ProtocolUnspecified:     true,
 		AnyAsString:             false,
@@ -209,6 +209,7 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		RootCACertPaths:            nil,
 		ConnectionID:               "",
 		IsSchemaMigrationDisabled:  false,
+		UserEnabledTls:             nil,
 	}
 	res.WithDefaults()
 	return res, nil
