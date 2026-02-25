@@ -72,7 +72,7 @@ func marshalAny(val interface{}) interface{} {
 }
 
 func Restore(column abstract.ColSchema, val interface{}) interface{} {
-	switch strings.ToLower(column.DataType) {
+	switch column.DataType {
 	case "any":
 		if v, ok := val.(string); ok {
 			return v
@@ -142,6 +142,19 @@ func divideTypeToExtAndInt(chType string) (extPart string, intPart string) {
 		return match[1], match[2]
 	}
 	return chType, ""
+}
+
+// IsCompositeType checks if type has external modifier (e.g. LowCardinality) except for Nullable.
+func IsCompositeType(chType string) bool {
+	extType, intType := divideTypeToExtAndInt(chType)
+	if intType == "" {
+		return false
+	}
+	if extType != "Nullable" {
+		return true
+	}
+	_, inner := divideTypeToExtAndInt(intType)
+	return inner != ""
 }
 
 var chTypeWithModifierRe *regexp.Regexp = regexp.MustCompile(`(\w*)\((.*)\)`)
