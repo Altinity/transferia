@@ -13,6 +13,11 @@ import (
 	tc_clickhouse "github.com/transferia/transferia/tests/tcrecipes/clickhouse"
 )
 
+const (
+	defaultHTTPPort   = 8123
+	defaultNativePort = 9000
+)
+
 type ContainerParams struct {
 	prefix      string
 	initScripts []string
@@ -86,11 +91,11 @@ func Source(opts ...Option) (*model.ChSource, error) {
 	if err := Prepare(params); err != nil {
 		return nil, xerrors.Errorf("unable to prepare container: %w", err)
 	}
-	httpPort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_HTTP_PORT"))
+	httpPort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_HTTP_PORT", defaultHTTPPort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_HTTP_PORT: %w", err)
 	}
-	nativePort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_NATIVE_PORT"))
+	nativePort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_NATIVE_PORT", defaultNativePort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_NATIVE_PORT: %w", err)
 	}
@@ -153,11 +158,11 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		return nil, xerrors.Errorf("unable to prepare container: %w", err)
 	}
 
-	httpPort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_HTTP_PORT"))
+	httpPort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_HTTP_PORT", defaultHTTPPort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_HTTP_PORT: %w", err)
 	}
-	nativePort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_NATIVE_PORT"))
+	nativePort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_NATIVE_PORT", defaultNativePort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_NATIVE_PORT: %w", err)
 	}
@@ -253,4 +258,19 @@ func Prepare(params ContainerParams) error {
 		return xerrors.Errorf("unable to set RECIPE_CLICKHOUSE_HTTP_PORT: %w", err)
 	}
 	return nil
+}
+
+func parseRecipePort(envName string, fallback int) (int, error) {
+	rawValue := os.Getenv(envName)
+	if rawValue == "" {
+		if tcrecipes.Enabled() {
+			return 0, xerrors.Errorf("empty env %s while testcontainers are enabled", envName)
+		}
+		return fallback, nil
+	}
+	port, err := strconv.Atoi(rawValue)
+	if err != nil {
+		return 0, err
+	}
+	return port, nil
 }

@@ -16,5 +16,4 @@ import (
 	_ "github.com/transferia/transferia/pkg/transformer/registry/sharder"
 	_ "github.com/transferia/transferia/pkg/transformer/registry/table_splitter"
 	_ "github.com/transferia/transferia/pkg/transformer/registry/to_string"
-	_ "github.com/transferia/transferia/pkg/transformer/registry/yt_dict"
 )

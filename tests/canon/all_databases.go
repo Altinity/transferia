@@ -15,8 +15,6 @@ import (
 	"github.com/transferia/transferia/pkg/providers/clickhouse"
 	"github.com/transferia/transferia/pkg/providers/mysql"
 	"github.com/transferia/transferia/pkg/providers/postgres"
-	"github.com/transferia/transferia/pkg/providers/ydb"
-	ytprovider "github.com/transferia/transferia/pkg/providers/yt"
 	"golang.org/x/exp/slices"
 )
 
@@ -27,10 +25,6 @@ var (
 	ClickhouseCanon embed.FS
 	//go:embed mysql/canondata/*/extracted
 	MysqlCanon embed.FS
-	//go:embed ydb/canondata/*/extracted
-	YdbCanon embed.FS
-	//go:embed yt/canondata/*/extracted
-	YtCanon embed.FS
 )
 
 func init() {
@@ -46,8 +40,6 @@ var (
 		postgres.ProviderType:   PostgresCanon,
 		mysql.ProviderType:      MysqlCanon,
 		clickhouse.ProviderType: ClickhouseCanon,
-		ytprovider.ProviderType: YtCanon,
-		ydb.ProviderType:        YdbCanon,
 	}
 	Roots = map[abstract.ProviderType]string{
 		postgres.ProviderType:   "postgres",
