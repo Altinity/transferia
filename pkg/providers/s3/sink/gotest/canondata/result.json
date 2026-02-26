@@ -1,5 +1,0 @@
-{
-    "gotest.gotest.TestParquetReplication/TestParquetReplication_2022/01/01/test_table_part_1-1_100.parquet.gz": {
-        "uri": "file://gotest.gotest.TestParquetReplication_TestParquetReplication_2022_01_01_test_table_part_1-1_100.parquet.gz/extracted"
-    }
-}

@@ -1,2 +1,0 @@
-{"schema":{"type":"struct","fields":[{"type":"int32","optional":false,"field":"id"}],"optional":false,"name":"fullfillment.public.basic_types.Key"},"payload":{"id":2}}
-
