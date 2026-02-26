@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="7" failures="0" errors="0" time="58.282050">
+	<testsuite tests="7" failures="0" time="58.282000" name="mongo" timestamp="2026-02-26T20:08:13+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mongo" name="TestCanonSource/vanilla_hetero_case/canondb.hetero_repack" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mongo" name="TestCanonSource/vanilla_hetero_case/canondb.hetero_repack#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mongo" name="TestCanonSource/vanilla_hetero_case" time="28.700000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mongo" name="TestCanonSource/strange_hetero_case/canondb.hetero_no_repack" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mongo" name="TestCanonSource/strange_hetero_case/canondb.hetero_no_repack#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mongo" name="TestCanonSource/strange_hetero_case" time="28.800000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mongo" name="TestCanonSource" time="57.500000"></testcase>
+	</testsuite>
+</testsuites>

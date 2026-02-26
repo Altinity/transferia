@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="cdc-packages" tests="234" failures="0" errors="0" time="38.433514">
+	<testsuite tests="182" failures="0" skipped="3" time="0.406000" name="postgres" timestamp="2026-02-26T20:06:09+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestStorage" time="0.000000">
+			<skipped message="=== RUN   TestStorage&#xA;    client_test.go:213: &#xA;--- SKIP: TestStorage (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestSink" time="0.000000">
+			<skipped message="=== RUN   TestSink&#xA;    client_test.go:256: &#xA;--- SKIP: TestSink (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnectionRealCluster" time="0.000000">
+			<skipped message="=== RUN   TestWithConnectionRealCluster&#xA;    client_test.go:300: &#xA;--- SKIP: TestWithConnectionRealCluster (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParseTimestamp" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParseTimestampNegativeTz" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParseTimestampZeroTz" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:boolean" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:boolean#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:smallint" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:smallint#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:integer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:integer#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:bigint" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:bigint#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:money" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:text" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:real" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:numeric" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:json" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType/test_pg:bytea" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreType" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreArray/{}" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreArray/{1,2,3}" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreArray/{{foo,bar},{abc,xyz}}" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRestoreArray" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonFetcherData" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnection/MakeConnConfigFromSrc" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnection/MakeConnConfigFromStorage" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnection/MakeConnConfigFromSink" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnection/MakeConnConfigFromSrc_for_onprem_one_host" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnection/MakeConnConfigFromStorage_for_replica_one_host" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnection/Get_mdb_host_port" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWithConnection" time="0.010000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestNewPgConnPoolConfig_DNSError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPgError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestGenericArray_DecodeText/uuid_array" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestGenericArray_DecodeText/simple_arr" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestGenericArray_DecodeText/matrix" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestGenericArray_DecodeText/mega_matrix_1" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestGenericArray_DecodeText/mega_matrix_2" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestGenericArray_DecodeText/mega_matrix_3" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestGenericArray_DecodeText" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestHstoreToJSON" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestJSONToHstore" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsKeyword" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestListWithCommaSingleQuoted" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestPgDumpStepsAnyStepIsTrue" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIncludeEmptyTable" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica/should_return_true_for_heterogeneous_SNAPSHOT_ONLY_transfer_without_DBLog" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica/should_return_false_for_homogeneous_transfer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica/should_return_false_for_nil_transfer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica/should_return_false_for_INCREMENT_ONLY_transfer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica/should_return_false_when_DBLog_is_enabled" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica/should_return_true_for_non-INCREMENT_ONLY_transfer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica/should_return_false_for_heterogeneous_snapshot_and_increment_transfer_with_DBLog" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestIsPreferReplica" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestSource_Include/PgObjectType/all_PgDumpSteps_is_valid_pg_objects" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestSource_Include/PgObjectType" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestSource_Include" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParseCreateTableDDL/simple" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParseCreateTableDDL/escaped" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParseCreateTableDDL" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/Table" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/Sequence" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/SequenceOwnedBy" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/Constraint" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/PrimaryKey" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/FkContraint" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/Collation" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/Trigger" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/Policy" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput/Cast" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestParsePgDumpOutput" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestBuildArgs" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID/wal2jsonfti_schema_table" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID/wal2jsonfti_noschema_table" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID/wal2jsonfti_schema_star" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID/wal2jsonfti_noschema_star" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID/wal2jsonfti_schema_tablewithdots" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID/wal2jsonfti_schemawithdots_table" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID/wal2jsonfti_schemawithdots_notable" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2jsonTableFromTableID" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestNewWal2jsonArgumentsDBLog/dblog_snapshot" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestNewWal2jsonArgumentsDBLog/dblog_replication" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestNewWal2jsonArgumentsDBLog/not-dblog_snapshot" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestNewWal2jsonArgumentsDBLog/not-dblog_replication" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestNewWal2jsonArgumentsDBLog" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery/append_only" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery/insert_into_the_middle" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery/prepend" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery/drop" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery/drop_and_insert" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery/no_changes" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery/no_initial_state" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddEnumValsQuery" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/single_column" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/multiple_columns" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/with_default_timestamp" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/with_custom_type" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/type_conversion" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/invalid_type_error" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/not_null" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/default_not_null" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery/camel_case" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestAddColsQuery" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/simple" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/composite_pkey" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/with_default" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/with_custom_types" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/not_null" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/with_array" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/with_json" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/invalid_type" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery/camel_case" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateTableQuery" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateEnumQuery/simple_enum_with_single_value" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateEnumQuery/enum_with_multiple_values" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateEnumQuery/invalid_original_type_format" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateEnumQuery/empty_enum_values" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCreateEnumQuery" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestPartialUpdate/per_tx_push_should_include_only_changed_values" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestPartialUpdate" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestPgJSONInsertSerialization" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRepresent/tc/0" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRepresent/tc/1" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRepresent/tc/2" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRepresent/tc/3" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRepresent/tc/4" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRepresent/tc/5" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestRepresent" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestEnumAllValues" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestHandlePartitionedTables/remove_partitioned_table" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestHandlePartitionedTables/error,_when_matched_partitioned_table_and_not_all_it&#39;s_parts" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestHandlePartitionedTables/remove_partitioned_table#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestHandlePartitionedTables" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/bigint" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/bit(1)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/bit(8)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/bit_varying(8)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/boolean" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/bytea" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/character(1)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/character(4)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/character_varying(256)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/character_varying(5)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/character_varying" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/cidr" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/daterange" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/date" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/double_precision" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/inet" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/int4range" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/int8range" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/integer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/interval" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/json" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/jsonb" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/macaddr" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/money" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/numeric" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/numrange" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/oid" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/point" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/citext" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/hstore" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/real" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/smallint" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/text" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/tsrange" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/tstzrange" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/uuid" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/xml" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/character_varying[]" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/timestamp_without_time_zone" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/timestamp_with_time_zone" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/time_with_time_zone" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString/time_without_time_zone" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestCanonizedPgTypeToYTTypeString" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestTypeSystem" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2JsonEntireChunk" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2JsonLineByLine" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres" name="TestWal2JsonError" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="dblog" timestamp="2026-02-26T20:06:09+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="8.952000" name="alltypes" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/dblog/tests/alltypes" name="TestIncrementalSnapshot" time="6.120000"></testcase>
+	</testsuite>
+	<testsuite tests="2" failures="0" time="17.102000" name="changing_chunk" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/dblog/tests/changing_chunk" name="TestIncrementalSnapshot" time="7.190000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/dblog/tests/changing_chunk" name="TestUpdateKey" time="7.260000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="8.639000" name="composite_key" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/dblog/tests/composite_key" name="TestIncrementalSnapshot" time="5.290000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="13.943000" name="fault_tolerance" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/dblog/tests/fault_tolerance" name="TestIncrementalSnapshotFaultTolerance" time="9.280000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="10.480000" name="mvp" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/dblog/tests/mvp" name="TestIncrementalSnapshot" time="5.300000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="pgrecipe" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="3" failures="0" time="3.306000" name="sequencer" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/sequencer" name="TestLsnTransaction" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/sequencer" name="TestProgressInfo" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/sequencer" name="TestSequences" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="15" failures="0" time="3.052000" name="splitter" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableFull" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_dolivochka_is_too_small_-_then_we_are_NOT_sharding!" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_dolivochka_is_too_small_-_then_we_are_NOT_sharding!#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_if_somewhy_tableSize_is_zero,_we_think_table_is_really_zero_size,_and_it&#39;s_too_small_-_then_we_are_NOT_sharding!" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_if_somewhy_tableSize_is_zero_&amp;_something_else_-_we_think_table_is_really_zero_size_-_then_we_are_NOT_sharding!" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_if_somewhy_tableSize_is_zero_&amp;_something_else_-_we_think_table_is_really_zero_size_-_then_we_are_NOT_sharding!#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_upload_new_2gb_piece,_from_20gb_table_-_then_we_are_sharding!" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_calculating_exact_count_exceed_15seconds_-_then_we_are_sharding!" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_if_somewhy_estimating_of_wholeTableRowsCount_is_zero_-_then_we_can&#39;t_estimate_DolivochkaDataSizeInBytes,_but_sharding!" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement/case:_if_somewhy_estimating_of_wholeTableRowsCount_is_zero_&amp;_calculating_exact_#rows_took_&gt;15sec_-_then_we_can&#39;t_estimate_DolivochkaDataSizeInBytes,_but_sharding!" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestTableIncrement" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestShardingStorage_CalculatePartsCount" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestView/case:_views_always_will_be_sharded" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestView/case:_views_always_will_be_sharded_-_and_when_timeout" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/splitter" name="TestView" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="0.000000" name="sqltimestamp" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/sqltimestamp" name="TestParse" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="17" failures="0" skipped="2" time="33.105000" name="tests" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestListSequencesInParallel" time="0.000000">
+			<skipped message="=== RUN   TestListSequencesInParallel&#xA;    sequence_test.go:51: &#xA;--- SKIP: TestListSequencesInParallel (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestShardingStorage_ShardTable" time="0.000000">
+			<skipped message="=== RUN   TestShardingStorage_ShardTable&#xA;    sharding_storage_test.go:23: proxy-based sharding test is unstable in containerized CI runs&#xA;--- SKIP: TestShardingStorage_ShardTable (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestCodedErrors_DropTableWithDependencies" time="11.900000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestShardingStorage_IncrementalTable/incremental_numeric" time="0.020000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestShardingStorage_IncrementalTable/incremental_timestamp" time="0.010000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestShardingStorage_IncrementalTable" time="4.250000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestInitialStatePopulate/single_table" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestInitialStatePopulate/single_table_not_match" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestInitialStatePopulate/many_tables_one_match" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestInitialStatePopulate/partial_upload" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestInitialStatePopulate" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestListSequences" time="2.910000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestShardingStorage_CalculatePartsCount" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestSlotHappyPath" time="2.320000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestSlotBrokenConnection" time="4.030000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestInheritTableStorageSize" time="2.820000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/tests" name="TestInheritTableSharding" time="0.210000"></testcase>
+	</testsuite>
+	<testsuite tests="10" failures="0" time="2.818000" name="utils" timestamp="2026-02-26T20:06:14+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/intersection_case_-_host_duplicated_1-to-1" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/intersection_case_-_host_duplicated_1-to-many,_duplicate_at_1st_place" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/intersection_case_-_host_duplicated_1-to-many,_duplicate_not_at_1st_place" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/intersection_case_-_host_differs_from_hosts" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/mutual_exclusive_case_-_there_are_only_&#39;host&#39;" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/mutual_exclusive_case_-_there_are_only_&#39;hosts&#39;" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/invalid_case_-_both_fields:_&#39;host&#39;_&amp;_&#39;hosts&#39;_not_filled,_hosts=nil" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/invalid_case_-_both_fields:_&#39;host&#39;_&amp;_&#39;hosts&#39;_not_filled,_hosts=[]string{}" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts/invalid_case_-_&#39;hosts&#39;_has_an_empty_string" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/postgres/utils" name="TestHandleHostAndHosts" time="0.000000"></testcase>
+	</testsuite>
+</testsuites>

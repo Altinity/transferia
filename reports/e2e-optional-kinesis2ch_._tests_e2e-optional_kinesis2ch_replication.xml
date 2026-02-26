@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-optional" tests="1" failures="0" errors="0" time="33.844681">
+	<testsuite tests="1" failures="0" time="33.844000" name="replication" timestamp="2026-02-26T20:35:37+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-optional/kinesis2ch/replication" name="TestReplication" time="33.110000"></testcase>
+	</testsuite>
+</testsuites>

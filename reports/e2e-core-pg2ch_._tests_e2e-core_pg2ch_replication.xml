@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="2" failures="0" errors="0" time="33.422542">
+	<testsuite tests="2" failures="0" time="33.419000" name="replication" timestamp="2026-02-26T20:14:28+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/replication" name="TestSnapshotAndIncrement" time="18.720000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/replication" name="TestOptimizeCleanup" time="7.030000"></testcase>
+	</testsuite>
+</testsuites>

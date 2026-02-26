@@ -135,7 +135,7 @@ func init() {
 		cfg = zap.JSONConfig(level.Log)
 	}
 
-	if os.Getenv("CI") == "1" || strings.Contains(os.Args[0], "gotest") {
+	if (os.Getenv("CI") == "1" || strings.Contains(os.Args[0], "gotest")) && os.Getenv("LOG_LEVEL") == "" {
 		cfg = zp.Config{
 			Level:            zp.NewAtomicLevelAt(zp.DebugLevel),
 			Encoding:         "console",

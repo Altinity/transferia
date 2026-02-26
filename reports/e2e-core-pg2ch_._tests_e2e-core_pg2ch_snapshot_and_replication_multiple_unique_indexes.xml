@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="2" failures="0" errors="0" time="35.357075">
+	<testsuite tests="2" failures="0" time="35.357000" name="snapshot_and_replication_multiple_unique_indexes" timestamp="2026-02-26T20:17:34+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_multiple_unique_indexes" name="TestSnapshotAndIncrementPK" time="17.600000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_multiple_unique_indexes" name="TestSnapshotAndIncrementNoPK" time="10.200000"></testcase>
+	</testsuite>
+</testsuites>

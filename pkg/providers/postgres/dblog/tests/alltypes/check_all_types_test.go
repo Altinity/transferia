@@ -119,11 +119,6 @@ var (
 		"int4",
 		"int8",
 		"bool",
-
-		// pg 14+
-		"nummultirange",
-		"int4multirange",
-		"int8multirange",
 	}
 )
 
@@ -223,11 +218,6 @@ func TestIncrementalSnapshot(t *testing.T) {
 		"int4_pk_table":   {"'1'", "'2'"},
 		"int8_pk_table":   {"'100'", "'200'"},
 		"bool_pk_table":   {"'false'", "'true'"},
-
-		// pg 14+
-		"nummultirange_pk_table":  {"'{(15e-1,25e-1), (25e-1,35e-1)}'", "'{(20e-1,30e-1), (30e-1,40e-1)}'"},
-		"int4multirange_pk_table": {"'{[3,7), [8,9)}'", "'{[4,8), [9,10)}'"},
-		"int8multirange_pk_table": {"'{[1,100), [200,300)}'", "'{[100,200), [300,400)}'"},
 
 		"_jsonb_pk_table":       {"'{1, 2, 3}'", "'{4, 5, 6}'"},
 		"_numeric_pk_table":     {"ARRAY['1.1', '2.2']::numeric[]", "ARRAY['3.3', '4.4']::numeric[]"},

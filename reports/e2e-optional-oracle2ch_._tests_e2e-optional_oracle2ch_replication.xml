@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-optional" tests="1" failures="0" errors="0" time="0.000073">
+	<testsuite tests="1" failures="0" skipped="1" time="0.000000" name="replication" timestamp="2026-02-26T20:36:12+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-optional/oracle2ch/replication" name="TestReplicationSmoke" time="0.000000">
+			<skipped message="=== RUN   TestReplicationSmoke&#xA;    check_db_test.go:6: blocked: oracle2ch local smoke is not wired yet; requires Oracle test container/image and initialization recipe. See ../README.md&#xA;--- SKIP: TestReplicationSmoke (0.00s)&#xA;"></skipped>
+		</testcase>
+	</testsuite>
+</testsuites>

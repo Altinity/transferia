@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="cdc-packages" tests="113" failures="0" errors="0" time="11.178924">
+	<testsuite tests="107" failures="0" time="0.471000" name="mysql" timestamp="2026-02-26T20:06:50+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestCreateTableExp" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestAlterTableExp" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestRenameTableExp" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestDropTableExp" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestWithoutSchemeExp" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestAll" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestIsErrorCode" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestConnectionTimeoutError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/regexp_black_white" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/regexp_black_only" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/regexp_blackout_whole_schema" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/regexp_white_only" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/string_match_black_white" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/string_match_black_only" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/string_match_white_only" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql/has_database_name" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include/mysql" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestSource_Include" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParserUnknownCharsetUtf8mb3/utf8mb3_general_ci" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParserUnknownCharsetUtf8mb3/utf8mb3_unicode_ci" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParserUnknownCharsetUtf8mb3" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries00/delete" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries00" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries01/update_primary_key" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries02/update_full_line" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries02" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries03/update_-_when_str2_toasted" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries03" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries04/insert_full_line" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries04" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries05/insert_-_case_when_len(conflictUpd)==0._It_means_we_don&#39;t_have_usual_fields_(not_a_pkey_&amp;_not_a_generated_column)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries05" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries06/insert_-_when_table_have_uniqConstraints" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries06" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueries_big" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_makeMapColnameToIndex" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryDeleteCondition/one_column_-_PrimaryKey" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryDeleteCondition/_one_column_-_not_a_PrimaryKey" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryDeleteCondition/two_columns:_both_PrimaryKey" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryDeleteCondition/two_columns:_only_one_PrimaryKey_(1st_col)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryDeleteCondition/two_columns:_only_one_PrimaryKey_(2nd_col)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryDeleteCondition/two_columns:_no_one_PrimaryKey" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryDeleteCondition" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueryUpdate/one_column_-_PrimaryKey,_changed" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueryUpdate/one_column_-_not_a_PrimaryKey,_changed" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueryUpdate/two_columns:_both_PrimaryKey,_one_1st_changed" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueryUpdate/two_columns:_both_PrimaryKey,_one_2nd_changed" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueryUpdate/two_columns:_both_PrimaryKey,_both_changed" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildQueryUpdate" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryInsert/one_column_-_PrimaryKey,_changed" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildPartOfQueryInsert" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_breakQueriesIntoBatches" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildDeleteQueries" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildStatementOnDuplicateKeyUpdate" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_setFqtn" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL/table_with_single_primary_key" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL/table_with_composite_primary_key" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL/table_with_no_primary_key" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL/table_with_different_column_types" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL/table_with_special_characters_in_names" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL/table_with_json_type" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL/table_with_array_type" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareDDL" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareAlterTableQuery/Add_single_new_column" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareAlterTableQuery/Add_multiple_new_columns" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareAlterTableQuery/No_new_columns" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareAlterTableQuery/Add_JSON_type_column" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareAlterTableQuery/add_columns_from_DataType" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestPrepareAlterTableQuery" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestValidate" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParseMySQLTableDDL" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParseMySQLViewDDL" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParseMySQLRoutineDDL" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParseMySQLTriggerDDL" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParseMySQLTriggerDDLInUpperLowerCase" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParseMySQLPartitions" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestParseMySQLPartitionsWithSpaces" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestForeignKeyWithIndex" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_generatedBounds" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_prepareInputPerTables_SyntaxError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_create_table" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_pushQuires_Deadlock_ReturnsCodedError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestNotMasterErrorWrapping/struct" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestNotMasterErrorWrapping/pointer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestNotMasterErrorWrapping" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset/UTC" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset/Empty_location_(defaults_to_UTC)" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset/Europe/Moscow" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset/America/Los_Angeles_Summer" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset/America/Los_Angeles_Winter" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset/Pacific/Marquesas" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset/Pacific/Kiritimati" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTimezoneOffset" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="TestTypeSystem" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_makeMapColNameToColTypeName" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_makeArrColsNames" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_calcChunkSize" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_getTableRowsCountTableDataSizeInBytes" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_buildSelectQuery" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_orderByPrimaryKeys" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_prepareArrayWithTypes_00" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_prepareArrayWithTypes_01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_pushDropAndCreateDDL" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_readRowsAndPushByChunks_00" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_readRowsAndPushByChunks_01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql" name="Test_readRowsAndPushByChunks_BySize" time="0.030000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="mysqlrecipe" timestamp="2026-02-26T20:06:50+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="5" failures="0" skipped="1" time="10.555000" name="codes" timestamp="2026-02-26T20:06:50+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql/tests/codes" name="TestBinlogFirstFileMissing_ReturnsCodedError" time="10.170000">
+			<skipped message="=== RUN   TestBinlogFirstFileMissing_ReturnsCodedError&#xA;2026/02/26 20:06:51 github.com/testcontainers/testcontainers-go - Connected to docker: &#xA;  Server Version: 28.5.2&#xA;  API Version: 1.44&#xA;  Operating System: OrbStack&#xA;  Total Memory: 7994 MB&#xA;  Resolved Docker Host: unix:///var/run/docker.sock&#xA;  Resolved Docker Socket Path: /var/run/docker.sock&#xA;  Test SessionID: 63bb5508995fd08442baa38480e805fbc52ce3997523fdfa33d4fec2b55c6f52&#xA;  Test ProcessID: 2221beab-b0b2-4cdf-b3fe-efacc4a1be23&#xA;2026/02/26 20:06:51 🐳 Creating container for image testcontainers/ryuk:0.7.0&#xA;2026/02/26 20:06:51 ✅ Container created: c7ca4fb112a2&#xA;2026/02/26 20:06:51 🐳 Starting container: c7ca4fb112a2&#xA;2026/02/26 20:06:51 ✅ Container started: c7ca4fb112a2&#xA;2026/02/26 20:06:51 🚧 Waiting for container id c7ca4fb112a2 image: testcontainers/ryuk:0.7.0. Waiting for: &amp;{Port:8080/tcp timeout:&lt;nil&gt; PollInterval:100ms}&#xA;2026/02/26 20:06:51 🔔 Container is ready: c7ca4fb112a2&#xA;2026/02/26 20:06:51 🐳 Creating container for image mysql/mysql-server:5.7.40&#xA;2026/02/26 20:06:51 ✅ Container created: 4534d3baa4c8&#xA;2026/02/26 20:06:51 🐳 Starting container: 4534d3baa4c8&#xA;2026/02/26 20:06:51 ✅ Container started: 4534d3baa4c8&#xA;2026/02/26 20:06:51 🚧 Waiting for container id 4534d3baa4c8 image: mysql/mysql-server:5.7.40. Waiting for: &amp;{timeout:&lt;nil&gt; Log:port: 3306  MySQL Community Server IsRegexp:false Occurrence:1 PollInterval:100ms}&#xA;2026/02/26 20:07:01 🔔 Container is ready: 4534d3baa4c8&#xA;    binlog_missing_test.go:68: binlog purge requires SUPER privileges in this runtime: Error 1227 (42000): Access denied; you need (at least one of) the SUPER privilege(s) for this operation&#xA;--- SKIP: TestBinlogFirstFileMissing_ReturnsCodedError (10.17s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql/tests/codes" name="TestConnect_InvalidCredential_ReturnsCodedError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql/tests/codes" name="TestConnect_DialError_ReturnsCodedError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql/tests/codes" name="TestConnect_DNSResolutionFailed_ReturnsCodedError" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql/tests/codes" name="TestConnect_UnknownDatabase_ReturnsCodedError" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="1" failures="0" time="10.721000" name="sharding" timestamp="2026-02-26T20:06:50+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mysql/tests/sharding" name="TestShardingByPartitions" time="10.050000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="replication" timestamp="2026-02-26T20:06:50+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="snapshot" timestamp="2026-02-26T20:06:50+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="types" timestamp="2026-02-26T20:06:50+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+	</testsuite>
+</testsuites>

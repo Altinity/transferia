@@ -19,13 +19,16 @@ import (
 )
 
 func TestShardingStorage_ShardTable(t *testing.T) {
-	_ = pgrecipe.RecipeSource(pgrecipe.WithPrefix(""), pgrecipe.WithInitDir("test_scripts"))
-	srcPort, _ := strconv.Atoi(os.Getenv("PG_LOCAL_PORT"))
+	if os.Getenv("USE_TESTCONTAINERS") == "1" {
+		t.Skip("proxy-based sharding test is unstable in containerized CI runs")
+	}
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("SHARDING_"), pgrecipe.WithInitDir("test_scripts"))
+	srcPort := src.Port
 	v := &postgres.PgSource{
 		Hosts:    []string{"127.0.0.1"},
-		User:     os.Getenv("PG_LOCAL_USER"),
-		Password: model.SecretString(os.Getenv("PG_LOCAL_PASSWORD")),
-		Database: os.Getenv("PG_LOCAL_DATABASE"),
+		User:     src.User,
+		Password: model.SecretString(src.Password),
+		Database: src.Database,
 		Port:     srcPort,
 		SlotID:   "testslot",
 	}

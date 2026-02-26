@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="cdc-packages" tests="45" failures="0" errors="0" time="34.878726">
+	<testsuite tests="45" failures="0" time="34.879000" name="mongo" timestamp="2026-02-26T20:07:04+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestKeyBatcher/BatchSizeFlushing" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestKeyBatcher/KeySizeFlushing" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestKeyBatcher/IntervalFlushing" time="4.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestKeyBatcher" time="4.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestExtBson" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestGetValueByPath" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestSetValueByPath" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestMarshalDValue" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestBulkSplitter" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestHasDiff" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestUpdateDocument" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestCopyDocument" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestEqualAny" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestRepack/no-homo" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestRepack/no-homo_without_repack" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestRepack/no-homo_without_repack_but_very_bad_no-homo" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestRepack/homo" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestRepack/homo_but_good_homo" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestRepack/homo_doesn&#39;t_give_a_shit_about_repacking" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestRepack" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestUpdateDocumentChangeItem" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestSchemasDescriptions" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestIsTrivialKey" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestContainsID" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/IntAsKey" time="3.680000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/IntAsValue" time="2.640000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/ObjectIDAsKey" time="2.190000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/CompositeStructureAsKey" time="2.720000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/TimestampAsKey" time="2.760000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/SymbolAsKey" time="3.190000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/JavaScriptAsKey" time="2.320000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/StringAsKey" time="2.580000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/BinaryAsKey" time="2.860000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/NullAsKey" time="1.690000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/BoolAsKey" time="1.630000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable/HeterogeneousAsKey" time="2.190000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestShardingStorage_ShardTable" time="30.460000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestMongoFatalErrors/ChangeStreamFatalErrorCode" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestMongoFatalErrors/ChangeStreamHistoryLostCode" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestMongoFatalErrors/any_other_code" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestMongoFatalErrors" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestSerialization" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestFilterSystemCollections" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestFilterSystemDbs" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/pkg/providers/mongo" name="TestTypeSystem" time="0.000000"></testcase>
+	</testsuite>
+</testsuites>

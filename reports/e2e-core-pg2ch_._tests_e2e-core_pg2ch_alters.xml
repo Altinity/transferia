@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="4" failures="0" errors="0" time="93.026566">
+	<testsuite tests="4" failures="0" time="93.026000" name="alters" timestamp="2026-02-26T20:09:19+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/alters" name="TestAlter/ADD_COLUMN" time="32.430000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/alters" name="TestAlter/ADD_COLUMN_single_transaction" time="20.330000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/alters" name="TestAlter/ADD_TEMPORARY_COLUMN" time="20.370000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/alters" name="TestAlter" time="85.530000"></testcase>
+	</testsuite>
+</testsuites>

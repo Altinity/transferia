@@ -7,32 +7,30 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strconv"
 	"testing"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/stretchr/testify/require"
 	"github.com/transferia/transferia/pkg/abstract"
+	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/providers/postgres"
 	"github.com/transferia/transferia/pkg/providers/postgres/pgrecipe"
 )
 
-func connect(ctx context.Context, t *testing.T) *pgxpool.Pool {
+func connect(ctx context.Context, t *testing.T, src *postgres.PgSource) *pgxpool.Pool {
 	poolConfig, err := pgxpool.ParseConfig("")
 	require.NoError(t, err)
 	connConfig := poolConfig.ConnConfig
 	if host, ok := os.LookupEnv("PG_LOCAL_HOST"); ok {
 		connConfig.Host = host
 	} else {
-		connConfig.Host = "localhost"
+		connConfig.Host = src.Hosts[0]
 	}
-	port, err := strconv.Atoi(os.Getenv("PG_LOCAL_PORT"))
-	require.NoError(t, err)
-	connConfig.Port = uint16(port)
-	connConfig.Database = os.Getenv("PG_LOCAL_DATABASE")
-	connConfig.User = os.Getenv("PG_LOCAL_USER")
-	connConfig.Password = os.Getenv("PG_LOCAL_PASSWORD")
+	connConfig.Port = uint16(src.Port)
+	connConfig.Database = src.Database
+	connConfig.User = src.User
+	connConfig.Password = string(model.SecretString(src.Password))
 	if certPath, ok := os.LookupEnv("PG_LOCAL_CERT"); ok {
 		certFile, err := os.ReadFile(certPath)
 		certPool := x509.NewCertPool()
@@ -52,9 +50,9 @@ func TestListSequencesInParallel(t *testing.T) {
 	if os.Getenv("USE_TESTCONTAINERS") == "1" {
 		t.Skip()
 	}
-	_ = pgrecipe.RecipeSource(pgrecipe.WithPrefix(""), pgrecipe.WithInitDir("test_scripts"))
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("SEQUENCE_"), pgrecipe.WithInitDir("test_scripts"))
 	ctx := context.Background()
-	pool := connect(ctx, t)
+	pool := connect(ctx, t, src)
 	defer pool.Close()
 
 	txOptions := pgx.TxOptions{IsoLevel: pgx.ReadCommitted, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.NotDeferrable}
@@ -76,9 +74,9 @@ func TestListSequencesInParallel(t *testing.T) {
 }
 
 func TestListSequences(t *testing.T) {
-	_ = pgrecipe.RecipeSource(pgrecipe.WithPrefix(""), pgrecipe.WithInitDir("test_scripts"))
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("SEQUENCE_"), pgrecipe.WithInitDir("test_scripts"))
 	ctx := context.Background()
-	pool := connect(ctx, t)
+	pool := connect(ctx, t, src)
 	defer pool.Close()
 
 	txOptions := pgx.TxOptions{IsoLevel: pgx.ReadCommitted, AccessMode: pgx.ReadWrite, DeferrableMode: pgx.NotDeferrable}

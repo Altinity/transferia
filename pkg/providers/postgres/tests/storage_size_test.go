@@ -12,7 +12,7 @@ import (
 )
 
 func TestInheritTableStorageSize(t *testing.T) {
-	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix(""), pgrecipe.WithInitDir("test_scripts"))
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("INHERIT_"), pgrecipe.WithInitDir("test_scripts"))
 	src.CollapseInheritTables = true
 	storage, err := postgres.NewStorage(src.ToStorageParams(nil))
 	require.NoError(t, err)
@@ -26,7 +26,7 @@ func TestInheritTableStorageSize(t *testing.T) {
 }
 
 func TestInheritTableSharding(t *testing.T) {
-	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix(""), pgrecipe.WithInitDir("test_scripts"))
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("INHERIT_"), pgrecipe.WithInitDir("test_scripts"))
 	src.CollapseInheritTables = true
 	storage, err := postgres.NewStorage(src.ToStorageParams(nil))
 	require.NoError(t, err)

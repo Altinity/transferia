@@ -30,6 +30,7 @@ func execBatch(t *testing.T, conn *sql.DB, sqlCommands string) {
 
 func TestCanonSource(t *testing.T) {
 	t.Setenv("YC", "1") // to not go to vanga
+	helpers.SkipIfMissingEnv(t, "RECIPE_MYSQL_HOST", "RECIPE_MYSQL_USER", "RECIPE_MYSQL_PASSWORD", "RECIPE_MYSQL_SOURCE_DATABASE", "RECIPE_MYSQL_PORT")
 	Source := &mysql.MysqlSource{
 		ClusterID:           os.Getenv("CLUSTER_ID"),
 		Host:                os.Getenv("RECIPE_MYSQL_HOST"),

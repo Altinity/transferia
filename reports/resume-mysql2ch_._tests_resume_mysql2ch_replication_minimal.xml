@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="0" failures="0" errors="0" time="14.238260">
+	<testsuite tests="0" failures="0" time="14.238000" name="replication_minimal" timestamp="2026-02-26T20:31:03+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+	</testsuite>
+</testsuites>

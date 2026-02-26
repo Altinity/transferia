@@ -12,7 +12,6 @@ import (
 	"github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/runtime/local"
 	"github.com/transferia/transferia/pkg/worker/tasks"
-	"go.uber.org/zap/zapcore"
 )
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -43,7 +42,7 @@ type Worker struct {
 }
 
 func (w *Worker) initLocalWorker(transfer *model.Transfer) {
-	w.worker = local.NewLocalWorker(w.cp, transfer, EmptyRegistry(), logger.LoggerWithLevel(zapcore.DebugLevel))
+	w.worker = local.NewLocalWorker(w.cp, transfer, EmptyRegistry(), logger.Log)
 }
 
 func (w *Worker) Run() error {

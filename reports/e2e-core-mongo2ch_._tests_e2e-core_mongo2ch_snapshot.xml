@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="4" failures="0" errors="0" time="19.489072">
+	<testsuite tests="4" failures="0" time="19.489000" name="snapshot" timestamp="2026-02-26T20:24:58+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mongo2ch/snapshot" name="TestGroup/Group_after_port_check/Ping" time="0.010000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mongo2ch/snapshot" name="TestGroup/Group_after_port_check/Snapshot" time="2.150000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mongo2ch/snapshot" name="TestGroup/Group_after_port_check" time="2.150000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mongo2ch/snapshot" name="TestGroup" time="12.330000"></testcase>
+	</testsuite>
+</testsuites>

@@ -44,6 +44,14 @@ func GetIntFromEnv(varName string) int {
 	return val
 }
 
+func SkipIfMissingEnv(t *testing.T, keys ...string) {
+	for _, key := range keys {
+		if os.Getenv(key) == "" {
+			t.Skipf("required env %s is not set", key)
+		}
+	}
+}
+
 // StrictEquality - default callback for checksum - just compare typeNames
 func StrictEquality(l, r string) bool {
 	return l == r

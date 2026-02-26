@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-optional" tests="4" failures="0" errors="0" time="19.298554">
+	<testsuite tests="4" failures="0" time="19.298000" name="snapshot_test_csv_different_values" timestamp="2026-02-26T20:38:12+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-optional/ch2ch/snapshot_test_csv_different_values" name="TestSnapshot/default,_CSV_case" time="0.370000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-optional/ch2ch/snapshot_test_csv_different_values" name="TestSnapshot/drop" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-optional/ch2ch/snapshot_test_csv_different_values" name="TestSnapshot/JSONCompactEachRow_case" time="0.300000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-optional/ch2ch/snapshot_test_csv_different_values" name="TestSnapshot" time="10.840000"></testcase>
+	</testsuite>
+</testsuites>

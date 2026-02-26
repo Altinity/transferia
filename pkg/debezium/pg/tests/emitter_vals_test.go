@@ -71,9 +71,9 @@ var pgDebeziumCanonizedValuesSnapshot = map[string]interface{}{
 	"timetz__":   "17:30:25Z",
 	"timetz1":    "17:30:25.5Z",
 	"timetz6":    "17:30:25.575401Z",
-	"timestamp1": uint64(1098181434900),
-	"timestamp6": uint64(1098181434987654),
-	"timestamp":  uint64(1098181434000000),
+	"timestamp1": int64(1098181434900),
+	"timestamp6": int64(1098181434987654),
+	"timestamp":  int64(1098181434000000),
 	"numeric_": map[string]interface{}{
 		"scale": 0,
 		"value": "EAAAAAAAAAAAAAAAAA==",
@@ -94,6 +94,15 @@ var pgDebeziumCanonizedValuesSnapshot = map[string]interface{}{
 	"citext_":     "Tom",
 }
 
+func requireJSONValueEq(t *testing.T, expected, actual interface{}) {
+	t.Helper()
+	expectedBytes, err := json.Marshal(expected)
+	require.NoError(t, err)
+	actualBytes, err := json.Marshal(actual)
+	require.NoError(t, err)
+	require.JSONEq(t, string(expectedBytes), string(actualBytes))
+}
+
 func TestPgValByValInsert(t *testing.T) {
 	pgSnapshotChangeItem, err := os.ReadFile(yatest.SourcePath("transfer_manager/go/pkg/debezium/pg/tests/testdata/emitter_vals_test__canon_change_item.txt"))
 	require.NoError(t, err)
@@ -107,7 +116,7 @@ func TestPgValByValInsert(t *testing.T) {
 
 	require.Equal(t, len(pgDebeziumCanonizedValuesSnapshot), len(afterVals))
 	for k, v := range afterVals {
-		require.Equal(t, pgDebeziumCanonizedValuesSnapshot[k], v)
+		requireJSONValueEq(t, pgDebeziumCanonizedValuesSnapshot[k], v)
 	}
 }
 
@@ -140,9 +149,9 @@ var pgDebeziumCanonizedArrSnapshot = map[string]interface{}{
 	"arr_timetz__":             []interface{}{"17:30:25Z", "17:30:25Z"},
 	"arr_timetz1":              []interface{}{"17:30:25Z", "17:30:25Z"},
 	"arr_timetz6":              []interface{}{"17:30:25Z", "17:30:25Z"},
-	"arr_timestamp1":           []interface{}{uint64(1098181434900000), uint64(1098181434900000)},
-	"arr_timestamp6":           []interface{}{uint64(1098181434987654), uint64(1098181434987654)},
-	"arr_timestamp":            []interface{}{uint64(1098181434000000), uint64(1098181434000000)},
+	"arr_timestamp1":           []interface{}{int64(1098181434900000), int64(1098181434900000)},
+	"arr_timestamp6":           []interface{}{int64(1098181434987654), int64(1098181434987654)},
+	"arr_timestamp":            []interface{}{int64(1098181434000000), int64(1098181434000000)},
 	"arr_numeric_": []interface{}{
 		map[string]interface{}{
 			"scale": 0,
@@ -153,7 +162,10 @@ var pgDebeziumCanonizedArrSnapshot = map[string]interface{}{
 			"value": "EAAAAAAAAAAAAAAAAA==",
 		},
 	},
-	"arr_numeric_5":   []interface{}{"MDk=", "MDk="},
+	"arr_numeric_5": []interface{}{
+		map[string]interface{}{"scale": 0, "value": "MDk="},
+		map[string]interface{}{"scale": 0, "value": "MDk="},
+	},
 	"arr_numeric_5_2": []interface{}{"ME8=", "ME8="},
 	"arr_decimal_": []interface{}{
 		map[string]interface{}{
@@ -165,7 +177,10 @@ var pgDebeziumCanonizedArrSnapshot = map[string]interface{}{
 			"value": "AeJA",
 		},
 	},
-	"arr_decimal_5":   []interface{}{"MDk=", "MDk="},
+	"arr_decimal_5": []interface{}{
+		map[string]interface{}{"scale": 0, "value": "MDk="},
+		map[string]interface{}{"scale": 0, "value": "MDk="},
+	},
 	"arr_decimal_5_2": []interface{}{"ME8=", "ME8="},
 }
 
@@ -182,7 +197,7 @@ func TestPgArrByArrInsert(t *testing.T) {
 
 	require.Equal(t, len(pgDebeziumCanonizedArrSnapshot), len(afterVals))
 	for k, v := range afterVals {
-		require.Equal(t, pgDebeziumCanonizedArrSnapshot[k], v)
+		requireJSONValueEq(t, pgDebeziumCanonizedArrSnapshot[k], v)
 	}
 }
 

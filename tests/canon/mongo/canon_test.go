@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -13,10 +12,14 @@ import (
 	mongocommon "github.com/transferia/transferia/pkg/providers/mongo"
 	"github.com/transferia/transferia/tests/canon/validator"
 	"github.com/transferia/transferia/tests/helpers"
+	"github.com/transferia/transferia/tests/tcrecipes"
 )
 
 func TestCanonSource(t *testing.T) {
 	t.Setenv("YC", "1") // to not go to vanga
+	if !tcrecipes.Enabled() {
+		helpers.SkipIfMissingEnv(t, "MONGO_LOCAL_PORT", "MONGO_LOCAL_USER", "MONGO_LOCAL_PASSWORD")
+	}
 	databaseName := "canondb"
 	t.Run("vanilla hetero case", func(t *testing.T) {
 		snapshotPlusIncrementScenario(t, databaseName, "hetero_repack", false, false)
@@ -27,18 +30,11 @@ func TestCanonSource(t *testing.T) {
 }
 
 func snapshotPlusIncrementScenario(t *testing.T, databaseName, collectionName string, isHomo, preventJSONRepack bool) {
-	Source := &mongocommon.MongoSource{
-		Hosts:    []string{"localhost"},
-		Port:     helpers.GetIntFromEnv("MONGO_LOCAL_PORT"),
-		User:     os.Getenv("MONGO_LOCAL_USER"),
-		Password: model.SecretString(os.Getenv("MONGO_LOCAL_PASSWORD")),
-		Collections: []mongocommon.MongoCollection{
-			{DatabaseName: databaseName, CollectionName: collectionName},
-		},
-		IsHomo:            isHomo,
-		PreventJSONRepack: preventJSONRepack,
-	}
-	Source.WithDefaults()
+	Source := mongocommon.RecipeSource(mongocommon.WithCollections(
+		mongocommon.MongoCollection{DatabaseName: databaseName, CollectionName: collectionName},
+	))
+	Source.IsHomo = isHomo
+	Source.PreventJSONRepack = preventJSONRepack
 	defer func() {
 		require.NoError(t, helpers.CheckConnections(
 			helpers.LabeledPort{Label: "Mongo source", Port: Source.Port},

@@ -23,6 +23,8 @@ import (
 func TestCanonSource(t *testing.T) {
 	if tcrecipes.Enabled() {
 		_ = pgrecipe.RecipeSource(pgrecipe.WithPrefix(""), pgrecipe.WithInitDir("dump"))
+	} else {
+		helpers.SkipIfMissingEnv(t, "PG_LOCAL_PORT", "PG_LOCAL_USER", "PG_LOCAL_PASSWORD", "PG_LOCAL_DATABASE")
 	}
 	t.Setenv("YC", "1") // to not go to vanga
 	srcPort := helpers.GetIntFromEnv("PG_LOCAL_PORT")

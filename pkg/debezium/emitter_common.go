@@ -3,12 +3,14 @@ package debezium
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/pkg/abstract"
 	debeziumcommon "github.com/transferia/transferia/pkg/debezium/common"
+	"github.com/transferia/transferia/pkg/debezium/typeutil"
 	"github.com/transferia/transferia/pkg/util"
 	ytschema "go.ytsaurus.tech/yt/go/schema"
 )
@@ -130,6 +132,20 @@ func addCommon(v *debeziumcommon.Values, colSchema *abstract.ColSchema, colVal i
 			return xerrors.Errorf("unknown input data type for type bool: %T", colVal)
 		}
 
+	case string(ytschema.TypeDate):
+		switch t := colVal.(type) {
+		case time.Time:
+			v.AddVal(colSchema.ColumnName, int32(t.UTC().Unix()/86400))
+		case string:
+			parsedDate, err := typeutil.ParseTimestamp(t)
+			if err != nil {
+				return xerrors.Errorf("unknown input data value for type date: %s, err: %w", t, err)
+			}
+			v.AddVal(colSchema.ColumnName, int32(parsedDate.UTC().Unix()/86400))
+		default:
+			return xerrors.Errorf("unknown input data type for type date: %T", colVal)
+		}
+
 	case string(ytschema.TypeDatetime):
 		switch t := colVal.(type) {
 		case time.Time:
@@ -150,6 +166,16 @@ func addCommon(v *debeziumcommon.Values, colSchema *abstract.ColSchema, colVal i
 		switch t := colVal.(type) {
 		case string:
 			v.AddVal(colSchema.ColumnName, t)
+		case bool:
+			v.AddVal(colSchema.ColumnName, fmt.Sprintf("%t", t))
+		case int, int8, int16, int32, int64:
+			v.AddVal(colSchema.ColumnName, fmt.Sprintf("%d", t))
+		case uint, uint8, uint16, uint32, uint64:
+			v.AddVal(colSchema.ColumnName, fmt.Sprintf("%d", t))
+		case float32, float64:
+			v.AddVal(colSchema.ColumnName, fmt.Sprintf("%v", t))
+		case json.Number:
+			v.AddVal(colSchema.ColumnName, t.String())
 		case map[string]interface{}:
 			val, err := util.JSONMarshalUnescape(t)
 			if err != nil {
@@ -208,6 +234,9 @@ var mapYtTypeToKafkaType = map[string]debeziumcommon.KafkaTypeDescr{
 	}},
 	string(ytschema.TypeBoolean): {KafkaTypeAndDebeziumNameAndExtra: func(*abstract.ColSchema, bool, bool, map[string]string) (string, string, map[string]interface{}) {
 		return "boolean", "", nil
+	}},
+	string(ytschema.TypeDate): {KafkaTypeAndDebeziumNameAndExtra: func(*abstract.ColSchema, bool, bool, map[string]string) (string, string, map[string]interface{}) {
+		return "int32", "io.debezium.time.Date", nil
 	}},
 	string(ytschema.TypeTimestamp): {KafkaTypeAndDebeziumNameAndExtra: func(*abstract.ColSchema, bool, bool, map[string]string) (string, string, map[string]interface{}) {
 		return "string", "io.debezium.time.ZonedTimestamp", nil

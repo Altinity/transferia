@@ -16,14 +16,13 @@ import (
 )
 
 func TestShardingStorage_IncrementalTable(t *testing.T) {
-	_ = pgrecipe.RecipeSource(pgrecipe.WithPrefix(""), pgrecipe.WithInitDir("test_scripts"))
-	srcPort, _ := strconv.Atoi(os.Getenv("PG_LOCAL_PORT"))
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("INCREMENTAL_"), pgrecipe.WithInitDir("test_scripts"))
 	v := &postgres.PgSource{
-		Hosts:    []string{"localhost"},
-		User:     os.Getenv("PG_LOCAL_USER"),
-		Password: model.SecretString(os.Getenv("PG_LOCAL_PASSWORD")),
-		Database: os.Getenv("PG_LOCAL_DATABASE"),
-		Port:     srcPort,
+		Hosts:    src.Hosts,
+		User:     src.User,
+		Password: model.SecretString(src.Password),
+		Database: src.Database,
+		Port:     src.Port,
 	}
 	v.WithDefaults()
 	require.NotEqual(t, 0, v.DesiredTableSize)

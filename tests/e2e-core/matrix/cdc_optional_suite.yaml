@@ -1,0 +1,32 @@
+name: local-cdc-optional
+version: 1
+scope: open-source-cdc-optional
+waves:
+  - id: optional-queues
+    description: Optional queue source flows to ClickHouse
+    suites:
+      - suite_name: e2e-optional-kafka2ch
+        suite_group: tests/e2e-optional
+        suite_path: kafka2ch
+      - suite_name: e2e-optional-eventhub2ch
+        suite_group: tests/e2e-optional
+        suite_path: eventhub2ch
+      - suite_name: e2e-optional-kinesis2ch
+        suite_group: tests/e2e-optional
+        suite_path: kinesis2ch
+  - id: optional-connectors
+    description: Optional connector source flows to ClickHouse
+    suites:
+      - suite_name: e2e-optional-airbyte2ch
+        suite_group: tests/e2e-optional
+        suite_path: airbyte2ch
+      - suite_name: e2e-optional-oracle2ch
+        suite_group: tests/e2e-optional
+        suite_path: oracle2ch
+  - id: optional-clickhouse-source
+    description: Optional ClickHouse source flows
+    suites:
+      - suite_name: e2e-optional-ch2ch
+        suite_group: tests/e2e-optional
+        suite_path: ch2ch
+matrix: {}
