@@ -2,11 +2,12 @@ package kinesis
 
 import (
 	"context"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/network"
 	"github.com/transferia/transferia/library/go/core/xerrors"
@@ -38,30 +39,37 @@ func Prepare(img string) (string, error) {
 	return endpoint, nil
 }
 
-func NewClient(src *KinesisSource) (*kinesis.Kinesis, error) {
-	session := session.Must(session.NewSession(
-		&aws.Config{
-			Region: &src.Region,
-			Credentials: credentials.NewStaticCredentials(src.AccessKey,
-				string(src.SecretKey), ""),
-			Endpoint: &src.Endpoint,
-		}),
+func NewClient(src *KinesisSource) (*kinesis.Client, error) {
+	cfg, err := awsconfig.LoadDefaultConfig(
+		context.Background(),
+		awsconfig.WithRegion(src.Region),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			src.AccessKey,
+			string(src.SecretKey),
+			"",
+		)),
 	)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to load aws config: %w", err)
+	}
 
-	client := *kinesis.New(session)
-	return &client, nil
+	return kinesis.NewFromConfig(cfg, func(o *kinesis.Options) {
+		if src.Endpoint != "" {
+			o.BaseEndpoint = aws.String(src.Endpoint)
+		}
+	}), nil
 }
 
-func CreateStream(streamName string, client *kinesis.Kinesis) error {
-	if _, err := client.CreateStream(&kinesis.CreateStreamInput{
+func CreateStream(streamName string, client *kinesis.Client) error {
+	ctx := context.Background()
+	if _, err := client.CreateStream(ctx, &kinesis.CreateStreamInput{
 		StreamName: &streamName,
 	}); err != nil {
 		return xerrors.Errorf("Failed to create stream: %w", err)
 	}
 
-	if err := client.WaitUntilStreamExists(&kinesis.DescribeStreamInput{
-		StreamName: &streamName,
-	}); err != nil {
+	waiter := kinesis.NewStreamExistsWaiter(client)
+	if err := waiter.Wait(ctx, &kinesis.DescribeStreamInput{StreamName: &streamName}, 5*time.Minute); err != nil {
 		return xerrors.Errorf("Failed to create stream: %w", err)
 	}
 	return nil

@@ -9,10 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kinesistypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/library/go/core/xerrors"
@@ -122,7 +123,7 @@ func (s *Source) ack(data []*consumer.Record, pushSt time.Time, err error) {
 	}
 	offsets := map[string]string{}
 	for _, r := range data {
-		offsets[r.ShardID] = *r.SequenceNumber
+		offsets[r.ShardID] = aws.ToString(r.SequenceNumber)
 	}
 	for shardID, seqNo := range offsets {
 		_ = s.consumer.SetCheckpoint(shardID, seqNo)
@@ -194,14 +195,18 @@ func (s *Source) changeItemAsMessage(ci abstract.ChangeItem) (parsers.Message, a
 }
 
 func (s *Source) makeRawChangeItem(msg *consumer.Record) abstract.ChangeItem {
+	approximateArrivalTimestamp := time.Now()
+	if msg.ApproximateArrivalTimestamp != nil {
+		approximateArrivalTimestamp = *msg.ApproximateArrivalTimestamp
+	}
 	return abstract.MakeRawMessage(
 		[]byte("stub"),
 		s.config.Stream,
-		*msg.ApproximateArrivalTimestamp,
+		approximateArrivalTimestamp,
 		s.config.Stream,
 		splitShard(msg.ShardID),
-		hash(*msg.SequenceNumber),
-		msg.Record.Data,
+		hash(aws.ToString(msg.SequenceNumber)),
+		msg.Data,
 	)
 }
 
@@ -259,25 +264,33 @@ func NewSource(
 	logger log.Logger,
 	registry metrics.Registry,
 ) (*Source, error) {
-	cred := credentials.AnonymousCredentials
+	var cred aws.CredentialsProvider = aws.AnonymousCredentials{}
 	if cfg.AccessKey != "" {
-		cred = credentials.NewStaticCredentials(cfg.AccessKey, string(cfg.SecretKey), "")
+		cred = credentials.NewStaticCredentialsProvider(cfg.AccessKey, string(cfg.SecretKey), "")
 	}
-	awsCfg := aws.NewConfig().
-		WithRegion(cfg.Region).
-		WithLogLevel(3).
-		WithCredentials(cred)
+	loadOptions := []func(*awsconfig.LoadOptions) error{
+		awsconfig.WithRegion(cfg.Region),
+		awsconfig.WithCredentialsProvider(cred),
+	}
 	if cfg.Endpoint != "" {
-		awsCfg.WithEndpoint(cfg.Endpoint)
+		loadOptions = append(loadOptions, awsconfig.WithBaseEndpoint(cfg.Endpoint))
 	}
-	ksis := kinesis.New(session.Must(session.NewSession(awsCfg)))
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(), loadOptions...)
+	if err != nil {
+		return nil, xerrors.Errorf("unable to create aws config: %w", err)
+	}
+	ksis := kinesis.NewFromConfig(awsCfg, func(o *kinesis.Options) {
+		if cfg.Endpoint != "" {
+			o.BaseEndpoint = aws.String(cfg.Endpoint)
+		}
+	})
 
 	store := consumer.NewCoordinatorStore(cp, transferID)
 	c, err := consumer.New(
 		cfg.Stream,
 		consumer.WithStore(store),
 		consumer.WithClient(ksis),
-		consumer.WithShardIteratorType(kinesis.ShardIteratorTypeTrimHorizon),
+		consumer.WithShardIteratorType(kinesistypes.ShardIteratorTypeTrimHorizon),
 	)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to start consumer: %w", err)

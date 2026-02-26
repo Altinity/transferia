@@ -1,8 +1,10 @@
 package kinesis
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesis"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 )
 
@@ -12,14 +14,16 @@ func PutRecord(src *KinesisSource, data []byte, key string) error {
 		return xerrors.Errorf("No stream exists with the provided name: %w", err)
 	}
 
-	if _, err = client.
-		DescribeStream(
-			&kinesis.DescribeStreamInput{
-				StreamName: &src.Stream}); err != nil {
+	if _, err = client.DescribeStream(
+		context.Background(),
+		&kinesis.DescribeStreamInput{
+			StreamName: &src.Stream,
+		},
+	); err != nil {
 		return xerrors.Errorf("No stream exists with the provided name: %w", err)
 	}
 	// put data to stream
-	_, err = client.PutRecord(&kinesis.PutRecordInput{
+	_, err = client.PutRecord(context.Background(), &kinesis.PutRecordInput{
 		Data:         []byte(data),
 		StreamName:   &src.Stream,
 		PartitionKey: aws.String(key),

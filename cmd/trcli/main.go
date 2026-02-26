@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"strings"
 
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/transferia/transferia/cmd/trcli/activate"
@@ -119,7 +121,11 @@ func main() {
 				}
 			case "s3":
 				var err error
-				cp, err = s3coordinator.NewS3(coordinatorS3Bucket, logger.Log)
+				awsCfg, err := awsconfig.LoadDefaultConfig(context.Background())
+				if err != nil {
+					return xerrors.Errorf("unable to load aws config: %w", err)
+				}
+				cp, err = s3coordinator.NewS3(coordinatorS3Bucket, logger.Log, awsCfg)
 				if err != nil {
 					return xerrors.Errorf("unable to load s3 coordinator: %w", err)
 				}

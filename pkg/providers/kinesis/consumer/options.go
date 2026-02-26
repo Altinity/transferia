@@ -1,9 +1,8 @@
 package consumer
 
 import (
+	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"time"
-
-	"github.com/aws/aws-sdk-go/service/kinesis/kinesisiface"
 )
 
 // Option is used to override defaults when creating a new Consumer
@@ -24,14 +23,14 @@ func WithStore(store Store) Option {
 }
 
 // WithClient overrides the default client
-func WithClient(client kinesisiface.KinesisAPI) Option {
+func WithClient(client KinesisAPI) Option {
 	return func(c *Consumer) {
 		c.client = client
 	}
 }
 
 // WithShardIteratorType overrides the starting point for the consumer
-func WithShardIteratorType(t string) Option {
+func WithShardIteratorType(t types.ShardIteratorType) Option {
 	return func(c *Consumer) {
 		c.initialShardIteratorType = t
 	}
@@ -54,7 +53,7 @@ func WithScanInterval(d time.Duration) Option {
 // WithMaxRecords overrides the maximum number of records to be
 // returned in a single GetRecords call for the consumer (specify a
 // value of up to 10,000)
-func WithMaxRecords(n int64) Option {
+func WithMaxRecords(n int32) Option {
 	return func(c *Consumer) {
 		c.maxRecords = n
 	}
