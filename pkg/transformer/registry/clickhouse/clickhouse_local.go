@@ -176,6 +176,10 @@ func (s *ClickhouseTransformer) prepareInput(input []abstract.ChangeItem, marsha
 }
 
 func (s *ClickhouseTransformer) clickhouseExec(buffer bytes.Buffer, marshallingRules *httpuploader.MarshallingRules) ([]byte, error) {
+	if _, err := validateSafeSingleSelectQuery(s.query); err != nil {
+		return nil, err
+	}
+
 	rules := typesystem.RuleFor(clickhouse.ProviderType)
 	var inputCols []string
 	for _, col := range marshallingRules.ColSchema {
@@ -323,7 +327,13 @@ func (s *ClickhouseTransformer) Suitable(table abstract.TableID, schema *abstrac
 		s.logger.Info("table not fit by table ID, so skipped", log.String("table", table.Fqtn()))
 		return false
 	}
-	resSchema, _ := s.ResultSchema(schema)
+	resSchema, err := s.ResultSchema(schema)
+	if err != nil {
+		s.logger.Warn("unable to infer result schema", log.String("table", table.Fqtn()), log.Error(err))
+	}
+	if resSchema == nil {
+		resSchema = abstract.NewTableSchema(nil)
+	}
 	if len(resSchema.Columns()) == 0 {
 		s.logger.Warn("table fit by table ID, but has no columns", log.String("table", table.Fqtn()))
 	}
@@ -337,6 +347,10 @@ func (s *ClickhouseTransformer) Suitable(table abstract.TableID, schema *abstrac
 func (s *ClickhouseTransformer) ResultSchema(schema *abstract.TableSchema) (*abstract.TableSchema, error) {
 	s.engineMutex.Lock()
 	defer s.engineMutex.Unlock()
+	normalizedQuery, err := validateSafeSingleSelectQuery(s.query)
+	if err != nil {
+		return abstract.NewTableSchema(nil), err
+	}
 	var inputCols []string
 	rules := typesystem.RuleFor(clickhouse.ProviderType)
 	for _, col := range schema.Columns() {
@@ -350,7 +364,7 @@ func (s *ClickhouseTransformer) ResultSchema(schema *abstract.TableSchema) (*abs
 		return nil, nil
 	}
 	inputStructure := strings.Join(inputCols, ",")
-	cmd := exec.Command(s.clickhousePath, "local", "--input-format", "JSONEachRow", "--output-format", "JSONCompact", "--structure", inputStructure, "--query", s.query, "--no-system-tables")
+	cmd := exec.Command(s.clickhousePath, "local", "--input-format", "JSONEachRow", "--output-format", "JSONCompact", "--structure", inputStructure, "--query", normalizedQuery, "--no-system-tables")
 	buffer := bytes.Buffer{}
 	buffer.Write([]byte(""))
 	cmd.Stdin = &buffer
@@ -397,6 +411,29 @@ func (s *ClickhouseTransformer) ResultSchema(schema *abstract.TableSchema) (*abs
 		return nil, xerrors.New("result table has no primary key")
 	}
 	return abstract.NewTableSchema(resSchema), nil
+}
+
+func validateSafeSingleSelectQuery(query string) (string, error) {
+	trimmed := strings.TrimSpace(query)
+	if trimmed == "" {
+		return "", xerrors.New("empty SQL query")
+	}
+
+	semicolonCount := strings.Count(trimmed, ";")
+	if semicolonCount > 1 || (semicolonCount == 1 && !strings.HasSuffix(trimmed, ";")) {
+		return "", xerrors.New("multiple SQL statements are not allowed")
+	}
+
+	trimmed = strings.TrimSuffix(trimmed, ";")
+	trimmed = strings.TrimSpace(trimmed)
+	fields := strings.Fields(strings.ToLower(trimmed))
+	if len(fields) == 0 {
+		return "", xerrors.New("empty SQL query")
+	}
+	if fields[0] != "select" && fields[0] != "with" {
+		return "", xerrors.New("only SELECT queries are allowed")
+	}
+	return trimmed, nil
 }
 
 func (s *ClickhouseTransformer) Description() string {

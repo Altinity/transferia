@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 )
 
@@ -172,7 +173,23 @@ func SourcePath(arcadiaPath string) string {
 	}
 
 	// Don't verify context for SourcePath - it can be mined without context
-	return filepath.Join(context.Runtime.SourceRoot, arcadiaPath)
+	candidate := filepath.Join(context.Runtime.SourceRoot, arcadiaPath)
+	if _, err := os.Stat(candidate); err == nil {
+		return candidate
+	}
+
+	// Historical tests in this repo still reference arcadia-like paths.
+	const legacyPrefix = "transfer_manager/go/"
+	if strings.HasPrefix(arcadiaPath, legacyPrefix) {
+		trimmed := strings.TrimPrefix(arcadiaPath, legacyPrefix)
+		legacyCandidate := filepath.Join(context.Runtime.SourceRoot, trimmed)
+		if _, err := os.Stat(legacyCandidate); err == nil {
+			return legacyCandidate
+		}
+		return legacyCandidate
+	}
+
+	return candidate
 }
 
 // BuildPath returns absolute path to the build directory.
