@@ -8,6 +8,7 @@ import (
 
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
+	amodel "github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/providers/clickhouse/model"
 	"github.com/transferia/transferia/tests/tcrecipes"
 	tc_clickhouse "github.com/transferia/transferia/tests/tcrecipes/clickhouse"
@@ -113,7 +114,7 @@ func Source(opts ...Option) (*model.ChSource, error) {
 		HTTPPort:         httpPort,
 		NativePort:       nativePort,
 		User:             params.user,
-		Password:         "",
+		Password:         amodel.SecretString(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_PASSWORD")),
 		SSLEnabled:       false,
 		PemFileContent:   "",
 		Database:         params.database,
@@ -171,7 +172,7 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		MdbClusterID:            "",
 		ChClusterName:           "test_shard_localhost",
 		User:                    params.user,
-		Password:                "",
+		Password:                amodel.SecretString(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_PASSWORD")),
 		Database:                params.database,
 		Partition:               "",
 		SSLEnabled:              false,
@@ -236,7 +237,6 @@ func Prepare(params ContainerParams) error {
 		ctx,
 		tc_clickhouse.WithDatabase("default"),
 		tc_clickhouse.WithUsername(params.user),
-		tc_clickhouse.WithPassword(""),
 		tc_clickhouse.WithZookeeper(zk),
 		tc_clickhouse.WithInitScripts(params.initScripts...),
 	)

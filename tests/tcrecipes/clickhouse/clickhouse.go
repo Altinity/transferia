@@ -17,7 +17,7 @@ import (
 const defaultUser = "default"
 const defaultDatabaseName = "clickhouse"
 
-const defaultImage = "clickhouse/clickhouse-server:23.3.8.21-alpine"
+const defaultImage = "clickhouse/clickhouse-server:25.12.7"
 
 const HTTPPort = nat.Port("8123/tcp")
 const NativePort = nat.Port("9000/tcp")
