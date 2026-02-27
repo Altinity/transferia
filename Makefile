@@ -23,7 +23,7 @@ test:
 	@set -euo pipefail; \
 	rerun_flag=""; \
 	if [[ "$(RERUN_FAILS)" == "1" ]]; then \
-		rerun_flag="--rerun-fails"; \
+		rerun_flag="--rerun-fails=2"; \
 	fi; \
 	LOG_LEVEL=ERROR YT_LOG_LEVEL=ERROR \
 	PATH="$$(go env GOPATH)/bin:$$PATH" USE_TESTCONTAINERS=1 gotestsum $$rerun_flag --format $(GOTESTSUM_FORMAT) --packages="./cmd/..." -- -timeout=30m
@@ -137,7 +137,7 @@ run-tests:
 	  sanitized_dir=$$(echo "$$dir" | sed 's|/|_|g'); \
 	  rerun_flag=""; \
 	  if [[ "$(RERUN_FAILS)" == "1" ]]; then \
-	    rerun_flag="--rerun-fails"; \
+	    rerun_flag="--rerun-fails=2"; \
 	  fi; \
 	  if ! gotestsum \
 	    --junitfile="reports/$(SUITE_NAME)_$$sanitized_dir.xml" \
@@ -182,7 +182,7 @@ run-go-packages:
 	sanitized_name="$$(echo "$$pkg_name" | sed 's|/|_|g')"; \
 	rerun_flag=""; \
 	if [[ "$(RERUN_FAILS)" == "1" ]]; then \
-		rerun_flag="--rerun-fails"; \
+		rerun_flag="--rerun-fails=2"; \
 	fi; \
 	gotestsum \
 		--junitfile="reports/$$sanitized_name.xml" \
@@ -821,7 +821,7 @@ test-matrix-wave1:
 	export YT_LOG_LEVEL=ERROR; \
 	rerun_flag=""; \
 	if [[ "$(RERUN_FAILS)" == "1" ]]; then \
-		rerun_flag="--rerun-fails"; \
+		rerun_flag="--rerun-fails=2"; \
 	fi; \
 	while IFS= read -r dir; do \
 		[[ -z "$$dir" ]] && continue; \
@@ -854,7 +854,7 @@ test-matrix-wave2:
 	export YT_LOG_LEVEL=ERROR; \
 	rerun_flag=""; \
 	if [[ "$(RERUN_FAILS)" == "1" ]]; then \
-		rerun_flag="--rerun-fails"; \
+		rerun_flag="--rerun-fails=2"; \
 	fi; \
 	while IFS= read -r dir; do \
 		[[ -z "$$dir" ]] && continue; \

@@ -54,6 +54,7 @@ jobs:
     needs: build
     name: e2e / ${{ matrix.suite.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -110,6 +111,7 @@ jobs:
     needs: build
     name: tests - ${{ matrix.suite.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -196,7 +198,7 @@ jobs:
             --junitfile="reports/${{ matrix.suite.name }}.xml" \
             --junitfile-project-name="${{ matrix.suite.group }}" \
             --junitfile-testsuite-name="short" \
-            --rerun-fails \
+            --rerun-fails=2 \
             --format github-actions \
             --packages="./${{ matrix.suite.group }}/${{ matrix.suite.path }}/..." \
             -- -timeout=15m $EXTRA_GO_TEST_ARGS
