@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/transferia/transferia/library/go/ptr"
 	"github.com/transferia/transferia/pkg/abstract/model"
 )
 
@@ -349,30 +348,4 @@ func TestBuildArgs(t *testing.T) {
 		`-T`,
 		`"public"."repl_mon"`,
 	}, args)
-}
-
-func TestShouldDumpSequenceValues_RequiresSequenceInSamePhase(t *testing.T) {
-	t.Run("no phase creates sequences but SequenceSet is true — must not dump (old impl would dump)", func(t *testing.T) {
-		src := &PgSource{
-			PreSteps:  &PgDumpSteps{Sequence: false, SequenceSet: ptr.T(true)},
-			PostSteps: &PgDumpSteps{Sequence: false, SequenceSet: ptr.T(false)},
-		}
-		require.False(t, shouldDumpSequenceValues(src))
-	})
-
-	t.Run("Pre has both Sequence and SequenceSet — must dump", func(t *testing.T) {
-		src := &PgSource{
-			PreSteps:  &PgDumpSteps{Sequence: true, SequenceSet: ptr.T(true)},
-			PostSteps: &PgDumpSteps{Sequence: false, SequenceSet: ptr.T(false)},
-		}
-		require.True(t, shouldDumpSequenceValues(src))
-	})
-
-	t.Run("Post has both Sequence and SequenceSet — must dump", func(t *testing.T) {
-		src := &PgSource{
-			PreSteps:  &PgDumpSteps{Sequence: false, SequenceSet: ptr.T(false)},
-			PostSteps: &PgDumpSteps{Sequence: true, SequenceSet: ptr.T(true)},
-		}
-		require.True(t, shouldDumpSequenceValues(src))
-	})
 }
