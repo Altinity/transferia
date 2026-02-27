@@ -18,7 +18,8 @@ on:
           - "false"
           - "true"
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   ci:
