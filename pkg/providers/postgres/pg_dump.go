@@ -17,6 +17,7 @@ import (
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/metrics"
 	"github.com/transferia/transferia/library/go/core/xerrors"
+	yaslices "github.com/transferia/transferia/library/go/slices"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/coordinator"
 	"github.com/transferia/transferia/pkg/abstract/model"
@@ -73,11 +74,11 @@ func (i *pgDumpItem) TableDescription() (*abstract.TableDescription, error) {
 	return nil, xerrors.New("Not found `CREATE TABLE` line")
 }
 
-func ApplyCommands(commands []*pgDumpItem, transfer model.Transfer, registry metrics.Registry, types ...string) error {
+func ApplyCommands(commands []*pgDumpItem, transfer model.Transfer, task *model.TransferOperation, registry metrics.Registry, types ...string) error {
 	if _, ok := transfer.Dst.(*PgDestination); !ok {
 		return nil
 	}
-	sink, err := sink_factory.MakeAsyncSink(&transfer, logger.Log, registry, coordinator.NewFakeClient(), middlewares.MakeConfig(middlewares.WithNoData))
+	sink, err := sink_factory.MakeAsyncSink(&transfer, task, logger.Log, registry, coordinator.NewFakeClient(), middlewares.MakeConfig(middlewares.WithNoData))
 	if err != nil {
 		return err
 	}
@@ -167,7 +168,31 @@ func PostgresDumpConnString(src *PgSource) (string, model.SecretString, error) {
 	}
 }
 
-func pgDumpSchemaArgs(src *PgSource, seqsIncluded []abstract.TableID, seqsExcluded []abstract.TableID) ([]string, error) {
+// resolveTablesIncluded returns intersection of source and transfer include lists.
+// When both are empty, returns nil. When only one is set, returns that list.
+func resolveTablesIncluded(src *PgSource, transfer *model.Transfer) ([]abstract.TableID, error) {
+	fromSrc := make([]abstract.TableID, 0, len(src.DBTables))
+	for _, table := range src.DBTables {
+		parsed, err := abstract.ParseTableID(table)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to parse source include directive '%s': %w", table, err)
+		}
+		fromSrc = append(fromSrc, *parsed)
+	}
+	fromTransfer := make([]abstract.TableID, 0)
+	if transfer.DataObjects != nil {
+		for _, table := range transfer.DataObjects.GetIncludeObjects() {
+			parsed, err := abstract.ParseTableID(table)
+			if err != nil {
+				return nil, xerrors.Errorf("failed to parse transfer include directive '%s': %w", table, err)
+			}
+			fromTransfer = append(fromTransfer, *parsed)
+		}
+	}
+	return abstract.TableIDsIntersection(fromSrc, fromTransfer), nil
+}
+
+func pgDumpSchemaArgs(src *PgSource, tablesIncluded []abstract.TableID, seqsIncluded []abstract.TableID, seqsExcluded []abstract.TableID) ([]string, error) {
 	args := make([]string, 0)
 	args = append(args,
 		"--no-publications",
@@ -176,19 +201,10 @@ func pgDumpSchemaArgs(src *PgSource, seqsIncluded []abstract.TableID, seqsExclud
 		"--no-owner",
 		"--schema-only",
 	)
-	initialArgsCount := len(args)
 
-	if len(src.DBTables) > 0 {
-		for _, t := range src.DBTables {
-			if len(t) == 0 {
-				// TM-1964
-				continue
-			}
-			arg, err := formatFqtn(t)
-			if err != nil {
-				return nil, xerrors.Errorf("failed to format directive '%s': %w", t, err)
-			}
-			args = append(args, "-t", arg)
+	if len(tablesIncluded) > 0 {
+		for _, table := range tablesIncluded {
+			args = append(args, "-t", table.Fqtn())
 		}
 		for _, t := range src.AuxTables() {
 			args = append(args, "-t", t)
@@ -197,10 +213,6 @@ func pgDumpSchemaArgs(src *PgSource, seqsIncluded []abstract.TableID, seqsExclud
 			args = append(args, "-t", seq.Fqtn())
 		}
 	}
-
-	if len(args) > initialArgsCount {
-		return args, nil
-	} // otherwise, all objects in the database are dumped
 
 	for _, t := range src.ExcludeWithGlobals() {
 		if len(t) == 0 {
@@ -270,7 +282,7 @@ func ExtractPgDumpSchema(transfer *model.Transfer) ([]*pgDumpItem, error) {
 }
 
 // ApplyPgDumpPreSteps takes the given dump and applies pre-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions
-func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registry metrics.Registry) error {
+func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, task *model.TransferOperation, registry metrics.Registry) error {
 	if len(pgdump) == 0 {
 		return nil
 	}
@@ -279,7 +291,7 @@ func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registr
 		return nil
 	}
 
-	if err := ApplyCommands(pgdump, *transfer, registry, src.PreSteps.List()...); err != nil {
+	if err := ApplyCommands(pgdump, *transfer, task, registry, src.PreSteps.List()...); err != nil {
 		return xerrors.Errorf("failed to apply schema pre-steps (%v) in the destination PostgreSQL: %w", src.PreSteps.List(), err)
 	}
 	logger.Log.Info("Successfully applied schema pre-steps in the destination PostgreSQL", log.Array("steps", src.PreSteps.List()))
@@ -287,7 +299,7 @@ func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registr
 }
 
 // ApplyPgDumpPostSteps takes the given dump and applies post-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions
-func ApplyPgDumpPostSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registry metrics.Registry) error {
+func ApplyPgDumpPostSteps(pgdump []*pgDumpItem, transfer *model.Transfer, task *model.TransferOperation, registry metrics.Registry) error {
 	if len(pgdump) == 0 {
 		return nil
 	}
@@ -296,7 +308,7 @@ func ApplyPgDumpPostSteps(pgdump []*pgDumpItem, transfer *model.Transfer, regist
 		return nil
 	}
 
-	if err := ApplyCommands(pgdump, *transfer, registry, src.PostSteps.List()...); err != nil {
+	if err := ApplyCommands(pgdump, *transfer, task, registry, src.PostSteps.List()...); err != nil {
 		return xerrors.Errorf("failed to apply schema post-steps (%v) in the destination PostgreSQL: %w", src.PostSteps.List(), err)
 	}
 	logger.Log.Info("Successfully applied schema post-steps in the destination PostgreSQL", log.Array("steps", src.PostSteps.List()))
@@ -362,39 +374,43 @@ func loadPgDumpSchema(ctx context.Context, src *PgSource, transfer *model.Transf
 	if err != nil {
 		return nil, xerrors.Errorf("failed to list all SEQUENCEs: %w", err)
 	}
+	tablesIncluded, err := resolveTablesIncluded(src, transfer)
+	if err != nil {
+		return nil, xerrors.Errorf("unable to resolve included tables: %w", err)
+	}
 	seqsIncluded, seqsExcluded := filterSequences(seqs, abstract.NewIntersectionIncludeable(src, transfer))
 
-	userDefinedItems, err := dumpDefinedItems(connString, secretPass, src)
+	hasTableFilter := len(tablesIncluded) > 0
+	userDefinedItems, err := dumpDefinedItems(connString, secretPass, src, hasTableFilter)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to dump defined items: %w", err)
 	}
 
 	tablesSchemas := set.New[string]()
-	for _, t := range src.DBTables {
-		tableID, err := abstract.NewTableIDFromStringPg(t, false)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to parse from string: %w", err)
-		}
+	for _, tableID := range tablesIncluded {
 		tablesSchemas.Add(tableID.Namespace)
 	}
 
-	result := dumpCollations(userDefinedItems["COLLATION"], tablesSchemas)
-
-	types, err := dumpUserDefinedTypes(ctx, userDefinedItems["TYPE"], src, tablesSchemas)
-	if err != nil {
-		return nil, err
+	var result []*pgDumpItem
+	var userDefinedBeforeTables []*pgDumpItem
+	var userDefinedAfterTables []*pgDumpItem
+	if len(userDefinedItems) > 0 {
+		userDefinedFiltered, err := filterUserDefinedItemsInOrder(ctx, userDefinedItems, src, tablesSchemas)
+		if err != nil {
+			return nil, xerrors.Errorf("unable to filter user defined items: %w", err)
+		}
+		for _, d := range userDefinedFiltered {
+			switch d.Typ {
+			case string(Function), string(Cast):
+				userDefinedAfterTables = append(userDefinedAfterTables, d)
+			default:
+				userDefinedBeforeTables = append(userDefinedBeforeTables, d)
+			}
+		}
+		result = append(result, userDefinedBeforeTables...)
 	}
-	result = append(result, types...)
 
-	excludedTypes := determineExcludedTypes(userDefinedItems["TYPE"], types)
-
-	functions := dumpFunctions(userDefinedItems["FUNCTION"], src, excludedTypes, tablesSchemas)
-	result = append(result, functions...)
-
-	casts := dumpCasts(userDefinedItems["CAST"], src, excludedTypes, tablesSchemas)
-	result = append(result, casts...)
-
-	pgDumpArgs, err := pgDumpSchemaArgs(src, seqsIncluded, seqsExcluded)
+	pgDumpArgs, err := pgDumpSchemaArgs(src, tablesIncluded, seqsIncluded, seqsExcluded)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to compose arguments for pg_dump: %w", err)
 	}
@@ -402,13 +418,15 @@ func loadPgDumpSchema(ctx context.Context, src *PgSource, transfer *model.Transf
 	if err != nil {
 		return nil, xerrors.Errorf("failed to execute pg_dump to get schema: %w", err)
 	}
-	if len(src.DBTables) == 0 {
+	if len(tablesIncluded) == 0 {
 		result = append(result, dump...)
 	} else {
 		result = append(result, filterDump(dump, abstract.NewIntersectionIncludeable(src, transfer))...)
 	}
 
-	if (src.PreSteps.SequenceSet == nil || *src.PreSteps.SequenceSet) || (src.PostSteps.SequenceSet == nil || *src.PostSteps.SequenceSet) {
+	result = append(result, userDefinedAfterTables...)
+
+	if shouldDumpSequenceValues(src) {
 		sequenceValuesDump, err := dumpSequenceValues(ctx, tx.Conn(), seqsIncluded)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to dump current SEQUENCE values: %w", err)
@@ -416,6 +434,68 @@ func loadPgDumpSchema(ctx context.Context, src *PgSource, transfer *model.Transf
 		result = append(result, sequenceValuesDump...)
 	}
 
+	return result, nil
+}
+
+// shouldDumpSequenceValues returns true only when at least one phase (Pre or Post) creates Sequence and sets their current values (SequenceSet).
+func shouldDumpSequenceValues(src *PgSource) bool {
+	preSeqSet := src.PreSteps.SequenceSet == nil || *src.PreSteps.SequenceSet
+	postSeqSet := src.PostSteps.SequenceSet == nil || *src.PostSteps.SequenceSet
+	return (src.PreSteps.Sequence && preSeqSet) || (src.PostSteps.Sequence && postSeqSet)
+}
+
+func resolveExcludedTypes(ctx context.Context, dump []*pgDumpItem, src *PgSource, tablesSchemas *set.Set[string]) (*set.Set[string], error) {
+	allTypes := yaslices.Filter(dump, func(i *pgDumpItem) bool { return i.Typ == "TYPE" })
+	allowedTypes, err := dumpUserDefinedTypes(ctx, allTypes, src, tablesSchemas)
+	if err != nil {
+		return nil, err
+	}
+	return determineExcludedTypes(allTypes, allowedTypes), nil
+}
+
+// filterUserDefinedItemsInOrder filters the ordered user-defined dump (COLLATION, TYPE, FUNCTION, CAST)
+// preserving pg_dump order so that dependency order (e.g. function before domain type) is kept.
+func filterUserDefinedItemsInOrder(ctx context.Context, dump []*pgDumpItem, src *PgSource, tablesSchemas *set.Set[string]) ([]*pgDumpItem, error) {
+	if len(dump) == 0 || tablesSchemas.Empty() || src == nil {
+		return nil, nil
+	}
+	pre := src.PreSteps
+	post := src.PostSteps
+	if pre == nil && post == nil {
+		return nil, nil
+	}
+	wantType := (pre != nil && pre.Type) || (post != nil && post.Type)
+	wantCollation := (pre != nil && pre.Collation) || (post != nil && post.Collation)
+	wantFunction := (pre != nil && pre.Function) || (post != nil && post.Function)
+	wantCast := (pre != nil && pre.Cast) || (post != nil && post.Cast)
+
+	excludedTypes, err := resolveExcludedTypes(ctx, dump, src, tablesSchemas)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*pgDumpItem, 0, len(dump))
+	for _, d := range dump {
+		switch d.Typ {
+		case string(Collation):
+			if wantCollation && tablesSchemas.Contains(d.Schema) {
+				result = append(result, d)
+			}
+		case string(Type):
+			if wantType && tablesSchemas.Contains(d.Schema) {
+				result = append(result, d)
+			}
+
+		case string(Function):
+			if wantFunction && tablesSchemas.Contains(d.Schema) && isAllowedFunction(d, excludedTypes) {
+				result = append(result, d)
+			}
+		case string(Cast):
+			if wantCast && isAllowedCast(d.Body, excludedTypes, tablesSchemas) {
+				result = append(result, d)
+			}
+		}
+	}
 	return result, nil
 }
 
@@ -455,7 +535,7 @@ func filterSequences(sequences SequenceMap, filter abstract.Includeable) (includ
 }
 
 func dumpUserDefinedTypes(ctx context.Context, dumpedTypes []*pgDumpItem, src *PgSource, tablesSchemas *set.Set[string]) ([]*pgDumpItem, error) {
-	if len(src.DBTables) == 0 || (!src.PreSteps.Type && !src.PostSteps.Type) {
+	if tablesSchemas.Empty() || (!src.PreSteps.Type && !src.PostSteps.Type) {
 		return nil, nil
 	}
 
@@ -519,9 +599,9 @@ func isAllowedCast(createCastSQL string, excludedTypes *set.Set[string], tablesS
 	return tablesSchemas.Contains(schemaPart[0])
 }
 
-func dumpDefinedItems(connString string, connPass model.SecretString, src *PgSource) (map[string][]*pgDumpItem, error) {
-	if src.DBTables == nil {
-		return make(map[string][]*pgDumpItem), nil
+func dumpDefinedItems(connString string, connPass model.SecretString, src *PgSource, hasTableFilter bool) ([]*pgDumpItem, error) {
+	if !hasTableFilter {
+		return nil, nil
 	}
 	args := []string{
 		"--no-publications",
@@ -537,13 +617,7 @@ func dumpDefinedItems(connString string, connPass model.SecretString, src *PgSou
 	if err != nil {
 		return nil, xerrors.Errorf("failed to execute pg_dump to get user-defined entities: %w", err)
 	}
-
-	result := make(map[string][]*pgDumpItem, 0)
-	for _, d := range dump {
-		result[d.Typ] = append(result[d.Typ], d)
-	}
-
-	return result, nil
+	return dump, nil
 }
 
 // strings.Split without considering the separator inside the quotes
@@ -639,7 +713,7 @@ func isAllowedFunction(function *pgDumpItem, excludedTypes *set.Set[string]) boo
 }
 
 func dumpFunctions(functions []*pgDumpItem, src *PgSource, excludedTypes *set.Set[string], schemas *set.Set[string]) []*pgDumpItem {
-	if len(src.DBTables) == 0 || (!src.PreSteps.Function && !src.PostSteps.Function) {
+	if schemas.Empty() || (!src.PreSteps.Function && !src.PostSteps.Function) {
 		return nil
 	}
 
@@ -655,7 +729,7 @@ func dumpFunctions(functions []*pgDumpItem, src *PgSource, excludedTypes *set.Se
 }
 
 func dumpCasts(definedCasts []*pgDumpItem, src *PgSource, excludedTypes *set.Set[string], tablesSchemas *set.Set[string]) []*pgDumpItem {
-	if len(src.DBTables) == 0 || (!src.PreSteps.Cast && !src.PostSteps.Cast) {
+	if tablesSchemas.Empty() || (!src.PreSteps.Cast && !src.PostSteps.Cast) {
 		return nil
 	}
 	result := make([]*pgDumpItem, 0, len(definedCasts))
