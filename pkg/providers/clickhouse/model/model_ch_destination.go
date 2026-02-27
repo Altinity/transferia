@@ -7,18 +7,16 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/blang/semver/v4"
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	chConn "github.com/transferia/transferia/pkg/connection/clickhouse"
 	"github.com/transferia/transferia/pkg/middlewares/async/bufferer"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
-	// the oldest version found with the existing insert_null_as_default_ setting
-	InsertNullAsDefaultExistedVersion = semver.MustParse("21.7.11")
 	//go:embed doc_destination_usage.md
 	destinationUsage []byte
 	//go:embed doc_destination_example.yaml
@@ -40,21 +38,19 @@ var (
 // ChDestination - see description of fields in sink_params.go
 type ChDestination struct {
 	// ChSinkServerParams
-	MdbClusterID  string `json:"Cluster"`
-	ChClusterName string // Name of the ClickHouse cluster to which data will be transfered. For Managed ClickHouse that is name of ShardGroup. Other clusters would be ignored.
-	User          string
-	Password      model.SecretString
-	Database      string
-	Partition     string
-	SSLEnabled    bool
-	HTTPPort      int
-	NativePort    int
-	TTL           string
-	InferSchema   bool
-	// MigrationOptions deprecated
-	MigrationOptions          *ChSinkMigrationOptions
-	ConnectionID              string
-	IsSchemaMigrationDisabled bool
+	MdbClusterID              string `json:"Cluster" log:"true"`
+	ChClusterName             string `log:"true"` // Name of the ClickHouse cluster to which data will be transfered. For Managed ClickHouse that is name of ShardGroup. Other clusters would be ignored.
+	User                      string `log:"true"`
+	Password                  model.SecretString
+	Database                  string `log:"true"`
+	Partition                 string `log:"true"`
+	SSLEnabled                bool   `log:"true"`
+	HTTPPort                  int    `log:"true"`
+	NativePort                int    `log:"true"`
+	TTL                       string `log:"true"`
+	InferSchema               bool   `log:"true"`
+	ConnectionID              string `log:"true"`
+	IsSchemaMigrationDisabled bool   `log:"true"`
 	// ForceJSONMode forces JSON protocol at sink:
 	// - allows upload records without 'required'-fields, clickhouse fills them via defaults.
 	//         BUT IF THEY ARE 'REQUIRED' - WHAT THE POINT?
@@ -66,41 +62,42 @@ type ChDestination struct {
 	//
 	// JSON protocol implementation currently only supports InsertKind items.
 	// This option used to be public.
-	ForceJSONMode           bool `json:"ForceHTTP"`
-	ProtocolUnspecified     bool // Denotes that the original proto configuration does not specify the protocol
-	AnyAsString             bool
-	SystemColumnsFirst      bool
-	IsUpdateable            bool
-	UpsertAbsentToastedRows bool
+	ForceJSONMode           bool `json:"ForceHTTP" log:"true"`
+	ProtocolUnspecified     bool `log:"true"` // Denotes that the original proto configuration does not specify the protocol
+	AnyAsString             bool `log:"true"`
+	SystemColumnsFirst      bool `log:"true"`
+	IsUpdateable            bool `log:"true"`
+	UpsertAbsentToastedRows bool `log:"true"`
 
 	// Insert settings
-	InsertParams InsertParams
+	InsertParams InsertParams `log:"true"`
 
 	// AltHosts
-	Hosts []string
+	Hosts []string `log:"true"`
 
 	// ChSinkShardParams
-	UseSchemaInTableName bool
-	ShardCol             string
-	Interval             time.Duration
-	AltNamesList         []model.AltName
+	UseSchemaInTableName bool            `log:"true"`
+	ShardCol             string          `log:"true"`
+	Interval             time.Duration   `log:"true"`
+	AltNamesList         []model.AltName `log:"true"`
 
 	// ChSinkParams
-	ShardByTransferID          bool
-	ShardByRoundRobin          bool
-	Rotation                   *model.RotatorConfig
-	ShardsList                 []ClickHouseShard
-	ColumnValueToShardNameList []ClickHouseColumnValueToShardName
+	ShardByTransferID          bool                               `log:"true"`
+	ShardByRoundRobin          bool                               `log:"true"`
+	Rotation                   *model.RotatorConfig               `log:"true"`
+	ShardsList                 []ClickHouseShard                  `log:"true"`
+	ColumnValueToShardNameList []ClickHouseColumnValueToShardName `log:"true"`
 
 	// fields used only in wrapper-over-sink
-	TransformerConfig  map[string]string
-	SubNetworkID       string
-	SecurityGroupIDs   []string
-	Cleanup            model.CleanupType
-	PemFileContent     string // timmyb32r: this field is not used in sinker! It seems we are not able to transfer into on-premise ch with cert
-	InflightBuffer     int    // deprecated: use BufferTriggingSize instead. Items' count triggering a buffer flush
-	BufferTriggingSize uint64
+	TransformerConfig  map[string]string `log:"true"`
+	SubNetworkID       string            `log:"true"`
+	SecurityGroupIDs   []string          `log:"true"`
+	Cleanup            model.CleanupType `log:"true"`
+	PemFileContent     string            // timmyb32r: this field is not used in sinker! It seems we are not able to transfer into on-premise ch with cert
+	InflightBuffer     int               `log:"true"` // deprecated: use BufferTriggingSize instead. Items' count triggering a buffer flush
+	BufferTriggingSize uint64            `log:"true"`
 	RootCACertPaths    []string
+	UserEnabledTls     *bool // tls config set by user explicitly
 }
 
 type InsertParams struct {
@@ -118,16 +115,16 @@ func (p InsertParams) AsQueryPart() string {
 	return ""
 }
 
-func (p InsertParams) ToQueryOption(version semver.Version) clickhouse.QueryOption {
+func (p InsertParams) ToQueryOption() clickhouse.QueryOption {
 	settings := make(clickhouse.Settings)
 	if p.MaterializedViewsIgnoreErrors {
 		settings["materialized_views_ignore_errors"] = "1"
 	}
-	// to fill column by default value if value unknown
-	if version.GTE(InsertNullAsDefaultExistedVersion) {
-		settings["insert_null_as_default"] = "1"
-	}
 	return clickhouse.WithSettings(settings)
+}
+
+func (d *ChDestination) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	return logger.MarshalSanitizedObject(d, enc)
 }
 
 func (d *ChDestination) IsAlterable() {}
@@ -171,11 +168,6 @@ func (d *ChDestination) WithDefaults() {
 
 	if d.BufferTriggingSize == 0 {
 		d.BufferTriggingSize = BufferTriggingSizeDefault
-	}
-	if d.MigrationOptions == nil {
-		d.MigrationOptions = &ChSinkMigrationOptions{
-			AddNewColumns: true,
-		}
 	}
 }
 
@@ -266,7 +258,6 @@ type ChDestinationWrapper struct {
 	connectionParams connectionParams
 	hosts            []*chConn.Host
 	useJSON          bool // useJSON is calculated in runtime, not by the model
-	migrationOpts    ChSinkMigrationOptions
 }
 
 func (d ChDestinationWrapper) InsertSettings() InsertParams {
@@ -275,12 +266,6 @@ func (d ChDestinationWrapper) InsertSettings() InsertParams {
 
 // newChDestinationWrapper copies the model provided to it in order to be able to modify the fields in it
 func newChDestinationWrapper(model ChDestination) *ChDestinationWrapper {
-	migrationOpts := ChSinkMigrationOptions{
-		AddNewColumns: false,
-	}
-	if model.MigrationOptions != nil {
-		migrationOpts = *model.MigrationOptions
-	}
 	return &ChDestinationWrapper{
 		Model: &model,
 		host: &chConn.Host{
@@ -299,9 +284,8 @@ func newChDestinationWrapper(model ChDestination) *ChDestinationWrapper {
 			PemFileContent: model.PemFileContent,
 			ClusterID:      model.MdbClusterID,
 		},
-		hosts:         make([]*chConn.Host, 0),
-		useJSON:       false,
-		migrationOpts: migrationOpts,
+		hosts:   make([]*chConn.Host, 0),
+		useJSON: false,
 	}
 }
 
@@ -373,10 +357,6 @@ func (d ChDestinationWrapper) UpsertAbsentToastedRows() bool {
 
 func (d ChDestinationWrapper) InferSchema() bool {
 	return d.Model.InferSchema
-}
-
-func (d ChDestinationWrapper) MigrationOptions() ChSinkMigrationOptions {
-	return d.migrationOpts
 }
 
 func (d ChDestinationWrapper) GetIsSchemaMigrationDisabled() bool {
@@ -455,7 +435,6 @@ func (d ChDestinationWrapper) MakeChildServerParams(host *chConn.Host) ChSinkSer
 		connectionParams: d.connectionParams,
 		hosts:            d.hosts,
 		useJSON:          d.useJSON,
-		migrationOpts:    d.MigrationOptions(),
 	}
 	return newChDestinationWrapper
 }
@@ -468,7 +447,6 @@ func (d ChDestinationWrapper) MakeChildShardParams(altHosts []*chConn.Host) ChSi
 		connectionParams: d.connectionParams,
 		hosts:            altHosts,
 		useJSON:          d.useJSON,
-		migrationOpts:    d.MigrationOptions(),
 	}
 	newChDestinationWrapper.connectionParams.Hosts = altHosts
 
