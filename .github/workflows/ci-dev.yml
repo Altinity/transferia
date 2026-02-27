@@ -18,6 +18,8 @@ on:
           - "false"
           - "true"
 
+permissions: {}
+
 jobs:
   ci:
     uses: ./.github/workflows/reusable-ci.yml

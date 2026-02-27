@@ -13,6 +13,7 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -446,6 +447,9 @@ func getBaseBackupInfo(ctx context.Context, conn *pgconn.PgConn) (start LSN, tim
 			if err != nil {
 				return start, timelineID, errors.Errorf("cannot convert timelineID to int: %s", colData)
 			}
+			if tli < math.MinInt32 || tli > math.MaxInt32 {
+				return start, timelineID, errors.Errorf("timelineID out of int32 range: %d", tli)
+			}
 			timelineID = int32(tli)
 		case *pgproto3.NoticeResponse:
 		case *pgproto3.CommandComplete:
@@ -493,6 +497,9 @@ func getTableSpaceInfo(ctx context.Context, conn *pgconn.PgConn) (tbss []BaseBac
 			if err != nil {
 				return tbss, errors.Errorf("cannot convert spcoid to int: %s", colData)
 			}
+			if OID < math.MinInt32 || OID > math.MaxInt32 {
+				return tbss, errors.Errorf("spcoid out of int32 range: %d", OID)
+			}
 			tbs.OID = int32(OID)
 			tbs.Location = string(msg.Values[1])
 			if msg.Values[2] != nil {
@@ -500,6 +507,9 @@ func getTableSpaceInfo(ctx context.Context, conn *pgconn.PgConn) (tbss []BaseBac
 				size, err := strconv.Atoi(colData)
 				if err != nil {
 					return tbss, errors.Errorf("cannot convert size to int: %s", colData)
+				}
+				if size < math.MinInt8 || size > math.MaxInt8 {
+					return tbss, errors.Errorf("size out of int8 range: %d", size)
 				}
 				tbs.Size = int8(size)
 			}
@@ -687,6 +697,9 @@ func SendStandbyCopyDone(ctx context.Context, conn *pgconn.PgConn) (cdr *CopyDon
 	timeline, err := strconv.Atoi(string(row[0]))
 	if err != nil {
 		return cdr, err
+	}
+	if timeline < math.MinInt32 || timeline > math.MaxInt32 {
+		return cdr, errors.Errorf("timeline out of int32 range: %d", timeline)
 	}
 	cdr = &CopyDoneResult{}
 	cdr.Timeline = int32(timeline)
