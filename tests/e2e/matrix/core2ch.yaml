@@ -1,0 +1,438 @@
+---
+version: 1
+meta:
+  title: Core-to-CH Coverage Matrix for pg/mysql/mongo/kafka
+  coverage_model: Tiered Core+Extensions
+  rollout: Two Waves
+  kafka_snapshot_policy: excluded_from_mandatory_core
+sources:
+- pg2ch
+- mysql2ch
+- mongo2ch
+- kafka2ch
+waves:
+  '1':
+    range: C01..C17
+  '2':
+    range: C13..C18
+extensions:
+  ch_async:
+  - pkg/providers/clickhouse/async/**
+  - pkg/providers/clickhouse/tests/async/**
+  source_specific:
+  - tests/e2e/**
+  - tests/e2e/**
+scenarios:
+- id: C01
+  name: Replication smoke
+  wave: 1
+  seed:
+  - pg2yt/replication
+  - kafka2ydb/replication
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/e2e/pg2ch/replication
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/replication_minimal
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/e2e/mongo2ch/snapshot
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/e2e/kafka2ch/replication
+- id: C02
+  name: Insert/Update/Delete correctness
+  wave: 1
+  seed:
+  - pg2yt/snapshot_and_replication
+  - ydb2ydb/snapshot_and_replication
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/e2e/pg2ch/replication
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/replication
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/e2e/mongo2ch/snapshot_flatten
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/e2e/kafka2ch/replication
+- id: C03
+  name: Filter rows by IDs/columns
+  wave: 1
+  seed:
+  - ydb2ydb/filter_rows_by_ids
+  - ydb2mock/snapshot_and_replication_filter_table
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/e2e/pg2ch/tables_inclusion
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/replication_minimal
+    mongo2ch:
+      mode: M
+      paths:
+      - tests/e2e/mongo2ch/snapshot_flatten
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/e2e/kafka2ch/blank_parser
+- id: C04
+  name: JSON/nested object fidelity
+  wave: 1
+  seed:
+  - mongo2yt/data_objects
+  - pg2yt/json_special_cases
+  notes: ''
+  applies:
+    pg2ch:
+      mode: A
+      paths:
+      - tests/e2e/pg2ch/snapshot_and_replication_canon_types
+    mysql2ch:
+      mode: A
+      paths:
+      - tests/e2e/mysql2ch/snapshot
+    mongo2ch:
+      mode: M
+      paths:
+      - tests/e2e/mongo2ch/snapshot_flatten
+    kafka2ch:
+      mode: A
+      paths:
+      - tests/evolution/kafka2ch/document_shape
+- id: C05
+  name: Schema add-column evolution
+  wave: 1
+  seed:
+  - ydb2ch/replication/add_column
+  - pg2yt/schema_change
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/evolution/pg2ch/alters
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/evolution/mysql2ch/add_column
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/evolution/mongo2ch/document_shape
+    kafka2ch:
+      mode: A
+      paths:
+      - tests/evolution/kafka2ch/document_shape
+- id: C06
+  name: High-volume/batching stability
+  wave: 1
+  seed:
+  - yt2ch/bigtable
+  - ydb2mock/batch_splitter
+  - ydb2ydb/sharded_snapshot
+  notes: ''
+  applies:
+    pg2ch:
+      mode: A
+      paths:
+      - tests/large/pg2ch/high_volume
+    mysql2ch:
+      mode: A
+      paths:
+      - tests/large/mysql2ch/high_volume
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/large/mongo2ch/high_volume
+    kafka2ch:
+      mode: A
+      paths:
+      - tests/large/kafka2ch/high_volume
+- id: C07
+  name: Resume from coordinator
+  wave: 1
+  seed:
+  - existing resume layer + YDB incremental ideas
+  notes: Resume coverage is enforced from dedicated tests/resume/* suites for core DB flows
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/resume/pg2ch/replication
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/resume/mysql2ch/replication
+    mongo2ch:
+      mode: M
+      paths:
+      - tests/resume/mongo2ch/snapshot
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/resume/kafka2ch/replication
+- id: C08
+  name: Transformer chain smoke
+  wave: 1
+  seed:
+  - pg2yt/simple_with_transformer
+  - pg2yt/raw_*_transformer
+  notes: ''
+  applies:
+    pg2ch:
+      mode: A
+      paths:
+      - tests/e2e/pg2ch/tables_inclusion
+    mysql2ch:
+      mode: A
+      paths:
+      - tests/e2e/mysql2ch/replication_minimal
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/e2e/mongo2ch/snapshot_flatten
+    kafka2ch:
+      mode: A
+      paths:
+      - tests/e2e/kafka2ch/blank_parser
+- id: C09
+  name: Type conversion coverage
+  wave: 1
+  seed:
+  - yt2ch/type_conversion
+  - mysql2yt/all_datatypes
+  notes: ''
+  applies:
+    pg2ch:
+      mode: A
+      paths:
+      - tests/e2e/pg2ch/snapshot_and_replication_canon_types
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/snapshot
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/e2e/mongo2ch/snapshot_flatten
+    kafka2ch:
+      mode: A
+      paths:
+      - tests/e2e/kafka2ch/replication
+- id: C10
+  name: Malformed payload/error path
+  wave: 1
+  seed:
+  - mongo2ydb/not_valid_json
+  - kafka2yt/parser__raw_to_table_row
+  notes: ''
+  applies:
+    pg2ch:
+      mode: A
+      paths:
+      - tests/e2e/pg2ch/date_overflow
+    mysql2ch:
+      mode: A
+      paths:
+      - tests/e2e/mysql2ch/snapshot_nofk
+    mongo2ch:
+      mode: M
+      paths:
+      - tests/e2e/mongo2ch/snapshot_flatten
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/e2e/kafka2ch/replication_mv
+- id: C11
+  name: Snapshot baseline
+  wave: 1
+  seed:
+  - pg2yt/snapshot
+  - mysql2yt/snapshot
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/e2e/pg2ch/snapshot
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/snapshot
+    mongo2ch:
+      mode: M
+      paths:
+      - tests/e2e/mongo2ch/snapshot
+    kafka2ch:
+      mode: N/A
+      paths: []
+- id: C12
+  name: Snapshot empty table
+  wave: 1
+  seed:
+  - pg2yt/static_on_snapshot/empty_tables idea + existing snapshot_empty_table
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/e2e/pg2ch/empty_keys
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/snapshot_empty_table
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/e2e/mongo2ch/snapshot
+    kafka2ch:
+      mode: N/A
+      paths: []
+- id: C13
+  name: No-PK behavior policy
+  wave: 2
+  seed:
+  - pg2yt/no_pkey
+  - mysql2yt/no_pkey
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/e2e/pg2ch/empty_keys
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/snapshot_nofk
+    mongo2ch:
+      mode: A
+      paths:
+      - tests/e2e/mongo2ch/snapshot
+    kafka2ch:
+      mode: N/A
+      paths: []
+- id: C14
+  name: Views behavior policy
+  wave: 2
+  seed:
+  - pg2yt/with_views
+  - mysql2yt/views
+  notes: ''
+  applies:
+    pg2ch:
+      mode: M
+      paths:
+      - tests/e2e/pg2ch/tables_inclusion
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/snapshot
+    mongo2ch:
+      mode: N/A
+      paths: []
+    kafka2ch:
+      mode: N/A
+      paths: []
+- id: C15
+  name: Non-UTF8 / charset edge
+  wave: 2
+  seed:
+  - mysql2yt/non_utf8_charset
+  notes: ''
+  applies:
+    pg2ch:
+      mode: A
+      paths:
+      - tests/e2e/pg2ch/date_overflow
+    mysql2ch:
+      mode: M
+      paths:
+      - tests/e2e/mysql2ch/replication
+    mongo2ch:
+      mode: E
+      paths: []
+    kafka2ch:
+      mode: E
+      paths: []
+- id: C16
+  name: Kafka schema-registry JSON
+  wave: 1
+  seed:
+  - kafka2yt/schema_registry_json_parser_test
+  notes: ''
+  applies:
+    pg2ch:
+      mode: N/A
+      paths: []
+    mysql2ch:
+      mode: N/A
+      paths: []
+    mongo2ch:
+      mode: N/A
+      paths: []
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/e2e/kafka2ch/replication
+- id: C17
+  name: Kafka cloudevents/raw parser
+  wave: 1
+  seed:
+  - kafka2yt/cloudevents
+  - kafka2yt/parser__raw_to_table_row
+  notes: ''
+  applies:
+    pg2ch:
+      mode: N/A
+      paths: []
+    mysql2ch:
+      mode: N/A
+      paths: []
+    mongo2ch:
+      mode: N/A
+      paths: []
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/e2e/kafka2ch/blank_parser
+- id: C18
+  name: Debezium serde profile (Kafka source path)
+  wave: 2
+  seed:
+  - pg2kafka2yt/debezium
+  - ydb2ydb/debezium/*
+  notes: ''
+  applies:
+    pg2ch:
+      mode: N/A
+      paths: []
+    mysql2ch:
+      mode: N/A
+      paths: []
+    mongo2ch:
+      mode: N/A
+      paths: []
+    kafka2ch:
+      mode: M
+      paths:
+      - tests/e2e/kafka2ch/replication_mv

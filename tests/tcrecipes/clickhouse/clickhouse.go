@@ -170,8 +170,9 @@ func WithUsername(user string) testcontainers.CustomizeRequestOption {
 	}
 }
 
-func WithZookeeper(container *ZookeeperContainer) testcontainers.CustomizeRequestOption {
-	return WithConfigData(fmt.Sprintf(`<?xml version="1.0"?>
+// WithKeeper configures ClickHouse to use its built-in Keeper instead of external Zookeeper
+func WithKeeper() testcontainers.CustomizeRequestOption {
+	return WithConfigData(`<?xml version="1.0"?>
 	<clickhouse>
 		<logger>
 			<level>debug</level>
@@ -187,10 +188,26 @@ func WithZookeeper(container *ZookeeperContainer) testcontainers.CustomizeReques
 
 		<timezone>Europe/Berlin</timezone>
 
+		<keeper_server>
+			<tcp_port>9181</tcp_port>
+			<server_id>1</server_id>
+			<coordination_settings>
+				<operation_timeout_ms>10000</operation_timeout_ms>
+				<session_timeout_ms>30000</session_timeout_ms>
+			</coordination_settings>
+			<raft_configuration>
+				<server>
+					<id>1</id>
+					<hostname>localhost</hostname>
+					<port>9234</port>
+				</server>
+			</raft_configuration>
+		</keeper_server>
+
 		<zookeeper>
 			<node index="1">
-				<host>%s</host>
-				<port>2181</port>
+				<host>localhost</host>
+				<port>9181</port>
 			</node>
 		</zookeeper>
 
@@ -216,7 +233,7 @@ func WithZookeeper(container *ZookeeperContainer) testcontainers.CustomizeReques
 
 		<format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
 	</clickhouse>
-	`, container.IP()))
+	`)
 }
 
 // Prepare creates an instance of the ClickHouse container type

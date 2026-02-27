@@ -6,14 +6,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/transferia/transferia/pkg/abstract"
 	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
-	"github.com/transferia/transferia/tests/e2e-core/mysql2ch"
-	"github.com/transferia/transferia/tests/e2e-core/pg2ch"
+	"github.com/transferia/transferia/tests/e2e/mysql2ch"
+	"github.com/transferia/transferia/tests/e2e/pg2ch"
 	"github.com/transferia/transferia/tests/helpers"
 )
 
 func TestSnapshot(t *testing.T) {
 	source := helpers.RecipeMysqlSource()
-	target := chrecipe.MustTarget(chrecipe.WithInitFile(helpers.RepoPath("tests", "e2e-core", "mysql2ch", "snapshot_nofk", "ch.sql")), chrecipe.WithDatabase("source"))
+	target := chrecipe.MustTarget(chrecipe.WithInitFile(helpers.RepoPath("tests", "e2e", "mysql2ch", "snapshot_nofk", "ch.sql")), chrecipe.WithDatabase("source"))
 
 	defer func() {
 		require.NoError(t, helpers.CheckConnections(

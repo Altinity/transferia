@@ -21,8 +21,8 @@ Current supported source families and test variants:
 ## Layers
 
 Flow layers (DB flow aliases):
-- `tests/e2e-core/{pg2ch,mysql2ch,mongo2ch}`
-- `tests/e2e-optional/{kafka2ch,eventhub2ch,kinesis2ch,airbyte2ch,oracle2ch,ch2ch}`
+- `tests/e2e/{pg2ch,mysql2ch,mongo2ch,kafka2ch}`
+- `tests/e2e/{eventhub2ch,kinesis2ch,airbyte2ch,oracle2ch,ch2ch}` (optional flows)
 - `tests/evolution/{pg2ch,mysql2ch,mongo2ch,kafka2ch}`
 - `tests/resume/{pg2ch,mysql2ch,mongo2ch,kafka2ch}`
 - `tests/large/{pg2ch,mysql2ch,mongo2ch,kafka2ch}`
@@ -37,7 +37,7 @@ Shared infra:
 
 ## Notes on Current State
 
-`e2e-core` runs from `tests/e2e-core/<flow>` in the layered system.
+`e2e` runs from `tests/e2e/<flow>` in the layered system.
 
 Core parity scope is limited to:
 - `pg2ch`
@@ -59,7 +59,7 @@ Deprecated/out-of-scope stacks are removed from this test layout.
 - List supported layers and aliases:
   `make test-list`
 - Run one layer for one DB:
-  `make test-layer LAYER=e2e-core DB=pg2ch`
+  `make test-layer LAYER=e2e DB=pg2ch`
 - Run one layer for all supported DBs:
   `make test-layer-all LAYER=resume`
 - Run all layers for one DB:
@@ -94,16 +94,16 @@ Run all configured variants:
 - `make test-source-matrix`
 
 Per-layer/per-DB with explicit variant:
-- `SOURCE_VARIANT=mysql/mysql84 make test-layer LAYER=e2e-core DB=mysql2ch`
+- `SOURCE_VARIANT=mysql/mysql84 make test-layer LAYER=e2e DB=mysql2ch`
 - `SOURCE_VARIANT=mysql/mariadb118 make test-layer LAYER=resume DB=mysql2ch`
 - `SOURCE_VARIANT=mysql/mysql84 make test-db DB=mysql2ch`
 
 Matrix definition file:
-- `tests/e2e-core/matrix/sources.yaml`
+- `tests/e2e/matrix/sources.yaml`
 
 Core matrix contract/report:
-- `tests/e2e-core/matrix/core2ch.yaml`
-- `tests/e2e-core/matrix/coverage_report.md`
+- `tests/e2e/matrix/core2ch.yaml`
+- `tests/e2e/matrix/coverage_report.md`
 
 ## Resume Layer Behavior
 
@@ -149,7 +149,7 @@ Fallback behavior:
 Strict local core gate for the in-scope product surface:
 - sources: `postgres`, `mysql/mariadb`, `mongo`
 - destination: `clickhouse`
-- layers: `providers`, `storage-canon`, `e2e-core`, `evolution`, `resume`, `large`
+- layers: `providers`, `storage-canon`, `e2e`, `evolution`, `resume`, `large`
 
 Wave definitions:
 
@@ -157,7 +157,7 @@ Wave definitions:
 |---|---|---|
 | `providers` | package-level provider tests (`pkg/providers/...`) + shared test infra checks | catch adapter/runtime regressions early |
 | `storage-canon` | `tests/storage/*` and `tests/canon/*` | validate storage/canonical compare correctness |
-| `e2e-core` | core flow e2e suites for `pg2ch/mysql2ch/mongo2ch` | verify end-to-end data movement works |
+| `e2e` | core flow e2e suites for `pg2ch/mysql2ch/mongo2ch` | verify end-to-end data movement works |
 | `evolution` | `tests/evolution/*` | verify schema/type evolution behavior |
 | `resume` | `tests/resume/*` | verify checkpoint restore and restart semantics |
 | `large` | `tests/large/*` | verify larger-volume and batching stability |
@@ -166,15 +166,15 @@ Wave execution details:
 - `test-cdc-full` runs waves in this order:
   1. `providers`
   2. `storage-canon`
-  3. `e2e-core`
+  3. `e2e`
   4. `evolution`
   5. `resume`
   6. `large`
 - `resume` wave runs once with default coordinator backend for the active scope.
 
 Manifest and helper:
-- `tests/e2e-core/matrix/cdc_local_suite.yaml`
-- `tests/e2e-core/matrix/cdc_optional_suite.yaml`
+- `tests/e2e/matrix/cdc_local_suite.yaml`
+- `tests/e2e/matrix/cdc_optional_suite.yaml`
 - `go run ./tools/testmatrix suite ...` (invoked by Makefile targets)
 
 Primary commands:
@@ -185,7 +185,7 @@ Primary commands:
 - Run one wave (fail-fast):
   `make test-cdc-wave WAVE=providers`
   `make test-cdc-wave WAVE=storage-canon`
-  `make test-cdc-wave WAVE=e2e-core`
+  `make test-cdc-wave WAVE=e2e`
   `make test-cdc-wave WAVE=evolution`
   `make test-cdc-wave WAVE=resume`
   `make test-cdc-wave WAVE=large`
@@ -213,7 +213,7 @@ Wave pass-state cache:
   - wave-specific:
     - `providers`: `tests/helpers`, `tests/tcrecipes`
     - `storage-canon`: `tests/storage`, `tests/canon`
-    - `e2e-core`: `tests/e2e-core`
+    - `e2e`: `tests/e2e`
     - `evolution`: `tests/evolution`
     - `resume`: `tests/resume`
     - `large`: `tests/large`
@@ -274,9 +274,9 @@ Optional cache:
 Blocked optional suites:
 - `eventhub2ch`, `airbyte2ch`, `oracle2ch` currently provide smoke placeholders with explicit `t.Skip(...)`.
 - See:
-  - `tests/e2e-optional/eventhub2ch/README.md`
-  - `tests/e2e-optional/airbyte2ch/README.md`
-  - `tests/e2e-optional/oracle2ch/README.md`
+  - `tests/e2e/eventhub2ch/README.md`
+  - `tests/e2e/airbyte2ch/README.md`
+  - `tests/e2e/oracle2ch/README.md`
 
 ## Recent Behavior Change (MySQL -> ClickHouse)
 

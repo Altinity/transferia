@@ -24,7 +24,7 @@ const flattenDatabaseName string = "db"
 
 var (
 	source = mongocommon.RecipeSource()
-	target = chrecipe.MustTarget(chrecipe.WithInitFile(helpers.RepoPath("tests", "e2e-core", "mongo2ch", "snapshot_flatten", "dump.sql")), chrecipe.WithDatabase(flattenDatabaseName))
+	target = chrecipe.MustTarget(chrecipe.WithInitFile(helpers.RepoPath("tests", "e2e", "mongo2ch", "snapshot_flatten", "dump.sql")), chrecipe.WithDatabase(flattenDatabaseName))
 )
 
 func TestResumeFromCoordinator(t *testing.T) {

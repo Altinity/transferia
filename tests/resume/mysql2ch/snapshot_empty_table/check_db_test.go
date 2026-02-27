@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/transferia/transferia/pkg/abstract"
 	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
-	"github.com/transferia/transferia/tests/e2e-core/pg2ch"
+	"github.com/transferia/transferia/tests/e2e/pg2ch"
 	"github.com/transferia/transferia/tests/helpers"
 )
 

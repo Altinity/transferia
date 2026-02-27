@@ -9,15 +9,15 @@ import (
 	"github.com/transferia/transferia/pkg/abstract"
 	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
 	"github.com/transferia/transferia/pkg/providers/mysql"
-	"github.com/transferia/transferia/tests/e2e-core/mysql2ch"
-	"github.com/transferia/transferia/tests/e2e-core/pg2ch"
+	"github.com/transferia/transferia/tests/e2e/mysql2ch"
+	"github.com/transferia/transferia/tests/e2e/pg2ch"
 	"github.com/transferia/transferia/tests/helpers"
 )
 
 var (
 	transferType = abstract.TransferTypeSnapshotAndIncrement
 	source       = *helpers.RecipeMysqlSource()
-	target       = *chrecipe.MustTarget(chrecipe.WithInitDir(helpers.RepoPath("tests", "e2e-core", "mysql2ch", "replication", "dump", "ch")), chrecipe.WithDatabase("source"))
+	target       = *chrecipe.MustTarget(chrecipe.WithInitDir(helpers.RepoPath("tests", "e2e", "mysql2ch", "replication", "dump", "ch")), chrecipe.WithDatabase("source"))
 )
 
 func init() {

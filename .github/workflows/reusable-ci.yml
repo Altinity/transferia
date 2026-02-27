@@ -15,7 +15,7 @@ on:
       run_optional:
         description: "Run optional e2e suites"
         required: false
-        default: true
+        default: false
         type: boolean
       go_version:
         description: "Go version to use"
@@ -152,20 +152,20 @@ jobs:
         if: failure()
         run: exit 1
 
-  e2e-core:
+  e2e:
     if: inputs.run_e2e && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
     needs: [build]
-    name: e2e-core / ${{ inputs.stream }} / ${{ matrix.suite.name }}
+    name: e2e / ${{ inputs.stream }} / ${{ matrix.suite.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         suite: [
-            { group: "tests/e2e-core", name: "pg2ch", path: "pg2ch" },
-            { group: "tests/e2e-core", name: "mysql2ch", path: "mysql2ch" },
-            { group: "tests/e2e-core", name: "mongo2ch", path: "mongo2ch" },
-            { group: "tests/e2e-core", name: "kafka2ch", path: "kafka2ch" },
+            { group: "tests/e2e", name: "pg2ch", path: "pg2ch" },
+            { group: "tests/e2e", name: "mysql2ch", path: "mysql2ch" },
+            { group: "tests/e2e", name: "mongo2ch", path: "mongo2ch" },
+            { group: "tests/e2e", name: "kafka2ch", path: "kafka2ch" },
           ]
     steps:
       - name: Checkout
@@ -211,12 +211,11 @@ jobs:
       fail-fast: false
       matrix:
         suite: [
-            { group: "tests/e2e-optional", name: "airbyte2ch", path: "airbyte2ch" },
-            { group: "tests/e2e-optional", name: "ch2ch", path: "ch2ch" },
-            { group: "tests/e2e-optional", name: "eventhub2ch", path: "eventhub2ch" },
-            { group: "tests/e2e-optional", name: "kafka2ch", path: "kafka2ch" },
-            { group: "tests/e2e-optional", name: "kinesis2ch", path: "kinesis2ch" },
-            { group: "tests/e2e-optional", name: "oracle2ch", path: "oracle2ch" },
+            { group: "tests/e2e", name: "airbyte2ch", path: "airbyte2ch" },
+            { group: "tests/e2e", name: "ch2ch", path: "ch2ch" },
+            { group: "tests/e2e", name: "eventhub2ch", path: "eventhub2ch" },
+            { group: "tests/e2e", name: "kinesis2ch", path: "kinesis2ch" },
+            { group: "tests/e2e", name: "oracle2ch", path: "oracle2ch" },
           ]
     steps:
       - name: Checkout
@@ -254,7 +253,7 @@ jobs:
 
   test-report:
     if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
-    needs: [generic-tests, e2e-core, e2e-optional]
+    needs: [generic-tests, e2e, e2e-optional]
     name: test-report / ${{ inputs.stream }}
     runs-on: ubuntu-latest
     steps:

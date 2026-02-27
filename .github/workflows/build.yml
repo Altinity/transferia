@@ -56,17 +56,16 @@ jobs:
       matrix:
         suite: [
             # core e2e suites
-            { group: "tests/e2e-core", name: "pg2ch", path: "pg2ch" },
-            { group: "tests/e2e-core", name: "mysql2ch", path: "mysql2ch" },
-            { group: "tests/e2e-core", name: "mongo2ch", path: "mongo2ch" },
-            { group: "tests/e2e-core", name: "kafka2ch", path: "kafka2ch" },
+            { group: "tests/e2e", name: "pg2ch", path: "pg2ch" },
+            { group: "tests/e2e", name: "mysql2ch", path: "mysql2ch" },
+            { group: "tests/e2e", name: "mongo2ch", path: "mongo2ch" },
+            { group: "tests/e2e", name: "kafka2ch", path: "kafka2ch" },
             # optional e2e suites
-            { group: "tests/e2e-optional", name: "airbyte2ch", path: "airbyte2ch" },
-            { group: "tests/e2e-optional", name: "ch2ch", path: "ch2ch" },
-            { group: "tests/e2e-optional", name: "eventhub2ch", path: "eventhub2ch" },
-            { group: "tests/e2e-optional", name: "kafka2ch-optional", path: "kafka2ch" },
-            { group: "tests/e2e-optional", name: "kinesis2ch", path: "kinesis2ch" },
-            { group: "tests/e2e-optional", name: "oracle2ch", path: "oracle2ch" },
+            { group: "tests/e2e", name: "airbyte2ch", path: "airbyte2ch" },
+            { group: "tests/e2e", name: "ch2ch", path: "ch2ch" },
+            { group: "tests/e2e", name: "eventhub2ch", path: "eventhub2ch" },
+            { group: "tests/e2e", name: "kinesis2ch", path: "kinesis2ch" },
+            { group: "tests/e2e", name: "oracle2ch", path: "oracle2ch" },
           ]
     steps:
       - name: Checkout

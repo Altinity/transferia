@@ -2,7 +2,6 @@ package chrecipe
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -225,18 +224,12 @@ func Prepare(params ContainerParams) error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	// test running outside arcadia
-	zk, err := tc_clickhouse.PrepareZK(ctx)
-	if err != nil {
-		return xerrors.Errorf("unable to prepare Zookeeper: %w", err)
-	}
-	fmt.Printf("zk: 0.0.0.0:%s \n", zk.Port().Port())
 
 	chcntr, err := tc_clickhouse.Prepare(
 		ctx,
 		tc_clickhouse.WithDatabase("default"),
 		tc_clickhouse.WithUsername(params.user),
-		tc_clickhouse.WithZookeeper(zk),
+		tc_clickhouse.WithKeeper(),
 		tc_clickhouse.WithInitScripts(params.initScripts...),
 	)
 	if err != nil {

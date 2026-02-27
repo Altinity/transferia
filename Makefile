@@ -30,21 +30,21 @@ test:
 
 
 # Define variables for the suite group, path, and name with defaults
-SUITE_GROUP ?= 'tests/e2e-core'
+SUITE_GROUP ?= 'tests/e2e'
 SUITE_PATH ?= 'pg2ch'
-SUITE_NAME ?= 'e2e-core-pg2ch'
+SUITE_NAME ?= 'e2e-pg2ch'
 GO_TEST_ARGS ?= -timeout=15m
 SHELL := /bin/bash
 GOTESTSUM_FORMAT ?= standard-quiet
 ifeq ($(GITHUB_ACTIONS),true)
 GOTESTSUM_FORMAT = github-actions
 endif
-MATRIX_CONTRACT ?= tests/e2e-core/matrix/core2ch.yaml
+MATRIX_CONTRACT ?= tests/e2e/matrix/core2ch.yaml
 MATRIX_TOOL ?= go run ./tools/testmatrix
-MATRIX_REPORT ?= tests/e2e-core/matrix/coverage_report.md
+MATRIX_REPORT ?= tests/e2e/matrix/coverage_report.md
 MATRIX_TEST_GO_ARGS ?= -count=1 -timeout=20m
-CDC_SUITE_MANIFEST ?= tests/e2e-core/matrix/cdc_local_suite.yaml
-CDC_OPTIONAL_SUITE_MANIFEST ?= tests/e2e-core/matrix/cdc_optional_suite.yaml
+CDC_SUITE_MANIFEST ?= tests/e2e/matrix/cdc_local_suite.yaml
+CDC_OPTIONAL_SUITE_MANIFEST ?= tests/e2e/matrix/cdc_optional_suite.yaml
 CDC_GO_TEST_ARGS ?= -timeout=20m
 TEST_STATE_DIR ?= .teststate
 TEST_STATE_WAVES_DIR ?= $(TEST_STATE_DIR)/waves
@@ -57,35 +57,35 @@ SUPPORTED_FLOW_DBS := pg2ch mysql2ch mongo2ch
 SUPPORTED_COMPONENT_DBS := postgres mysql mongo
 SUPPORTED_STREAM_FLOW_DBS := kafka2ch
 SUPPORTED_OPTIONAL_FLOW_DBS := kafka2ch eventhub2ch kinesis2ch airbyte2ch oracle2ch ch2ch
-SUPPORTED_LAYERS := storage canon e2e-core evolution resume large
+SUPPORTED_LAYERS := storage canon e2e evolution resume large
 SUPPORTED_SOURCE_VARIANTS := \
 	postgres/17 postgres/18 \
 	mysql/mysql84 mysql/mariadb118 \
 	mongo/6 mongo/7 \
 	kafka/confluent75 kafka/redpanda24
 RESUME_TEST_PATTERN ?= ResumeFromCoordinator|Resume
-LAYER ?= e2e-core
+LAYER ?= e2e
 DB ?= pg2ch
 SOURCE_VARIANT ?=
 MATRIX_FAMILY ?= postgres
-MATRIX_CORE_LAYERS ?= e2e-core evolution large
+MATRIX_CORE_LAYERS ?= e2e evolution large
 MATRIX_GO_TEST_ARGS ?= -count=1 -timeout=15m
-KAFKA_MATRIX_LAYERS ?= e2e-core evolution large
-CDC_WAVES := providers storage-canon e2e-core evolution resume large
+KAFKA_MATRIX_LAYERS ?= e2e evolution large
+CDC_WAVES := providers storage-canon e2e evolution resume large
 WAVE_TARGETS := $(addprefix $(TEST_STATE_WAVES_DIR)/,$(addsuffix .ok,$(CDC_WAVES)))
 CDC_WAVE_SHARED_PATHS := library pkg vendor_patched tools/testmatrix
 WAVE_PATHS_providers := tests/helpers tests/tcrecipes
 WAVE_PATHS_storage-canon := tests/storage tests/canon
-WAVE_PATHS_e2e-core := tests/e2e-core
+WAVE_PATHS_e2e := tests/e2e
 WAVE_PATHS_evolution := tests/evolution
 WAVE_PATHS_resume := tests/resume
 WAVE_PATHS_large := tests/large
 CDC_OPTIONAL_WAVES := optional-queues optional-connectors optional-clickhouse-source
 OPTIONAL_WAVE_TARGETS := $(addprefix $(TEST_STATE_OPTIONAL_WAVES_DIR)/,$(addsuffix .ok,$(CDC_OPTIONAL_WAVES)))
 CDC_OPTIONAL_WAVE_SHARED_PATHS := library pkg vendor_patched tools/testmatrix
-OPTIONAL_WAVE_PATHS_optional-queues := tests/e2e-optional/kafka2ch tests/e2e-optional/eventhub2ch tests/e2e-optional/kinesis2ch tests/tcrecipes
-OPTIONAL_WAVE_PATHS_optional-connectors := tests/e2e-optional/airbyte2ch tests/e2e-optional/oracle2ch tests/tcrecipes
-OPTIONAL_WAVE_PATHS_optional-clickhouse-source := tests/e2e-optional/ch2ch
+OPTIONAL_WAVE_PATHS_optional-queues := tests/e2e/kafka2ch tests/e2e/eventhub2ch tests/e2e/kinesis2ch tests/tcrecipes
+OPTIONAL_WAVE_PATHS_optional-connectors := tests/e2e/airbyte2ch tests/e2e/oracle2ch tests/tcrecipes
+OPTIONAL_WAVE_PATHS_optional-clickhouse-source := tests/e2e/ch2ch
 
 define LIST_TRACKED_FILES
 $(strip $(shell \
@@ -101,7 +101,7 @@ endef
 COMMON_WAVE_DEPS := Makefile go.mod go.sum $(CDC_SUITE_MANIFEST) $(MATRIX_CONTRACT) $(call LIST_TRACKED_FILES,$(CDC_WAVE_SHARED_PATHS))
 WAVE_DEPS_providers := $(call LIST_TRACKED_FILES,$(WAVE_PATHS_providers))
 WAVE_DEPS_storage-canon := $(call LIST_TRACKED_FILES,$(WAVE_PATHS_storage-canon))
-WAVE_DEPS_e2e-core := $(call LIST_TRACKED_FILES,$(WAVE_PATHS_e2e-core))
+WAVE_DEPS_e2e := $(call LIST_TRACKED_FILES,$(WAVE_PATHS_e2e))
 WAVE_DEPS_evolution := $(call LIST_TRACKED_FILES,$(WAVE_PATHS_evolution))
 WAVE_DEPS_resume := $(call LIST_TRACKED_FILES,$(WAVE_PATHS_resume))
 WAVE_DEPS_large := $(call LIST_TRACKED_FILES,$(WAVE_PATHS_large))
@@ -109,7 +109,7 @@ COMMON_OPTIONAL_WAVE_DEPS := Makefile go.mod go.sum $(CDC_OPTIONAL_SUITE_MANIFES
 OPTIONAL_WAVE_DEPS_optional-queues := $(call LIST_TRACKED_FILES,$(OPTIONAL_WAVE_PATHS_optional-queues))
 OPTIONAL_WAVE_DEPS_optional-connectors := $(call LIST_TRACKED_FILES,$(OPTIONAL_WAVE_PATHS_optional-connectors))
 OPTIONAL_WAVE_DEPS_optional-clickhouse-source := $(call LIST_TRACKED_FILES,$(OPTIONAL_WAVE_PATHS_optional-clickhouse-source))
-MATRIX_CACHE_SHARED_PATHS := library pkg vendor_patched tools/testmatrix tests/e2e-core tests/evolution tests/large
+MATRIX_CACHE_SHARED_PATHS := library pkg vendor_patched tools/testmatrix tests/e2e tests/evolution tests/large
 COMMON_MATRIX_DEPS := Makefile go.mod go.sum $(CDC_SUITE_MANIFEST) $(MATRIX_CONTRACT) $(call LIST_TRACKED_FILES,$(MATRIX_CACHE_SHARED_PATHS))
 
 # Define the `run-tests` target
@@ -200,7 +200,7 @@ test-list:
 	@echo "Supported stream flow DB aliases: $(SUPPORTED_STREAM_FLOW_DBS)"
 	@echo "Supported component DB names: $(SUPPORTED_COMPONENT_DBS)"
 	@echo "Examples:"
-	@echo "  make test-layer LAYER=e2e-core DB=pg2ch"
+	@echo "  make test-layer LAYER=e2e DB=pg2ch"
 	@echo "  make test-layer-all LAYER=resume"
 	@echo "  make test-db DB=mysql2ch"
 	@echo "  make test-core"
@@ -687,7 +687,7 @@ test-layer:
 		*) echo "Unsupported DB alias: $$db. Use one of: $(SUPPORTED_FLOW_DBS) $(SUPPORTED_STREAM_FLOW_DBS)"; exit 1 ;; \
 	esac; \
 	case "$$layer" in \
-		e2e-core) suite_group="tests/e2e-core"; suite_path="$$db" ;; \
+		e2e) suite_group="tests/e2e"; suite_path="$$db" ;; \
 		evolution|resume|large) suite_group="tests"; suite_path="$$layer/$$db" ;; \
 		canon) [[ "$$db" == "kafka2ch" ]] && { echo "canon layer is not defined for $$db"; exit 1; }; suite_group="tests"; suite_path="canon/$$source_db" ;; \
 		storage) [[ "$$db" == "kafka2ch" ]] && { echo "storage layer is not defined for $$db"; exit 1; }; suite_group="tests"; suite_path="storage/$$source_db" ;; \
@@ -719,12 +719,12 @@ test-layer-optional:
 		kafka2ch|eventhub2ch|kinesis2ch|airbyte2ch|oracle2ch|ch2ch) ;; \
 		*) echo "Unsupported optional DB alias: $$db. Use one of: $(SUPPORTED_OPTIONAL_FLOW_DBS)"; exit 1 ;; \
 	esac; \
-	$(MAKE) run-tests SUITE_GROUP="tests/e2e-optional" SUITE_PATH="$$db" SUITE_NAME="e2e-optional-$$db" GO_TEST_ARGS="$(MATRIX_GO_TEST_ARGS)"
+	$(MAKE) run-tests SUITE_GROUP="tests/e2e" SUITE_PATH="$$db" SUITE_NAME="e2e-$$db" GO_TEST_ARGS="$(MATRIX_GO_TEST_ARGS)"
 
 .PHONY: test-db
 test-db:
 	@set -euo pipefail; \
-	for layer in storage canon e2e-core evolution resume large; do \
+	for layer in storage canon e2e evolution resume large; do \
 		echo "=== layer=$$layer db=$(DB) ==="; \
 		$(MAKE) test-layer LAYER="$$layer" DB="$(DB)"; \
 	done
@@ -736,7 +736,7 @@ test-core:
 		echo "=== core db=$$db ==="; \
 		$(MAKE) test-layer LAYER=storage DB="$$db"; \
 		$(MAKE) test-layer LAYER=canon DB="$$db"; \
-		$(MAKE) test-layer LAYER=e2e-core DB="$$db"; \
+		$(MAKE) test-layer LAYER=e2e DB="$$db"; \
 		$(MAKE) test-layer LAYER=resume DB="$$db"; \
 	done
 

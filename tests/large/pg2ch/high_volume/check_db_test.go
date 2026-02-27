@@ -12,15 +12,15 @@ import (
 	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
 	pgcommon "github.com/transferia/transferia/pkg/providers/postgres"
 	"github.com/transferia/transferia/pkg/providers/postgres/pgrecipe"
-	"github.com/transferia/transferia/tests/e2e-core/pg2ch"
+	"github.com/transferia/transferia/tests/e2e/pg2ch"
 	"github.com/transferia/transferia/tests/helpers"
 )
 
 var (
 	databaseName = "public"
 	transferType = abstract.TransferTypeSnapshotAndIncrement
-	source       = *pgrecipe.RecipeSource(pgrecipe.WithInitDir(helpers.RepoPath("tests", "e2e-core", "pg2ch", "replication", "dump", "pg")), pgrecipe.WithPrefix(""), pgrecipe.WithoutPgDump())
-	target       = *chrecipe.MustTarget(chrecipe.WithInitDir(helpers.RepoPath("tests", "e2e-core", "pg2ch", "replication", "dump", "ch")), chrecipe.WithDatabase(databaseName))
+	source       = *pgrecipe.RecipeSource(pgrecipe.WithInitDir(helpers.RepoPath("tests", "e2e", "pg2ch", "replication", "dump", "pg")), pgrecipe.WithPrefix(""), pgrecipe.WithoutPgDump())
+	target       = *chrecipe.MustTarget(chrecipe.WithInitDir(helpers.RepoPath("tests", "e2e", "pg2ch", "replication", "dump", "ch")), chrecipe.WithDatabase(databaseName))
 )
 
 func init() {

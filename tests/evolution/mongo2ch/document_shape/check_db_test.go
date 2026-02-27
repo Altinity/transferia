@@ -21,7 +21,7 @@ const databaseName = "db"
 
 var (
 	source = mongocommon.RecipeSource()
-	target = chrecipe.MustTarget(chrecipe.WithInitFile(helpers.RepoPath("tests", "e2e-core", "mongo2ch", "snapshot", "dump.sql")), chrecipe.WithDatabase(databaseName))
+	target = chrecipe.MustTarget(chrecipe.WithInitFile(helpers.RepoPath("tests", "e2e", "mongo2ch", "snapshot", "dump.sql")), chrecipe.WithDatabase(databaseName))
 )
 
 func jsonAsStringComparator(lVal interface{}, _ abstract.ColSchema, rVal interface{}, _ abstract.ColSchema, _ bool) (bool, bool, error) {

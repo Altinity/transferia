@@ -29,7 +29,7 @@ transferia/
 │   └── connection/     # Connection management
 ├── internal/           # Internal packages (logger, config, metrics)
 ├── tests/
-│   ├── e2e-core/       # End-to-end tests (pg2ch, mysql2ch, mongo2ch)
+│   ├── e2e/            # End-to-end tests (pg2ch, mysql2ch, mongo2ch)
 │   ├── helpers/        # Test utilities and helpers
 │   ├── canon/          # Type/schema validation tests
 │   └── storage/        # Provider storage tests
@@ -146,7 +146,7 @@ Providers register via `init()` with:
 2. Implement required interfaces (Storage, Source, Sink as needed)
 3. Register in `init()` function
 4. Add test recipes in `recipe/`
-5. Create e2e tests in `tests/e2e-core/`
+5. Create e2e tests in `tests/e2e/`
 
 ### Adding a Transformer
 
@@ -168,7 +168,7 @@ make test-cdc-full
 make test-cdc-wave WAVE=providers
 
 # Specific layer
-make test-layer LAYER=e2e-core DB=pg2ch
+make test-layer LAYER=e2e DB=pg2ch
 ```
 
 ## Build Commands
