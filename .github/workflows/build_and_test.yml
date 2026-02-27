@@ -186,6 +186,12 @@ jobs:
           echo "Running ${{ matrix.suite.group }} suite ${{ matrix.suite.name }}"
           export RECIPE_CLICKHOUSE_BIN=clickhouse
           export USE_TESTCONTAINERS=1
+          EXTRA_GO_TEST_ARGS=""
+          if [[ "${{ matrix.suite.group }}" == "pkg/providers" && "${{ matrix.suite.path }}" == "clickhouse" ]]; then
+            # ClickHouse provider tests initialize multiple testcontainer recipes at package init;
+            # serial package execution avoids ryuk/reaper startup races.
+            EXTRA_GO_TEST_ARGS="-p=1"
+          fi
           gotestsum \
             --junitfile="reports/${{ matrix.suite.name }}.xml" \
             --junitfile-project-name="${{ matrix.suite.group }}" \
@@ -193,7 +199,7 @@ jobs:
             --rerun-fails \
             --format github-actions \
             --packages="./${{ matrix.suite.group }}/${{ matrix.suite.path }}/..." \
-            -- -timeout=15m
+            -- -timeout=15m $EXTRA_GO_TEST_ARGS
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()

@@ -27,3 +27,16 @@ func TestIsFatalClickhouseError(t *testing.T) {
 	require.True(t, IsFatalClickhouseError(fatalChErr), "should be fatal error")
 	require.True(t, IsFatalClickhouseError(xerrors.Errorf("oh: %w", fatalChErr)), "wrapped fatal should be fatal")
 }
+
+func TestIsDistributedDDLError(t *testing.T) {
+	irrelevant := xerrors.New("irrelevant")
+	notFound170 := &clickhouse.Exception{Code: 170, Message: "Cluster 'abc' not found"}
+	notFound701 := &clickhouse.Exception{Code: 701, Message: "Requested cluster 'abc' not found"}
+	other701 := &clickhouse.Exception{Code: 701, Message: "some other error"}
+
+	require.False(t, IsDistributedDDLError(irrelevant))
+	require.False(t, IsDistributedDDLError(xerrors.Errorf("wrapped: %w", irrelevant)))
+	require.True(t, IsDistributedDDLError(notFound170))
+	require.True(t, IsDistributedDDLError(notFound701))
+	require.False(t, IsDistributedDDLError(other701))
+}

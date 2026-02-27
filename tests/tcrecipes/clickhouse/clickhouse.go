@@ -233,7 +233,7 @@ func Prepare(ctx context.Context, opts ...testcontainers.ContainerCustomizer) (*
 			wait.NewHostPortStrategy(NativePort),
 			wait.NewHTTPStrategy("/").WithPort(HTTPPort).WithStatusCodeMatcher(func(status int) bool {
 				return status == 200
-			}).WithStartupTimeout(10*time.Second),
+			}).WithStartupTimeout(30*time.Second),
 		),
 	}
 

@@ -24,10 +24,11 @@ func IsDistributedDDLError(err error) bool {
 	if !xerrors.As(err, &chError) {
 		return false
 	}
+	msgLower := strings.ToLower(chError.Message)
 	return (chError.Code == 139 && strings.Contains(chError.Message, "Zookeeper")) || // NO_ELEMENTS_IN_CONFIG error and no ZK setting
 		(chError.Code == 225) || // NO_ZOOKEEPER
 		(chError.Code == 392 && strings.Contains(chError.Message, "Distributed DDL")) || // QUERY_IS_PROHIBITED
-		(chError.Code == 170 && strings.Contains(chError.Message, "cluster") && strings.Contains(chError.Message, "not found")) // Cluster not found, may be ignored if single node
+		((chError.Code == 170 || chError.Code == 701) && strings.Contains(msgLower, "cluster") && strings.Contains(msgLower, "not found")) // Cluster not found, may be ignored if single node
 }
 
 type ErrDistributedDDLTimeout struct {

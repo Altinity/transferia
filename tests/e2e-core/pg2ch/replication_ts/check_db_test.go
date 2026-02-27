@@ -72,12 +72,13 @@ func TestSnapshotAndIncrement(t *testing.T) {
 	// wait & compare
 
 	// For this no-PK timestamp fixture, current delete/update semantics in CH converge to
-	// zero active rows. Assert deterministic convergence instead of strict parity.
-	targetStorage := helpers.GetSampleableStorageByModel(t, Target)
-	tableDesc := abstract.TableDescription{Name: "date_types", Schema: databaseName}
-	tableID := tableDesc.ID()
-	require.Eventually(t, func() bool {
-		rowsCount, countErr := targetStorage.ExactTableRowsCount(tableID)
-		return countErr == nil && rowsCount == 0
-	}, 60*time.Second, 2*time.Second)
+	// the same row count as source. Validate convergence only by count.
+	require.NoError(t, helpers.WaitEqualRowsCount(
+		t,
+		databaseName,
+		"date_types",
+		helpers.GetSampleableStorageByModel(t, Source),
+		helpers.GetSampleableStorageByModel(t, Target),
+		60*time.Second,
+	))
 }

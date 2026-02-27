@@ -106,5 +106,6 @@ func TestReplication(t *testing.T) {
 		NativePort: target.NativePort,
 		HTTPPort:   target.HTTPPort,
 		User:       target.User,
+		Password:   target.Password,
 	})
 }

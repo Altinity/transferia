@@ -257,6 +257,11 @@ func Prepare(params ContainerParams) error {
 	if err := os.Setenv(params.prefix+"RECIPE_CLICKHOUSE_HTTP_PORT", httpPort.Port()); err != nil {
 		return xerrors.Errorf("unable to set RECIPE_CLICKHOUSE_HTTP_PORT: %w", err)
 	}
+	// tc_clickhouse.Prepare exports non-prefixed RECIPE_CLICKHOUSE_PASSWORD.
+	// Mirror it into the requested prefix so prefixed sources/targets keep valid auth.
+	if err := os.Setenv(params.prefix+"RECIPE_CLICKHOUSE_PASSWORD", os.Getenv("RECIPE_CLICKHOUSE_PASSWORD")); err != nil {
+		return xerrors.Errorf("unable to set RECIPE_CLICKHOUSE_PASSWORD: %w", err)
+	}
 	return nil
 }
 

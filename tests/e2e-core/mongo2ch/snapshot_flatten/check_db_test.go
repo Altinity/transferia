@@ -118,5 +118,6 @@ SETTINGS
 		NativePort: Target.NativePort,
 		HTTPPort:   Target.HTTPPort,
 		User:       Target.User,
+		Password:   Target.Password,
 	}, true))
 }
