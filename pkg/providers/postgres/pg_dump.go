@@ -73,11 +73,11 @@ func (i *pgDumpItem) TableDescription() (*abstract.TableDescription, error) {
 	return nil, xerrors.New("Not found `CREATE TABLE` line")
 }
 
-func ApplyCommands(commands []*pgDumpItem, transfer model.Transfer, task *model.TransferOperation, registry metrics.Registry, types ...string) error {
+func ApplyCommands(commands []*pgDumpItem, transfer model.Transfer, registry metrics.Registry, types ...string) error {
 	if _, ok := transfer.Dst.(*PgDestination); !ok {
 		return nil
 	}
-	sink, err := sink_factory.MakeAsyncSink(&transfer, task, logger.Log, registry, coordinator.NewFakeClient(), middlewares.MakeConfig(middlewares.WithNoData))
+	sink, err := sink_factory.MakeAsyncSink(&transfer, logger.Log, registry, coordinator.NewFakeClient(), middlewares.MakeConfig(middlewares.WithNoData))
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func ExtractPgDumpSchema(transfer *model.Transfer) ([]*pgDumpItem, error) {
 }
 
 // ApplyPgDumpPreSteps takes the given dump and applies pre-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions
-func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, task *model.TransferOperation, registry metrics.Registry) error {
+func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registry metrics.Registry) error {
 	if len(pgdump) == 0 {
 		return nil
 	}
@@ -290,7 +290,7 @@ func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, task *m
 		return nil
 	}
 
-	if err := ApplyCommands(pgdump, *transfer, task, registry, src.PreSteps.List()...); err != nil {
+	if err := ApplyCommands(pgdump, *transfer, registry, src.PreSteps.List()...); err != nil {
 		return xerrors.Errorf("failed to apply schema pre-steps (%v) in the destination PostgreSQL: %w", src.PreSteps.List(), err)
 	}
 	logger.Log.Info("Successfully applied schema pre-steps in the destination PostgreSQL", log.Array("steps", src.PreSteps.List()))
@@ -298,7 +298,7 @@ func ApplyPgDumpPreSteps(pgdump []*pgDumpItem, transfer *model.Transfer, task *m
 }
 
 // ApplyPgDumpPostSteps takes the given dump and applies post-steps defined in transfer source ONLY for homogenous PG-PG transfers. It also logs its actions
-func ApplyPgDumpPostSteps(pgdump []*pgDumpItem, transfer *model.Transfer, task *model.TransferOperation, registry metrics.Registry) error {
+func ApplyPgDumpPostSteps(pgdump []*pgDumpItem, transfer *model.Transfer, registry metrics.Registry) error {
 	if len(pgdump) == 0 {
 		return nil
 	}
@@ -307,7 +307,7 @@ func ApplyPgDumpPostSteps(pgdump []*pgDumpItem, transfer *model.Transfer, task *
 		return nil
 	}
 
-	if err := ApplyCommands(pgdump, *transfer, task, registry, src.PostSteps.List()...); err != nil {
+	if err := ApplyCommands(pgdump, *transfer, registry, src.PostSteps.List()...); err != nil {
 		return xerrors.Errorf("failed to apply schema post-steps (%v) in the destination PostgreSQL: %w", src.PostSteps.List(), err)
 	}
 	logger.Log.Info("Successfully applied schema post-steps in the destination PostgreSQL", log.Array("steps", src.PostSteps.List()))

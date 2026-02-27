@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/blang/semver/v4"
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	chConn "github.com/transferia/transferia/pkg/connection/clickhouse"
 	"github.com/transferia/transferia/pkg/middlewares/async/bufferer"
-	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -21,6 +21,11 @@ var (
 	destinationUsage []byte
 	//go:embed doc_destination_example.yaml
 	destinationExample []byte
+)
+
+var (
+	// the oldest version found with the existing insert_null_as_default setting
+	InsertNullAsDefaultExistedVersion = semver.MustParse("21.7.11")
 )
 
 type ClickHouseColumnValueToShardName struct {
@@ -115,17 +120,18 @@ func (p InsertParams) AsQueryPart() string {
 	return ""
 }
 
-func (p InsertParams) ToQueryOption() clickhouse.QueryOption {
+func (p InsertParams) ToQueryOption(version semver.Version) clickhouse.QueryOption {
 	settings := make(clickhouse.Settings)
 	if p.MaterializedViewsIgnoreErrors {
 		settings["materialized_views_ignore_errors"] = "1"
 	}
+	// to fill column by default value if value unknown
+	if version.GTE(InsertNullAsDefaultExistedVersion) {
+		settings["insert_null_as_default"] = "1"
+	}
 	return clickhouse.WithSettings(settings)
 }
 
-func (d *ChDestination) MarshalLogObject(enc zapcore.ObjectEncoder) error {
-	return logger.MarshalSanitizedObject(d, enc)
-}
 
 func (d *ChDestination) IsAlterable() {}
 

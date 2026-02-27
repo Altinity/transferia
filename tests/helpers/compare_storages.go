@@ -38,8 +38,8 @@ func withTextSerialization(storageParams *pgStorage.PgStorageParams) *pgStorage.
 	return storageParams
 }
 
-func GetSampleableStorageByModel(t *testing.T, serverModel interface{}) abstract.SampleableStorage {
-	var result abstract.SampleableStorage
+func GetSampleableStorageByModel(t *testing.T, serverModel interface{}) abstract.ChecksumableStorage {
+	var result abstract.ChecksumableStorage
 	var err error
 
 	switch model := serverModel.(type) {
@@ -206,7 +206,7 @@ func applyStableFallback(checksumErr error, params *CompareStoragesParams, fallb
 	return nil
 }
 
-func compareStoragesStable(srcStorage, dstStorage abstract.SampleableStorage, params *CompareStoragesParams, tables []abstract.TableDescription) error {
+func compareStoragesStable(srcStorage, dstStorage abstract.Storage, params *CompareStoragesParams, tables []abstract.TableDescription) error {
 	if params.StableRowLimit <= 0 {
 		return fmt.Errorf("stable fallback requires StableRowLimit > 0")
 	}
@@ -233,7 +233,7 @@ func compareStoragesStable(srcStorage, dstStorage abstract.SampleableStorage, pa
 	return nil
 }
 
-func loadAllRows(storage abstract.SampleableStorage, table abstract.TableDescription, stableRowLimit int) ([]abstract.ChangeItem, error) {
+func loadAllRows(storage abstract.Storage, table abstract.TableDescription, stableRowLimit int) ([]abstract.ChangeItem, error) {
 	rows := make([]abstract.ChangeItem, 0)
 	err := storage.LoadTable(context.Background(), table, func(input []abstract.ChangeItem) error {
 		rows = append(rows, input...)
