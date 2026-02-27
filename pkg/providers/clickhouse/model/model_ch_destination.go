@@ -33,6 +33,11 @@ type ClickHouseColumnValueToShardName struct {
 	ShardName   string
 }
 
+// ChSinkMigrationOptions controls schema migration behavior
+type ChSinkMigrationOptions struct {
+	AddNewColumns bool `json:"AddNewColumns"` // When true, automatically add new columns from source to target
+}
+
 var (
 	_ model.Destination          = (*ChDestination)(nil)
 	_ model.Describable          = (*ChDestination)(nil)
@@ -53,9 +58,10 @@ type ChDestination struct {
 	HTTPPort                  int    `log:"true"`
 	NativePort                int    `log:"true"`
 	TTL                       string `log:"true"`
-	InferSchema               bool   `log:"true"`
-	ConnectionID              string `log:"true"`
-	IsSchemaMigrationDisabled bool   `log:"true"`
+	InferSchema               bool                    `log:"true"`
+	MigrationOptions          *ChSinkMigrationOptions `log:"true"`
+	ConnectionID              string                  `log:"true"`
+	IsSchemaMigrationDisabled bool                    `log:"true"`
 	// ForceJSONMode forces JSON protocol at sink:
 	// - allows upload records without 'required'-fields, clickhouse fills them via defaults.
 	//         BUT IF THEY ARE 'REQUIRED' - WHAT THE POINT?
