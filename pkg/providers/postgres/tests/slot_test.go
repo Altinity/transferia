@@ -11,7 +11,7 @@ import (
 )
 
 func TestSlotHappyPath(t *testing.T) {
-	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix(""))
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("SLOT_"))
 
 	transferID := helpers.GenerateTransferID("TestSlotHappyPath")
 	src.SlotID = transferID
@@ -37,7 +37,7 @@ func TestSlotHappyPath(t *testing.T) {
 }
 
 func TestSlotBrokenConnection(t *testing.T) {
-	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix(""))
+	src := pgrecipe.RecipeSource(pgrecipe.WithPrefix("SLOT_"))
 
 	transferID := helpers.GenerateTransferID("TestSlotBrokenConnection")
 	src.SlotID = transferID

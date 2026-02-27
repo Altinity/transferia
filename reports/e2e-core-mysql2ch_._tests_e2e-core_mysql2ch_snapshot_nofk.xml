@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="3" failures="0" errors="0" time="27.375744">
+	<testsuite tests="3" failures="0" time="27.376000" name="snapshot_nofk" timestamp="2026-02-26T20:24:23+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mysql2ch/snapshot_nofk" name="TestSnapshot/fake_keys" time="2.330000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mysql2ch/snapshot_nofk" name="TestSnapshot/no_fake_keys" time="0.040000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mysql2ch/snapshot_nofk" name="TestSnapshot" time="26.620000"></testcase>
+	</testsuite>
+</testsuites>

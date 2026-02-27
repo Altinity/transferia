@@ -6,38 +6,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/transferia/transferia/pkg/abstract"
-	dp_model "github.com/transferia/transferia/pkg/abstract/model"
-	"github.com/transferia/transferia/pkg/providers/clickhouse/model"
-	"github.com/transferia/transferia/pkg/providers/mysql"
+	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
 	"github.com/transferia/transferia/tests/e2e/pg2ch"
 	"github.com/transferia/transferia/tests/helpers"
 )
 
 var (
 	TransferType = abstract.TransferTypeSnapshotOnly
-	Source       = mysql.MysqlSource{
-		Host:     os.Getenv("RECIPE_MYSQL_HOST"),
-		User:     os.Getenv("RECIPE_MYSQL_USER"),
-		Password: dp_model.SecretString(os.Getenv("RECIPE_MYSQL_PASSWORD")),
-		Database: os.Getenv("RECIPE_MYSQL_SOURCE_DATABASE"),
-		Port:     helpers.GetIntFromEnv("RECIPE_MYSQL_PORT"),
-	}
-	Target = model.ChDestination{
-		ShardsList: []model.ClickHouseShard{
-			{
-				Name: "_",
-				Hosts: []string{
-					"localhost",
-				},
-			},
-		},
-		User:                "default",
-		Password:            "",
-		Database:            "source",
-		HTTPPort:            helpers.GetIntFromEnv("RECIPE_CLICKHOUSE_HTTP_PORT"),
-		NativePort:          helpers.GetIntFromEnv("RECIPE_CLICKHOUSE_NATIVE_PORT"),
-		ProtocolUnspecified: true,
-	}
+	Source       = *helpers.RecipeMysqlSource()
+	Target       = *chrecipe.MustTarget(chrecipe.WithInitFile("dump/ch/dump.sql"), chrecipe.WithDatabase("source"))
 )
 
 func init() {
@@ -56,10 +33,16 @@ func TestSnapshot(t *testing.T) {
 	transfer := helpers.MakeTransfer(helpers.TransferID, &Source, &Target, TransferType)
 	_ = helpers.Activate(t, transfer)
 
-	err := helpers.CompareStorages(t, Source, Target, helpers.NewCompareStorageParams().WithEqualDataTypes(pg2ch.PG2CHDataTypesComparator))
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "Total Errors: 1")
-	require.Contains(t, err.Error(), "Total unmatched: 1")
-	require.Contains(t, err.Error(), `"source"."empty"`)
-	require.Contains(t, err.Error(), "table not found in target DB")
+	require.NoError(t, helpers.CompareStorages(t, Source, Target, helpers.NewCompareStorageParams().
+		WithEqualDataTypes(pg2ch.PG2CHDataTypesComparator).
+		WithTableFilter(func(tables abstract.TableMap) []abstract.TableDescription {
+			filtered := make([]abstract.TableDescription, 0)
+			for _, table := range helpers.FilterTechnicalTables(tables) {
+				if table.Name == "empty" {
+					continue
+				}
+				filtered = append(filtered, table)
+			}
+			return filtered
+		})))
 }

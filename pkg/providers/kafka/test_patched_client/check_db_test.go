@@ -85,6 +85,10 @@ func setMaxMessageBytes(t *testing.T, kafkaClient *client.Client, topicName, val
 
 func TestAutoDeriveBatchBytes(t *testing.T) {
 	broker := os.Getenv("KAFKA_RECIPE_BROKER_LIST")
+	if broker == "" {
+		require.NoError(t, kafka.StartKafkaContainer())
+		broker = os.Getenv("KAFKA_RECIPE_BROKER_LIST")
+	}
 	topicName := "topic1"
 
 	// create topics

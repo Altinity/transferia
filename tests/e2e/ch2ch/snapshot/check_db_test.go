@@ -76,11 +76,11 @@ func TestSnapshot(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		exec(`drop table mtmobproxy.logs_weekly__mt_mt`)
-		exec(`drop table mtmobproxy.logs_weekly__nurmt_mt`)
-		exec(`drop table mtmobproxy.logs_weekly__nurmt_nurmt`)
-		exec("drop table mtmobproxy.`.-logs_weekly__urmt_mt`")
-		exec(`drop table mtmobproxy.empty`)
+		exec(`DROP TABLE IF EXISTS mtmobproxy.logs_weekly__mt_mt NO DELAY`)
+		exec(`DROP TABLE IF EXISTS mtmobproxy.logs_weekly__nurmt_mt NO DELAY`)
+		exec(`DROP TABLE IF EXISTS mtmobproxy.logs_weekly__nurmt_nurmt NO DELAY`)
+		exec("DROP TABLE IF EXISTS mtmobproxy.`.-logs_weekly__urmt_mt` NO DELAY")
+		exec(`DROP TABLE IF EXISTS mtmobproxy.empty NO DELAY`)
 
 		srcProxy.ResetSniffedData()
 		dstProxy.ResetSniffedData()

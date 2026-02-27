@@ -548,8 +548,19 @@ func AddPg(v *debeziumcommon.Values, colSchema *abstract.ColSchema, colName stri
 			return nil
 		} else if postgres.IsPgTypeTimestampWithoutTimeZone(originalType) {
 			ts := new(pgtype.Timestamp)
-			if err := ts.Set(colVal); err != nil {
-				return xerrors.Errorf("pg - unable to parse %s %v: %w", originalType, colVal, err)
+			switch t := colVal.(type) {
+			case string:
+				parsedTS, err := typeutil.ParseTimestamp(t)
+				if err != nil {
+					return xerrors.Errorf("pg - unable to parse %s %v: %w", originalType, colVal, err)
+				}
+				if err := ts.Set(parsedTS); err != nil {
+					return xerrors.Errorf("pg - unable to parse %s %v: %w", originalType, colVal, err)
+				}
+			default:
+				if err := ts.Set(colVal); err != nil {
+					return xerrors.Errorf("pg - unable to parse %s %v: %w", originalType, colVal, err)
+				}
 			}
 			if ts.Status != pgtype.Present {
 				return xerrors.Errorf("pg - unable to parse %s %v: parsed to nil", originalType, colVal)

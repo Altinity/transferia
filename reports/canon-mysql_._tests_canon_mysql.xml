@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="1" failures="0" errors="0" time="0.715322">
+	<testsuite tests="1" failures="0" skipped="1" time="0.715000" name="mysql" timestamp="2026-02-26T20:08:08+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/canon/mysql" name="TestCanonSource" time="0.000000">
+			<skipped message="=== RUN   TestCanonSource&#xA;    utils.go:50: required env RECIPE_MYSQL_HOST is not set&#xA;--- SKIP: TestCanonSource (0.00s)&#xA;"></skipped>
+		</testcase>
+	</testsuite>
+</testsuites>

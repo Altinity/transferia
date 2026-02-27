@@ -29,7 +29,7 @@ TO public.__test_aggr
 AS
 SELECT
     coalesce(id / 2, 0) is_even,
-    sum(toInt32(_partition)) AS sumVal -- at replication we will try to insert null, it should fail sum
+    sum(toInt32(_partition)) AS sum_id -- at replication we will try to insert null, it should fail sum
 FROM public.topic1
 GROUP BY
     is_even;

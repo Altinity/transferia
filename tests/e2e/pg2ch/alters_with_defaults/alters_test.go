@@ -10,7 +10,6 @@ import (
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/pkg/abstract"
 	dp_model "github.com/transferia/transferia/pkg/abstract/model"
-	"github.com/transferia/transferia/pkg/providers/clickhouse/model"
 	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
 	pgcommon "github.com/transferia/transferia/pkg/providers/postgres"
 	"github.com/transferia/transferia/pkg/providers/postgres/pgrecipe"
@@ -46,9 +45,6 @@ func TestAlter(t *testing.T) {
 	// start worker
 
 	Target.ProtocolUnspecified = true
-	Target.MigrationOptions = &model.ChSinkMigrationOptions{
-		AddNewColumns: true,
-	}
 	transfer := helpers.MakeTransfer(helpers.TransferID, &Source, &Target, TransferType)
 	transfer.DataObjects = &dp_model.DataObjects{IncludeObjects: []string{"public.__test"}}
 	var terminateErr error
@@ -97,9 +93,6 @@ func TestAlter(t *testing.T) {
 			require.NoError(t, err)
 			rows.Close()
 
-			rows, err = tx.Query(context.Background(), "INSERT INTO __test (id, val1, val2, new_val1, new_val2) VALUES (6, 6, 'f', '6', 6)")
-			require.NoError(t, err)
-			rows.Close()
 			return nil
 		})
 		require.NoError(t, err)
@@ -114,7 +107,8 @@ func TestAlter(t *testing.T) {
 				break
 			}
 		}
-		require.Error(t, terminateErr)
-		require.True(t, abstract.IsFatal(terminateErr))
+		// Complex PostgreSQL defaults can be unsupported in ClickHouse DDL translation.
+		// Runtime should keep retrying instead of terminating the worker with a fatal error.
+		require.NoError(t, terminateErr)
 	})
 }

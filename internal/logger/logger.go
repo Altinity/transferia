@@ -14,7 +14,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	"go.ytsaurus.tech/library/go/core/log"
 	"go.ytsaurus.tech/library/go/core/log/zap"
-	"go.ytsaurus.tech/yt/go/mapreduce"
 )
 
 // Дефолтный логгер.
@@ -79,18 +78,11 @@ func getEnvLogLevels() levels {
 	return levels{zapcore.InfoLevel, log.InfoLevel}
 }
 
-func getEnvYtLogLevel() levels {
-	if level, ok := os.LookupEnv("YT_LOG_LEVEL"); ok {
-		return parseLevel(level)
-	}
-	return levels{zapcore.DebugLevel, log.DebugLevel}
-}
-
 func parseLevel(level string) levels {
 	zpLvl := zapcore.InfoLevel
 	lvl := log.InfoLevel
 	if level != "" {
-		fmt.Printf("overriden YT log level to: %v\n", level)
+		fmt.Printf("overriden log level to: %v\n", level)
 		var l zapcore.Level
 		if err := l.UnmarshalText([]byte(level)); err == nil {
 			zpLvl = l
@@ -135,7 +127,7 @@ func init() {
 		cfg = zap.JSONConfig(level.Log)
 	}
 
-	if os.Getenv("CI") == "1" || strings.Contains(os.Args[0], "gotest") {
+	if (os.Getenv("CI") == "1" || strings.Contains(os.Args[0], "gotest")) && os.Getenv("LOG_LEVEL") == "" {
 		cfg = zp.Config{
 			Level:            zp.NewAtomicLevelAt(zp.DebugLevel),
 			Encoding:         "console",
@@ -153,33 +145,10 @@ func init() {
 			},
 		}
 	}
-	if mapreduce.InsideJob() {
-		cfg = zp.Config{
-			Level:            cfg.Level,
-			Encoding:         "console",
-			OutputPaths:      []string{"stderr"},
-			ErrorOutputPaths: []string{"stderr"},
-			EncoderConfig: zapcore.EncoderConfig{
-				MessageKey:     "msg",
-				LevelKey:       "level",
-				TimeKey:        "ts",
-				CallerKey:      "caller",
-				EncodeLevel:    zapcore.CapitalLevelEncoder,
-				EncodeTime:     zapcore.ISO8601TimeEncoder,
-				EncodeDuration: zapcore.StringDurationEncoder,
-				EncodeCaller:   AdditionalComponentCallerEncoder,
-			},
-		}
-	}
-
-	ytCfg := cfg
-	ytLogLevel := getEnvYtLogLevel()
-	ytCfg.Level = zp.NewAtomicLevelAt(ytLogLevel.Zap)
 
 	host, _ := os.Hostname()
 	logger := zap.Must(cfg)
-	ytLogger := zap.Must(ytCfg)
-	Log = log.With(NewYtLogBundle(logger, ytLogger), log.Any("host", host)).(YtLogBundle)
+	Log = log.With(logger, log.Any("host", host))
 	Log = batching_logger.NewBatchingLogger(Log, &batching_logger.BatchingOptions{
 		FlushInterval: 1 * time.Minute,
 		Threshold:     32,

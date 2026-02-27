@@ -11,7 +11,6 @@ import (
 	debeziumcommon "github.com/transferia/transferia/pkg/debezium/common"
 	"github.com/transferia/transferia/pkg/debezium/mysql"
 	"github.com/transferia/transferia/pkg/debezium/pg"
-	"github.com/transferia/transferia/pkg/debezium/ydb"
 )
 
 var prefixToNotDefaultReceiver map[string]debeziumcommon.NotDefaultReceiverDescription
@@ -20,7 +19,6 @@ func init() {
 	// init this map into init() to avoid 'initialization loop'
 	prefixToNotDefaultReceiver = map[string]debeziumcommon.NotDefaultReceiverDescription{
 		"pg:":    pg.KafkaTypeToOriginalTypeToFieldReceiverFunc,
-		"ydb:":   ydb.KafkaTypeToOriginalTypeToFieldReceiverFunc,
 		"mysql:": mysql.KafkaTypeToOriginalTypeToFieldReceiverFunc,
 	}
 }

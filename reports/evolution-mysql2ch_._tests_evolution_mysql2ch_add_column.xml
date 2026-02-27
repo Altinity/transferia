@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="1" failures="0" errors="0" time="29.881704">
+	<testsuite tests="1" failures="0" time="29.881000" name="add_column" timestamp="2026-02-26T20:28:42+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/evolution/mysql2ch/add_column" name="TestAddColumnDuringReplication" time="14.830000"></testcase>
+	</testsuite>
+</testsuites>

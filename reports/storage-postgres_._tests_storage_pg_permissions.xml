@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="3" failures="0" errors="0" time="2.769788">
+	<testsuite tests="3" failures="0" time="2.770000" name="permissions" timestamp="2026-02-26T20:07:43+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/storage/pg/permissions" name="TestTableListStar" time="2.250000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/storage/pg/permissions" name="TestTableListFilter" time="0.020000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/storage/pg/permissions" name="TestTableListFilterIncludeTables" time="0.020000"></testcase>
+	</testsuite>
+</testsuites>

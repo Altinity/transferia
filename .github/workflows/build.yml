@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - "altinity"
-  pull_request:
-    branches:
-      - "*"
   workflow_dispatch:
 
 concurrency:
@@ -23,7 +20,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22.0"
+          go-version: "1.24.13"
       - shell: bash
         run: |
           make build
@@ -39,10 +36,15 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22.0"
+          go-version: "1.24.13"
       - shell: bash
         run: |
-          go test ./cmd/... -timeout=20m
+          packages=$(go list ./cmd/... | grep -v '/tests$' || true)
+          if [ -z "$packages" ]; then
+            echo "No cmd packages selected"
+            exit 1
+          fi
+          go test $packages -timeout=20m
 
   e2e-tests:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
@@ -53,28 +55,17 @@ jobs:
       fail-fast: false
       matrix:
         suite: [
-            # CLI test suites
-            { group: "cmd", name: "cmd", path: "" },
-            # providers suites, some of the providers are too heavy to run as single test
-            {
-              group: "pkg/providers",
-              name: "container",
-              path: "container",
-              container: true,
-            },
-            { group: "pkg/providers", name: "yt", path: "yt", yt: true },
-            {
-              group: "pkg/providers",
-              name: "providers-postgres",
-              path: "postgres",
-            },
-            # e2e test suites
-            { group: "tests/e2e", name: "kafka2ch", path: "kafka2ch" },
-            { group: "tests/e2e", name: "pg2pg", path: "pg2pg" },
+            # core e2e suites
             { group: "tests/e2e", name: "pg2ch", path: "pg2ch" },
+            { group: "tests/e2e", name: "mysql2ch", path: "mysql2ch" },
             { group: "tests/e2e", name: "mongo2ch", path: "mongo2ch" },
+            { group: "tests/e2e", name: "kafka2ch", path: "kafka2ch" },
+            # optional e2e suites
+            { group: "tests/e2e", name: "airbyte2ch", path: "airbyte2ch" },
+            { group: "tests/e2e", name: "ch2ch", path: "ch2ch" },
+            { group: "tests/e2e", name: "eventhub2ch", path: "eventhub2ch" },
             { group: "tests/e2e", name: "kinesis2ch", path: "kinesis2ch" },
-            { group: "tests/e2e", name: "ch2s3", path: "ch2s3" },
+            { group: "tests/e2e", name: "oracle2ch", path: "oracle2ch" },
           ]
     steps:
       - name: Checkout
@@ -82,7 +73,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22.0"
+          go-version: "1.24.13"
       - shell: bash
         run: |
           go install gotest.tools/gotestsum@latest
@@ -97,27 +88,9 @@ jobs:
       - shell: bash
         run: |
           pg_dump --version
-      - uses: engineerd/setup-kind@v0.6.2
-        if: matrix.suite.container
-        with:
-          version: "v0.26.0"
-          # Handled by the test code
-          skipClusterCreation: true
-          skipClusterDeletion: true
-          skipClusterLogsExport: true
-      - shell: bash
-        if: matrix.suite.yt
-        name: prepare local YT
-        run: |
-          go build -o binaries/lightexe ./pkg/providers/yt/lightexe/*.go
-          docker compose -f "pkg/providers/yt/recipe/docker-compose.yml" up -d --build
-          export YT_PROXY=localhost:8180
-          export TEST_DEPS_BINARY_PATH=binaries
       - shell: bash
         run: |
           make run-tests SUITE_GROUP="${{ matrix.suite.group }}" SUITE_PATH="${{ matrix.suite.path }}" SUITE_NAME="${{ matrix.suite.name }}"
-        env:
-          TEST_KUBERNETES_INTEGRATION: ${{ matrix.suite.container == true && '1' || '' }}
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
@@ -141,7 +114,7 @@ jobs:
             { group: "tests/canon", name: "canon-parser", path: "parser" },
             { group: "tests/storage", name: "storage-pg", path: "pg" },
             # internal test suites
-            { group: "internal", name: "internal", path: "..." },
+            { group: "internal", name: "internal", path: "" },
             # provider test suites
             { group: "pkg/providers", name: "providers-mongo", path: "mongo" },
             { group: "pkg/providers", name: "providers-mysql", path: "mysql" },
@@ -149,6 +122,11 @@ jobs:
               group: "pkg/providers",
               name: "providers-sample",
               path: "sample",
+            },
+            {
+              group: "pkg/providers",
+              name: "providers-stdout",
+              path: "stdout",
             },
             { group: "pkg/providers", name: "providers-kafka", path: "kafka" },
             {
@@ -158,19 +136,12 @@ jobs:
             },
             {
               group: "pkg/providers",
-              name: "providers-greenplum",
-              path: "greenplum",
-            },
-            {
-              group: "pkg/providers",
               name: "providers-clickhouse",
               path: "clickhouse",
             },
-            {
-              group: "pkg/providers",
-              name: "providers-elastic",
-              path: "elastic",
-            },
+            { group: "pkg/providers", name: "providers-airbyte", path: "airbyte" },
+            { group: "pkg/providers", name: "providers-eventhub", path: "eventhub" },
+            { group: "pkg/providers", name: "providers-oracle", path: "oracle" },
             # pkg test suites
             { group: "pkg", name: "abstract", path: "abstract" },
             { group: "pkg", name: "transformer", path: "transformer" },
@@ -194,7 +165,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22.0"
+          go-version: "1.24.13"
       - shell: bash
         run: |
           go install gotest.tools/gotestsum@latest
@@ -211,6 +182,12 @@ jobs:
           echo "Running ${{ matrix.suite.group }} suite ${{ matrix.suite.name }}"
           export RECIPE_CLICKHOUSE_BIN=clickhouse
           export USE_TESTCONTAINERS=1
+          EXTRA_GO_TEST_ARGS=""
+          if [[ "${{ matrix.suite.group }}" == "pkg/providers" && "${{ matrix.suite.path }}" == "clickhouse" ]]; then
+            # ClickHouse provider tests initialize multiple testcontainer recipes at package init;
+            # serial package execution avoids ryuk/reaper startup races.
+            EXTRA_GO_TEST_ARGS="-p=1"
+          fi
           gotestsum \
             --junitfile="reports/${{ matrix.suite.name }}.xml" \
             --junitfile-project-name="${{ matrix.suite.group }}" \
@@ -218,7 +195,7 @@ jobs:
             --rerun-fails \
             --format github-actions \
             --packages="./${{ matrix.suite.group }}/${{ matrix.suite.path }}/..." \
-            -- -timeout=15m
+            -- -timeout=15m $EXTRA_GO_TEST_ARGS
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()

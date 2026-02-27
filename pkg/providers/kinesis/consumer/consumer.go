@@ -2,14 +2,14 @@ package consumer
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/aws/aws-sdk-go/service/kinesis/kinesisiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kinesistypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	yslices "github.com/transferia/transferia/library/go/slices"
@@ -19,9 +19,15 @@ import (
 // Record wraps the record returned from the Kinesis library and
 // extends to include the shard id.
 type Record struct {
-	*kinesis.Record
+	kinesistypes.Record
 	ShardID            string
 	MillisBehindLatest *int64
+}
+
+type KinesisAPI interface {
+	GetRecords(ctx context.Context, params *kinesis.GetRecordsInput, optFns ...func(*kinesis.Options)) (*kinesis.GetRecordsOutput, error)
+	GetShardIterator(ctx context.Context, params *kinesis.GetShardIteratorInput, optFns ...func(*kinesis.Options)) (*kinesis.GetShardIteratorOutput, error)
+	ListShards(ctx context.Context, params *kinesis.ListShardsInput, optFns ...func(*kinesis.Options)) (*kinesis.ListShardsOutput, error)
 }
 
 func New(streamName string, opts ...Option) (*Consumer, error) {
@@ -31,7 +37,7 @@ func New(streamName string, opts ...Option) (*Consumer, error) {
 
 	c := &Consumer{
 		streamName:               streamName,
-		initialShardIteratorType: kinesis.ShardIteratorTypeLatest,
+		initialShardIteratorType: kinesistypes.ShardIteratorTypeLatest,
 		initialTimestamp:         nil,
 		client:                   nil,
 		group:                    nil,
@@ -47,11 +53,11 @@ func New(streamName string, opts ...Option) (*Consumer, error) {
 	}
 
 	if c.client == nil {
-		newSession, err := session.NewSession(aws.NewConfig())
+		cfg, err := awsconfig.LoadDefaultConfig(context.Background())
 		if err != nil {
 			return nil, err
 		}
-		c.client = kinesis.New(newSession)
+		c.client = kinesis.NewFromConfig(cfg)
 	}
 
 	if c.group == nil {
@@ -63,14 +69,14 @@ func New(streamName string, opts ...Option) (*Consumer, error) {
 
 type Consumer struct {
 	streamName               string
-	initialShardIteratorType string
+	initialShardIteratorType kinesistypes.ShardIteratorType
 	initialTimestamp         *time.Time
-	client                   kinesisiface.KinesisAPI
+	client                   KinesisAPI
 	group                    Group
 	logger                   log.Logger
 	store                    Store
 	scanInterval             time.Duration
-	maxRecords               int64
+	maxRecords               int32
 	shardClosedHandler       ShardClosedHandler
 }
 
@@ -89,7 +95,7 @@ func (c *Consumer) Scan(ctx context.Context, fn ScanFunc) error {
 
 	var (
 		errc   = make(chan error, 1)
-		shardc = make(chan *kinesis.Shard, 1)
+		shardc = make(chan kinesistypes.Shard, 1)
 	)
 
 	go func() {
@@ -113,7 +119,7 @@ func (c *Consumer) Scan(ctx context.Context, fn ScanFunc) error {
 					// error has already occurred
 				}
 			}
-		}(aws.StringValue(shard.ShardId))
+		}(aws.ToString(shard.ShardId))
 	}
 
 	go func() {
@@ -147,32 +153,31 @@ func (c *Consumer) ScanShard(ctx context.Context, shardID string, fn ScanFunc) e
 	defer scanTicker.Stop()
 
 	for {
-		resp, err := c.client.GetRecords(&kinesis.GetRecordsInput{
-			Limit:         aws.Int64(c.maxRecords),
+		resp, err := c.client.GetRecords(ctx, &kinesis.GetRecordsInput{
+			Limit:         aws.Int32(c.maxRecords),
 			ShardIterator: shardIterator,
 		})
 		// attempt to recover from GetRecords error when expired iterator
 		if err != nil {
 			c.logger.Warn("get records error", log.Error(err))
 
-			if awserr, ok := err.(awserr.Error); ok {
-				if _, ok := retriableErrors[awserr.Code()]; !ok {
-					return xerrors.Errorf("get records error: %v", awserr.Message())
-				}
+			if !isRetriableError(err) {
+				return xerrors.Errorf("get records error: %w", err)
 			}
 
 			shardIterator, err = c.getShardIterator(ctx, c.streamName, shardID, lastSeqNum)
 			if err != nil {
 				return xerrors.Errorf("get shard iterator error: %w", err)
 			}
-		} else {
-			err = fn(yslices.Map(resp.Records, func(r *kinesis.Record) *Record {
-				lastSeqNum = *r.SequenceNumber
-				return &Record{r, shardID, resp.MillisBehindLatest}
-			}))
-			if err != nil {
-				return xerrors.Errorf("unable to process records: %w", err)
-			}
+			continue
+		}
+
+		err = fn(yslices.Map(resp.Records, func(r kinesistypes.Record) *Record {
+			lastSeqNum = aws.ToString(r.SequenceNumber)
+			return &Record{Record: r, ShardID: shardID, MillisBehindLatest: resp.MillisBehindLatest}
+		}))
+		if err != nil {
+			return xerrors.Errorf("unable to process records: %w", err)
 		}
 
 		if isShardClosed(resp.NextShardIterator, shardIterator) {
@@ -198,10 +203,17 @@ func (c *Consumer) ScanShard(ctx context.Context, shardID string, fn ScanFunc) e
 	}
 }
 
-var retriableErrors = map[string]struct{}{
-	kinesis.ErrCodeExpiredIteratorException:               {},
-	kinesis.ErrCodeProvisionedThroughputExceededException: {},
-	kinesis.ErrCodeInternalFailureException:               {},
+func isRetriableError(err error) bool {
+	var expired *kinesistypes.ExpiredIteratorException
+	if errors.As(err, &expired) {
+		return true
+	}
+	var throughput *kinesistypes.ProvisionedThroughputExceededException
+	if errors.As(err, &throughput) {
+		return true
+	}
+	var internalFailure *kinesistypes.InternalFailureException
+	return errors.As(err, &internalFailure)
 }
 
 func isShardClosed(nextShardIterator, currentShardIterator *string) bool {
@@ -215,15 +227,18 @@ func (c *Consumer) getShardIterator(ctx context.Context, streamName, shardID, se
 	}
 
 	if seqNum != "" {
-		params.ShardIteratorType = aws.String(kinesis.ShardIteratorTypeAfterSequenceNumber)
+		params.ShardIteratorType = kinesistypes.ShardIteratorTypeAfterSequenceNumber
 		params.StartingSequenceNumber = aws.String(seqNum)
 	} else if c.initialTimestamp != nil {
-		params.ShardIteratorType = aws.String(kinesis.ShardIteratorTypeAtTimestamp)
+		params.ShardIteratorType = kinesistypes.ShardIteratorTypeAtTimestamp
 		params.Timestamp = c.initialTimestamp
 	} else {
-		params.ShardIteratorType = aws.String(c.initialShardIteratorType)
+		params.ShardIteratorType = c.initialShardIteratorType
 	}
 
-	res, err := c.client.GetShardIteratorWithContext(ctx, params)
+	res, err := c.client.GetShardIterator(ctx, params)
+	if err != nil {
+		return nil, err
+	}
 	return res.ShardIterator, err
 }

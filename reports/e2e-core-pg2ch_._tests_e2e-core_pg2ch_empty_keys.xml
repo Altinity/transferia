@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="1" failures="0" errors="0" time="20.877338">
+	<testsuite tests="1" failures="0" time="20.877000" name="empty_keys" timestamp="2026-02-26T20:13:32+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/empty_keys" name="TestSnapshotAndIncrement" time="12.360000"></testcase>
+	</testsuite>
+</testsuites>

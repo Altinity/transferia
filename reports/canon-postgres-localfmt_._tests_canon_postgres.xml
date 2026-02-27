@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/canon" tests="31" failures="0" errors="0" time="24.968264">
+	<testsuite tests="31" failures="0" time="24.968000" name="postgres" timestamp="2026-02-26T20:05:29+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/array_types/canon_0" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/array_types/canon_0#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/array_types/canon_0#02" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/array_types" time="2.150000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/array_types/canon_0#03" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/date_types/canon_0" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/date_types/canon_0#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/date_types/canon_0#02" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/date_types" time="2.820000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/date_types/canon_0#03" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/geom_types/canon_0" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/geom_types/canon_0#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/geom_types/canon_0#02" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/geom_types" time="3.030000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/geom_types/canon_0#03" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/numeric_types/canon_0" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/numeric_types/canon_0#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/numeric_types/canon_0#02" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/numeric_types" time="2.710000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/numeric_types/canon_0#03" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/text_types/canon_0" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/text_types/canon_0#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/text_types/canon_0#02" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/text_types" time="2.710000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/text_types/canon_0#03" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/wtf_types/canon_0" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/wtf_types/canon_0#01" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/wtf_types/canon_0#02" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/wtf_types" time="2.610000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource/wtf_types/canon_0#03" time="0.000000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/canon/postgres" name="TestCanonSource" time="24.150000"></testcase>
+	</testsuite>
+</testsuites>

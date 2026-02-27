@@ -175,7 +175,7 @@ func (c *Canal) runSyncBinlog() error {
 				return xerrors.Errorf("OnGTID MySQL handler failed: %w", err)
 			}
 		case *replication.QueryEvent:
-			stmts, _, err := c.parser.Parse(string(event.Query), "", "")
+			stmts, _, err := parseWithCharsetCompat(c.parser, string(event.Query))
 			if err != nil {
 				c.logger.Errorf("parse query(%s) err %v, will skip this event", event.Query, err)
 				continue

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="2" failures="0" errors="0" time="34.752341">
+	<testsuite tests="2" failures="0" time="34.752000" name="alters_snapshot" timestamp="2026-02-26T20:27:26+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/evolution/pg2ch/alters_snapshot" name="TestAlter/ADD_COLUMN" time="13.380000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/evolution/pg2ch/alters_snapshot" name="TestAlter" time="26.900000"></testcase>
+	</testsuite>
+</testsuites>

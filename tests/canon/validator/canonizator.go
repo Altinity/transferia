@@ -49,7 +49,6 @@ func (c *CanonizatorSink) Close() error {
 			}
 			rawJSON, err := json.MarshalIndent(typedChanges, "", "    ")
 			require.NoError(t, err)
-			fmt.Println(string(rawJSON))
 			canon.SaveJSON(t, string(rawJSON))
 		}
 	})

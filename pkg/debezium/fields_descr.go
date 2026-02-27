@@ -9,7 +9,6 @@ import (
 	"github.com/transferia/transferia/pkg/debezium/mysql"
 	debeziumparameters "github.com/transferia/transferia/pkg/debezium/parameters"
 	"github.com/transferia/transferia/pkg/debezium/pg"
-	"github.com/transferia/transferia/pkg/debezium/ydb"
 	pgcommon "github.com/transferia/transferia/pkg/providers/postgres"
 )
 
@@ -36,11 +35,6 @@ func getFieldDescr(colSchema abstract.ColSchema, connectorParameters map[string]
 		typeDescr, err = mysql.GetKafkaTypeDescrByMysqlType(colSchema.OriginalType)
 		if err != nil {
 			return nil, xerrors.Errorf("unable to get mysql fieldDescr: %s, err: %w", colSchema.OriginalType, err)
-		}
-	} else if strings.HasPrefix(colSchema.OriginalType, "ydb:") {
-		typeDescr, err = ydb.GetKafkaTypeDescrByYDBType(colSchema.OriginalType)
-		if err != nil {
-			return nil, xerrors.Errorf("unable to get ydb fieldDescr: %s, err: %w", colSchema.OriginalType, err)
 		}
 	} else {
 		return nil, xerrors.Errorf("unknown original type: %s", colSchema.OriginalType)

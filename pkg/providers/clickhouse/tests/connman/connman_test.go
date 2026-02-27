@@ -14,14 +14,13 @@ import (
 
 var (
 	source = *chrecipe.MustSource(chrecipe.WithDatabase("test"), chrecipe.WithInitFile("init.sql"))
-	target = *chrecipe.MustTarget(chrecipe.WithDatabase("test"), chrecipe.WithInitFile("init.sql"))
+	target = targetFromSource(source)
 
 	connID = "connman_test"
 )
 
 func init() {
 	source.WithDefaults()
-	target.WithDefaults()
 	helpers.InitConnectionResolver(map[string]connection.ManagedConnection{connID: sourceToManagedConnection(source)})
 }
 
@@ -98,6 +97,21 @@ func sourceToManagedConnection(source chmodel.ChSource) *chconn.Connection {
 	}
 
 	return managedConn
+}
+
+func targetFromSource(source chmodel.ChSource) chmodel.ChDestination {
+	target := chmodel.ChDestination{
+		MdbClusterID: source.MdbClusterID,
+		User:         source.User,
+		Password:     source.Password,
+		Database:     source.Database,
+		SSLEnabled:   source.SSLEnabled,
+		HTTPPort:     source.HTTPPort,
+		NativePort:   source.NativePort,
+		ShardsList:   source.ShardsList,
+	}
+	target.WithDefaults()
+	return target
 }
 
 func requireSinkParamsEqual(t *testing.T, sinkParams chmodel.ChSinkParams, expected chmodel.ChSinkParams) {

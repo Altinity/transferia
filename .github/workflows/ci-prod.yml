@@ -1,0 +1,31 @@
+name: CI Prod
+
+on:
+  push:
+    branches:
+      - altinity
+  pull_request:
+    branches:
+      - altinity
+  workflow_dispatch:
+    inputs:
+      run_optional:
+        description: "Run optional e2e suites (overrides repo variable)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/reusable-ci.yml
+    with:
+      stream: prod
+      run_e2e: true
+      run_optional: ${{ fromJSON((github.event_name == 'workflow_dispatch' && github.event.inputs.run_optional) || vars.CI_RUN_OPTIONAL || 'false') }}
+      go_version: "1.24.13"

@@ -147,6 +147,10 @@ func TestOptimizeCleanup(t *testing.T) {
 	chConn, err := clickhouse.MakeConnection(storageParams)
 	require.NoError(t, err)
 
+	// ClickHouse 25.x requires table-level opt-in for cleanup merges.
+	_, err = chConn.Exec("ALTER TABLE public.__test MODIFY SETTING allow_experimental_replacing_merge_with_cleanup=1")
+	require.NoError(t, err)
+
 	// Run OPTIMIZE ... FINAL CLEANUP
 	_, err = chConn.Exec("OPTIMIZE TABLE public.__test FINAL CLEANUP")
 	require.NoError(t, err)

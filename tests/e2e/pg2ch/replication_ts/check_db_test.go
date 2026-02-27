@@ -71,5 +71,14 @@ func TestSnapshotAndIncrement(t *testing.T) {
 	//------------------------------------------------------------------------------------
 	// wait & compare
 
-	require.NoError(t, helpers.WaitEqualRowsCount(t, databaseName, "date_types", helpers.GetSampleableStorageByModel(t, Source), helpers.GetSampleableStorageByModel(t, Target), 60*time.Second))
+	// For this no-PK timestamp fixture, current delete/update semantics in CH converge to
+	// the same row count as source. Validate convergence only by count.
+	require.NoError(t, helpers.WaitEqualRowsCount(
+		t,
+		databaseName,
+		"date_types",
+		helpers.GetSampleableStorageByModel(t, Source),
+		helpers.GetSampleableStorageByModel(t, Target),
+		60*time.Second,
+	))
 }

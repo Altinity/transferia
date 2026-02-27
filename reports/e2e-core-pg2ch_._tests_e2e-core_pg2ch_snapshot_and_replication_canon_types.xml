@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="5" failures="0" errors="0" time="40.585040">
+	<testsuite tests="5" failures="0" time="40.585000" name="snapshot_and_replication_canon_types" timestamp="2026-02-26T20:16:46+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_canon_types" name="TestSnapshotAndIncrement/date_types" time="4.500000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_canon_types" name="TestSnapshotAndIncrement/geom_types" time="4.720000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_canon_types" name="TestSnapshotAndIncrement/numeric_types" time="5.150000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_canon_types" name="TestSnapshotAndIncrement/text_types" time="5.220000"></testcase>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_canon_types" name="TestSnapshotAndIncrement" time="39.780000"></testcase>
+	</testsuite>
+</testsuites>

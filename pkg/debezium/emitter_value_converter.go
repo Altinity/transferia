@@ -14,7 +14,6 @@ import (
 	debeziumparameters "github.com/transferia/transferia/pkg/debezium/parameters"
 	"github.com/transferia/transferia/pkg/debezium/pg"
 	"github.com/transferia/transferia/pkg/debezium/typeutil"
-	"github.com/transferia/transferia/pkg/debezium/ydb"
 	"github.com/transferia/transferia/pkg/schemaregistry/format"
 	"github.com/transferia/transferia/pkg/util"
 	"github.com/transferia/transferia/tests/helpers/testsflag"
@@ -173,11 +172,6 @@ func add(colSchema *abstract.ColSchema, colName string, colVal interface{}, orig
 		err := mysql.AddMysql(result, colName, colVal, originalType, snapshot, connectorParameters)
 		if err != nil {
 			return xerrors.Errorf("unable to convert mysql event, err: %w", err)
-		}
-	} else if strings.HasPrefix(originalType, "ydb:") {
-		err := ydb.AddYDB(result, colName, colVal, originalType, connectorParameters)
-		if err != nil {
-			return xerrors.Errorf("unable to convert ydb event, err: %w", err)
 		}
 	} else {
 		if ignoreUnknownSources {

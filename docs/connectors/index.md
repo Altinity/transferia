@@ -11,8 +11,7 @@ description: "Explore the list of {{ data-transfer-name }} connectors in {{ DC }
 [{{ CH }}](clickhouse.md),
 [{{ PG }}](postgresql.md),
 [{{ MY }}](mysql.md),
-[{{ MG }}](mongodb.md),
-and [{{ S3 }}](object-storage.md).
+and [{{ MG }}](mongodb.md).
 
 Other connectors are based on [Airbyte](https://docs.airbyte.com/integrations/).
 
@@ -27,10 +26,5 @@ Other connectors are based on [Airbyte](https://docs.airbyte.com/integrations/).
 | [{#T}](mongodb.md)        | CDC / Snapshot / target                       |
 | [{#T}](mysql.md)          | CDC / Snapshot / target                       |
 | [{#T}](kafka.md)          | streaming / target                            |
-| [{#T}](object-storage.md) | Snapshot / target / replication / append-only |
 | [{#T}](clickhouse.md)     | Snapshot / incremental / target / sharding    |
-| [{#T}](ytsaurus.md)       | Snapshot / incremental / target / sharding    |
 | [{#T}](kinesis.md)        | streaming                                     |
-| [{#T}](elasticsearch.md)  | Snapshot / target                             |
-| [{#T}](opensearch.md)     | Snapshot / target                             |
-| [{#T}](delta.md)          | Snapshot                                      |

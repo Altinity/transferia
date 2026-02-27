@@ -67,7 +67,6 @@ const (
 
 	SourceTypePg    = "pg"
 	SourceTypeMysql = "mysql"
-	SourceTypeYDB   = "ydb"
 
 	MysqlTimeZoneUTC = "UTC"
 
@@ -115,8 +114,18 @@ var converterParams = set.New([]string{
 	ValueConverterSslCa,
 }...)
 
+var sensitiveParameters = set.New([]string{
+	KeyConverterBasicAuthUserInfo,
+
+	ValueConverterBasicAuthUserInfo,
+}...)
+
 func IsConverterParam(param string) bool {
 	return converterParams.Contains(param)
+}
+
+func IsSensitiveParam(param string) bool {
+	return sensitiveParameters.Contains(param)
 }
 
 type connectorSetting struct {
@@ -130,7 +139,7 @@ var connectorSettings = []connectorSetting{
 	{TopicPrefix, []string{}, ""},
 	{UnknownTypesPolicy, []string{UnknownTypesPolicyFail, UnknownTypesPolicySkip, UnknownTypesPolicyToString}, UnknownTypesPolicyFail},
 	{AddOriginalTypes, []string{BoolFalse, BoolTrue}, BoolFalse},
-	{SourceType, []string{"", SourceTypePg, SourceTypeMysql, SourceTypeYDB}, ""},
+	{SourceType, []string{"", SourceTypePg, SourceTypeMysql}, ""},
 	{MysqlTimeZone, []string{}, MysqlTimeZoneUTC},
 	{BatchingMaxSize, []string{}, "0"},
 	{WriteIntoOneFullTopicName, []string{BoolFalse, BoolTrue}, BoolFalse},

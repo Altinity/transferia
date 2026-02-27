@@ -33,12 +33,6 @@ var (
 	MySQLSourceIsNotMaster         = coded.Register("mysql", "source_is_not_master")
 	MySQLDeadlock                  = coded.Register("mysql", "deadlock")
 
-	// opensearch
-	OpenSearchInvalidDocumentKeys      = coded.Register("opensearch", "invalid_document_keys")
-	OpenSearchMapperParsingException   = coded.Register("opensearch", "mapper_parsing_exception")
-	OpenSearchSSLRequired              = coded.Register("opensearch", "ssl_required")
-	OpenSearchTotalFieldsLimitExceeded = coded.Register("opensearch", "total_fields_limit_exceeded")
-
 	// postgres
 	PostgresAllHostsUnavailable             = coded.Register("postgres", "all_hosts_unavailable")
 	PostgresDDLApplyFailed                  = coded.Register("postgres", "ddl_apply_failed")
@@ -69,21 +63,6 @@ var (
 	// ycdbaas
 	YcDBAASNoAliveHosts = coded.Register("ycdbaas", "no_alive_hosts")
 	MDBNotFound         = coded.Register("mdb", "not_found")
-
-	// ydb
-	YDBNotFound   = coded.Register("ydb", "not_found")
-	YDBOverloaded = coded.Register("ydb", "overloaded")
-
-	// ytsaurus
-	YTSaurusNotFound              = coded.Register("yt", "not_found")
-	YTSaurusGenericError          = coded.Register("yt", "generic_error")
-	YTSaurusOOMKilled             = coded.Register("yt", "oom_killed")
-	YTSaurusProcessExitedWithCode = coded.Register("yt", "process_exited_with_code")
-	YTSaurusJobsFailed            = coded.Register("yt", "jobs_failed")
-	YTSaurusTooManyOperations     = coded.Register("yt", "too_many_operations")
-	YTSaurusAuthorizationError    = coded.Register("yt", "authorization_error")
-	// greenplum
-	GreenplumExternalUrlsExceedSegments = coded.Register("greenplum", "external_urls_exceed_segments")
 
 	// clickhouse
 	ClickHouseToastUpdate         = coded.Register("ch", "update_toast_error")

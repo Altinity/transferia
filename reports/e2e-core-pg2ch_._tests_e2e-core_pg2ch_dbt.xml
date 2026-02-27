@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="1" failures="0" errors="0" time="0.795799">
+	<testsuite tests="1" failures="0" skipped="1" time="0.796000" name="dbt" timestamp="2026-02-26T20:13:27+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/dbt" name="TestSnapshot" time="0.000000">
+			<skipped message="=== RUN   TestSnapshot&#xA;    check_db_test.go:22: &#xA;--- SKIP: TestSnapshot (0.00s)&#xA;"></skipped>
+		</testcase>
+	</testsuite>
+</testsuites>

@@ -59,7 +59,7 @@ func (t *sinkTable) Init(cols *abstract.TableSchema) error {
 		return xerrors.Errorf("failed to check existing of table %s: %w", t.tableName, err)
 	}
 	if t.config.InferSchema() || exist {
-		if !t.config.GetIsSchemaMigrationDisabled() && t.config.MigrationOptions().AddNewColumns {
+		if !t.config.GetIsSchemaMigrationDisabled() {
 			targetCols, err := schema.DescribeTable(t.server.db, t.config.Database(), t.tableName, nil)
 			if err != nil {
 				return xerrors.Errorf("failed to discover existing schema of %s: %w", t.tableName, err)
@@ -281,7 +281,7 @@ func (t *sinkTable) ApplyChangeItems(rows []abstract.ChangeItem) error {
 }
 
 func (t *sinkTable) applyBatch(items []abstract.ChangeItem) error {
-	if !t.config.GetIsSchemaMigrationDisabled() && t.config.MigrationOptions().AddNewColumns {
+	if !t.config.GetIsSchemaMigrationDisabled() {
 		if err := t.ApplySchemaDiffToDB(t.cols.Columns(), items[0].TableSchema.Columns()); err != nil {
 			return xerrors.Errorf("fail to alter table schema for new batch: %w", err)
 		}
@@ -388,7 +388,7 @@ func (t *sinkTable) uploadAsJSON(rows []abstract.ChangeItem) error {
 }
 
 // by vals from OldKeys!
-func buildDeleteKindArgs(changeItem *abstract.ChangeItem, suffix []interface{}, cols []abstract.ColSchema) []interface{} {
+func buildDeleteKindArgs(changeItem *abstract.ChangeItem, suffix []interface{}, cols []abstract.ColSchema, fillRequiredColumn bool) []interface{} {
 	var args []interface{}
 	pkeys := make(map[string]interface{})
 	for i, key := range changeItem.OldKeys.KeyNames {
@@ -397,29 +397,29 @@ func buildDeleteKindArgs(changeItem *abstract.ChangeItem, suffix []interface{}, 
 	for _, col := range cols {
 		if val, ok := pkeys[col.ColumnName]; ok {
 			args = append(args, columntypes.Restore(col, val))
+		} else if col.Required && fillRequiredColumn {
+			args = append(args, abstract.DefaultValue(&col))
 		} else {
-			if col.Required {
-				args = append(args, abstract.DefaultValue(&col))
-			} else {
-				args = append(args, interface{}(nil))
-			}
+			// if the column is not nullable,
+			// the "insert_null_as_default" parameter fills in the default value on the clickhouse side
+			args = append(args, nil)
 		}
 	}
 	args = append(args, suffix...)
 	return args
 }
 
-func buildChangeItemArgs(changeItem *abstract.ChangeItem, cols []abstract.ColSchema, isUpdatable bool) [][]interface{} {
+func buildChangeItemArgs(changeItem *abstract.ChangeItem, cols []abstract.ColSchema, isUpdatable bool, fillRequiredColumn bool) [][]interface{} {
 	var args []interface{}
 	if isUpdatable {
 		suffixWithDeleteTime := []interface{}{changeItem.CommitTime, changeItem.CommitTime}
 		suffixWithoutDeleteTime := []interface{}{changeItem.CommitTime, uint64(0)}
 
 		if changeItem.Kind == abstract.DeleteKind {
-			args = buildDeleteKindArgs(changeItem, suffixWithDeleteTime, cols)
+			args = buildDeleteKindArgs(changeItem, suffixWithDeleteTime, cols, fillRequiredColumn)
 		} else if changeItem.KeysChanged() {
 			result := make([][]interface{}, 0)
-			result = append(result, buildDeleteKindArgs(changeItem, suffixWithDeleteTime, cols))
+			result = append(result, buildDeleteKindArgs(changeItem, suffixWithDeleteTime, cols, fillRequiredColumn))
 			result = append(result, append(restoreVals(changeItem.ColumnValues, cols), suffixWithoutDeleteTime...))
 			return result
 		} else {
@@ -649,7 +649,7 @@ func doOperation(t *sinkTable, tx *sql.Tx, items []abstract.ChangeItem) (err err
 		strings.Join(colVals, ","),
 	)
 
-	insertCtx := clickhouse.Context(context.Background(), t.config.InsertSettings().ToQueryOption())
+	insertCtx := clickhouse.Context(context.Background(), t.config.InsertSettings().ToQueryOption(t.version))
 	insertQuery, err := tx.PrepareContext(insertCtx, q)
 	if err != nil {
 		if err.Error() == "Decimal128 is not supported" {
@@ -660,9 +660,10 @@ func doOperation(t *sinkTable, tx *sql.Tx, items []abstract.ChangeItem) (err err
 
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
+	fillRequiredColumn := t.version.LT(model.InsertNullAsDefaultExistedVersion)
 	for i := range items {
 		// TODO - handle AlterTable
-		argsArr := buildChangeItemArgs(&items[i], currSchema, t.config.IsUpdateable())
+		argsArr := buildChangeItemArgs(&items[i], currSchema, t.config.IsUpdateable(), fillRequiredColumn)
 		for _, args := range argsArr {
 			if _, err := insertQuery.ExecContext(ctx, args...); err != nil {
 				t.logger.Error("Unable to exec changeItem", log.Error(err))
@@ -698,6 +699,7 @@ func restoreVals(vals []interface{}, cols []abstract.ColSchema) []interface{} {
 
 func (t *sinkTable) ApplySchemaDiffToDB(oldSchema []abstract.ColSchema, newSchema []abstract.ColSchema) error {
 	added, removed := compareColumnSets(oldSchema, newSchema)
+	modified := compareColumnTypes(oldSchema, newSchema)
 	if len(removed) != 0 {
 		removedNames := make([]string, 0, len(removed))
 		for _, col := range removed {
@@ -705,11 +707,11 @@ func (t *sinkTable) ApplySchemaDiffToDB(oldSchema []abstract.ColSchema, newSchem
 		}
 		t.logger.Warnf("Some columns missed: %s. Hope, it's ok", strings.Join(removedNames, ","))
 	}
-	if len(added) == 0 {
+	if len(added) == 0 && len(modified) == 0 {
 		return nil
 	}
 	return t.cluster.execDDL(func(distributed bool) error {
-		return t.alterTable(added, nil, distributed)
+		return t.alterTable(added, nil, modified, distributed)
 	})
 }
 
@@ -787,20 +789,30 @@ func compareColumnSets(currentSchema []abstract.ColSchema, newSchema []abstract.
 	return added, removed
 }
 
-func (t *sinkTable) alterTable(addCols, dropCols []abstract.ColSchema, distributed bool) error {
-	ddl := fmt.Sprintf("ALTER TABLE `%s` ", t.tableName)
-	if distributed {
-		ddl += fmt.Sprintf(" ON CLUSTER `%s` ", t.cluster.topology.ClusterName())
+func generateAlterTableDDL(
+	tableName, clusterName string, addCols, dropCols, modifyCols []abstract.ColSchema, distributed bool,
+) string {
+	ddl := fmt.Sprintf("ALTER TABLE `%s` ", tableName)
+	if distributed && clusterName != "" {
+		ddl += fmt.Sprintf("ON CLUSTER `%s` ", clusterName)
 	}
 
-	ddlItems := make([]string, 0, len(addCols)+len(dropCols))
+	ddlItems := make([]string, 0, len(addCols)+len(dropCols)+len(modifyCols))
 	for _, col := range addCols {
 		ddlItems = append(ddlItems, fmt.Sprintf("ADD COLUMN IF NOT EXISTS %s", chColumnDefinitionWithExpression(&col)))
 	}
 	for _, col := range dropCols {
 		ddlItems = append(ddlItems, fmt.Sprintf("DROP COLUMN IF EXISTS `%s`", col.ColumnName))
 	}
-	ddl += strings.Join(ddlItems, ", ")
+	for _, col := range modifyCols {
+		ddlItems = append(ddlItems, fmt.Sprintf("MODIFY COLUMN %s", chColumnDefinitionWithExpression(&col)))
+	}
+	return ddl + strings.Join(ddlItems, ", ")
+}
+
+func (t *sinkTable) alterTable(addCols, dropCols, modifyCols []abstract.ColSchema, distributed bool) error {
+	clusterName := t.cluster.topology.ClusterName()
+	ddl := generateAlterTableDDL(t.tableName, clusterName, addCols, dropCols, modifyCols, distributed)
 
 	t.logger.Info("ALTER DDL start", log.Any("ddl", ddl), log.Any("table", t.tableName))
 	if err := t.server.ExecDDL(context.Background(), ddl); err != nil {
@@ -811,4 +823,29 @@ func (t *sinkTable) alterTable(addCols, dropCols []abstract.ColSchema, distribut
 		return xerrors.Errorf("failed to infer columns: %w", err)
 	}
 	return nil
+}
+
+// compareColumnTypes returns columns for which ClickHouse type has been changed in allowed way.
+func compareColumnTypes(oldSchema []abstract.ColSchema, newSchema []abstract.ColSchema) []abstract.ColSchema {
+	oldCols := make(map[string]abstract.ColSchema, len(oldSchema))
+	for _, col := range oldSchema {
+		oldCols[col.ColumnName] = col
+	}
+	var modified []abstract.ColSchema
+	for _, newCol := range newSchema {
+		oldCol, ok := oldCols[newCol.ColumnName]
+		if !ok {
+			continue
+		}
+		if chColumnType(oldCol) == chColumnType(newCol) {
+			continue
+		}
+		if err := isAlterPossible(oldCol, newCol); err != nil {
+			logger.Log.Infof("alter of column %s (table %s) is not possible: %s",
+				oldCol.ColumnName, oldCol.TableID().String(), err.Error())
+		} else {
+			modified = append(modified, newCol)
+		}
+	}
+	return modified
 }

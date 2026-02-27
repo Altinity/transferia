@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="1" failures="0" errors="0" time="28.684504">
+	<testsuite tests="1" failures="0" time="28.684000" name="snapshot_empty_table" timestamp="2026-02-26T20:23:47+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/mysql2ch/snapshot_empty_table" name="TestSnapshot" time="13.550000"></testcase>
+	</testsuite>
+</testsuites>

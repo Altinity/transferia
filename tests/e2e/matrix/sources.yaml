@@ -1,0 +1,69 @@
+version: 1
+policy:
+  scope: cdc-core-open-source
+  families:
+    - postgres
+    - mysql
+    - mongo
+    - kafka
+  excluded_sources:
+    - greenplum
+    - s3
+
+matrix:
+  postgres:
+    db_alias: pg2ch
+    required_layers:
+      - e2e
+      - evolution
+      - resume
+      - large
+    variants:
+      - id: "17"
+        source_variant: "postgres/17"
+        image: "quay.io/debezium/postgres:17"
+      - id: "18"
+        source_variant: "postgres/18"
+        image: "quay.io/debezium/postgres:18"
+
+  mysql:
+    db_alias: mysql2ch
+    required_layers:
+      - e2e
+      - evolution
+      - resume
+      - large
+    variants:
+      - id: "mysql84"
+        source_variant: "mysql/mysql84"
+        image: "mysql:8.4"
+      - id: "mariadb118"
+        source_variant: "mysql/mariadb118"
+        image: "mariadb:11.8"
+
+  mongo:
+    db_alias: mongo2ch
+    required_layers:
+      - e2e
+      - evolution
+      - resume
+      - large
+    variants:
+      - id: "6"
+        source_variant: "mongo/6"
+        image: "mongo:6"
+      - id: "7"
+        source_variant: "mongo/7"
+        image: "mongo:7"
+
+  kafka:
+    db_alias: kafka2ch
+    required_layers:
+      - e2e
+    variants:
+      - id: "confluent75"
+        source_variant: "kafka/confluent75"
+        image: "confluentinc/confluent-local:7.5.0"
+      - id: "redpanda24"
+        source_variant: "kafka/redpanda24"
+        image: "docker.redpanda.com/redpandadata/redpanda:v24.1.10"

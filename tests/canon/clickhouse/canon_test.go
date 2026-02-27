@@ -9,9 +9,10 @@ import (
 	dp_model "github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/providers/clickhouse"
 	"github.com/transferia/transferia/pkg/providers/clickhouse/columntypes"
-	"github.com/transferia/transferia/pkg/providers/clickhouse/model"
+	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
 	"github.com/transferia/transferia/tests/canon/validator"
 	"github.com/transferia/transferia/tests/helpers"
+	"github.com/transferia/transferia/tests/tcrecipes"
 )
 
 func getID(item abstract.ChangeItem) uint64 {
@@ -50,22 +51,10 @@ func getBaseType(colSchema abstract.ColSchema) string {
 
 func TestCanonSource(t *testing.T) {
 	t.Setenv("YC", "1") // to not go to vanga
-	Source := &model.ChSource{
-		ShardsList: []model.ClickHouseShard{
-			{
-				Name: "_",
-				Hosts: []string{
-					"localhost",
-				},
-			},
-		},
-		User:       "default",
-		Password:   "",
-		Database:   "canon",
-		HTTPPort:   helpers.GetIntFromEnv("RECIPE_CLICKHOUSE_HTTP_PORT"),
-		NativePort: helpers.GetIntFromEnv("RECIPE_CLICKHOUSE_NATIVE_PORT"),
+	if !tcrecipes.Enabled() {
+		helpers.SkipIfMissingEnv(t, "RECIPE_CLICKHOUSE_HTTP_PORT", "RECIPE_CLICKHOUSE_NATIVE_PORT")
 	}
-	Source.WithDefaults()
+	Source := chrecipe.MustSource(chrecipe.WithDatabase("canon"))
 
 	transfer := helpers.MakeTransfer(
 		helpers.TransferID,

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="1" failures="0" errors="0" time="25.623270">
+	<testsuite tests="1" failures="0" time="25.623000" name="document_shape" timestamp="2026-02-26T20:29:20+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/evolution/mongo2ch/document_shape" name="TestDocumentShapeEvolution" time="18.500000"></testcase>
+	</testsuite>
+</testsuites>

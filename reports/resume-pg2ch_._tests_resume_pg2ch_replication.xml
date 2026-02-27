@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests" tests="1" failures="0" errors="0" time="23.128578">
+	<testsuite tests="1" failures="0" time="23.128000" name="replication" timestamp="2026-02-26T20:29:53+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/resume/pg2ch/replication" name="TestResumeFromCoordinator" time="16.600000"></testcase>
+	</testsuite>
+</testsuites>

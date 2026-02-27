@@ -1,0 +1,90 @@
+---
+name: local-cdc-core2ch
+version: 1
+scope: open-source-cdc-local-only
+waves:
+- id: providers
+  description: Provider package suites for postgres/mysql/mongo
+  packages:
+  - name: providers-postgres
+    pattern: "./pkg/providers/postgres/..."
+  - name: providers-mysql
+    pattern: "./pkg/providers/mysql/..."
+  - name: providers-mongo
+    pattern: "./pkg/providers/mongo/..."
+- id: storage-canon
+  description: Storage and canon layers for core source families
+  suites:
+  - suite_name: storage-postgres
+    suite_group: tests
+    suite_path: storage/pg
+  - suite_name: storage-mysql
+    suite_group: tests
+    suite_path: storage/mysql
+  - suite_name: canon-postgres
+    suite_group: tests
+    suite_path: canon/postgres
+  - suite_name: canon-mysql
+    suite_group: tests
+    suite_path: canon/mysql
+  - suite_name: canon-mongo
+    suite_group: tests
+    suite_path: canon/mongo
+- id: e2e
+  description: Core E2E suites for pg/mysql/mongo to ClickHouse
+  suites:
+  - suite_name: e2e-pg2ch
+    suite_group: tests/e2e
+    suite_path: pg2ch
+  - suite_name: e2e-mysql2ch
+    suite_group: tests/e2e
+    suite_path: mysql2ch
+  - suite_name: e2e-mongo2ch
+    suite_group: tests/e2e
+    suite_path: mongo2ch
+- id: evolution
+  description: Evolution layer for core in-scope flows
+  suites:
+  - suite_name: evolution-pg2ch
+    suite_group: tests
+    suite_path: evolution/pg2ch
+  - suite_name: evolution-mysql2ch
+    suite_group: tests
+    suite_path: evolution/mysql2ch
+  - suite_name: evolution-mongo2ch
+    suite_group: tests
+    suite_path: evolution/mongo2ch
+- id: resume
+  description: Resume layer for core in-scope flows (fake + S3 coordinator)
+  suites:
+  - suite_name: resume-pg2ch
+    suite_group: tests
+    suite_path: resume/pg2ch
+    go_test_args: -run "ResumeFromCoordinator|Resume" -timeout=20m
+  - suite_name: resume-mysql2ch
+    suite_group: tests
+    suite_path: resume/mysql2ch
+    go_test_args: -run "ResumeFromCoordinator|Resume" -timeout=20m
+  - suite_name: resume-mongo2ch
+    suite_group: tests
+    suite_path: resume/mongo2ch
+    go_test_args: -run "ResumeFromCoordinator|Resume" -timeout=20m
+- id: large
+  description: Large layer for core in-scope flows
+  suites:
+  - suite_name: large-pg2ch
+    suite_group: tests
+    suite_path: large/pg2ch
+  - suite_name: large-mysql2ch
+    suite_group: tests
+    suite_path: large/mysql2ch
+  - suite_name: large-mongo2ch
+    suite_group: tests
+    suite_path: large/mongo2ch
+matrix:
+  source_variants:
+  - postgres/18
+  - mysql/mysql84
+  - mysql/mariadb118
+  - mongo/6
+  - mongo/7

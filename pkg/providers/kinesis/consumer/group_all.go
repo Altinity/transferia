@@ -5,23 +5,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/aws/aws-sdk-go/service/kinesis/kinesisiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kinesistypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"go.ytsaurus.tech/library/go/core/log"
 )
 
 // NewAllGroup returns an intitialized AllGroup for consuming
 // all shards on a stream
-func NewAllGroup(ksis kinesisiface.KinesisAPI, store Store, streamName string, logger log.Logger) *AllGroup {
+func NewAllGroup(ksis KinesisAPI, store Store, streamName string, logger log.Logger) *AllGroup {
 	return &AllGroup{
 		Store:      store,
 		ksis:       ksis,
 		streamName: streamName,
 		logger:     logger,
 		shardMu:    sync.Mutex{},
-		shards:     make(map[string]*kinesis.Shard),
+		shards:     make(map[string]kinesistypes.Shard),
 	}
 }
 
@@ -31,19 +31,19 @@ func NewAllGroup(ksis kinesisiface.KinesisAPI, store Store, streamName string, l
 type AllGroup struct {
 	Store
 
-	ksis       kinesisiface.KinesisAPI
+	ksis       KinesisAPI
 	streamName string
 	logger     log.Logger
 
 	shardMu sync.Mutex
-	shards  map[string]*kinesis.Shard
+	shards  map[string]kinesistypes.Shard
 }
 
 // Start is a blocking operation which will loop and attempt to find new
 // shards on a regular cadence.
-func (g *AllGroup) Start(ctx context.Context, shardc chan *kinesis.Shard) {
+func (g *AllGroup) Start(ctx context.Context, shardc chan kinesistypes.Shard) {
 	var ticker = time.NewTicker(30 * time.Second)
-	g.findNewShards(shardc)
+	g.findNewShards(ctx, shardc)
 
 	// Note: while ticker is a rather naive approach to this problem,
 	// it actually simplies a few things. i.e. If we miss a new shard while
@@ -60,7 +60,7 @@ func (g *AllGroup) Start(ctx context.Context, shardc chan *kinesis.Shard) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			g.findNewShards(shardc)
+			g.findNewShards(ctx, shardc)
 		}
 	}
 }
@@ -68,34 +68,35 @@ func (g *AllGroup) Start(ctx context.Context, shardc chan *kinesis.Shard) {
 // findNewShards pulls the list of shards from the Kinesis API
 // and uses a local cache to determine if we are already processing
 // a particular shard.
-func (g *AllGroup) findNewShards(shardc chan *kinesis.Shard) {
+func (g *AllGroup) findNewShards(ctx context.Context, shardc chan kinesistypes.Shard) {
 	g.shardMu.Lock()
 	defer g.shardMu.Unlock()
 
-	shards, err := listShards(g.ksis, g.streamName)
+	shards, err := listShards(ctx, g.ksis, g.streamName)
 	if err != nil {
 		g.logger.Warn("list shard failed error", log.Error(err))
 		return
 	}
 
 	for _, shard := range shards {
-		if _, ok := g.shards[*shard.ShardId]; ok {
+		shardID := aws.ToString(shard.ShardId)
+		if _, ok := g.shards[shardID]; ok {
 			continue
 		}
-		g.shards[*shard.ShardId] = shard
+		g.shards[shardID] = shard
 		shardc <- shard
 	}
 }
 
 // listShards pulls a list of shard IDs from the kinesis api
-func listShards(ksis kinesisiface.KinesisAPI, streamName string) ([]*kinesis.Shard, error) {
-	var ss []*kinesis.Shard
+func listShards(ctx context.Context, ksis KinesisAPI, streamName string) ([]kinesistypes.Shard, error) {
+	var ss []kinesistypes.Shard
 	var listShardsInput = &kinesis.ListShardsInput{
 		StreamName: aws.String(streamName),
 	}
 
 	for {
-		resp, err := ksis.ListShards(listShardsInput)
+		resp, err := ksis.ListShards(ctx, listShardsInput)
 		if err != nil {
 			return nil, xerrors.Errorf("ListShards failed: %w", err)
 		}

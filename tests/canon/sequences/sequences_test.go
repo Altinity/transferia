@@ -3,7 +3,6 @@ package sequences
 import (
 	"context"
 	_ "embed"
-	"os"
 	"testing"
 	"time"
 
@@ -12,9 +11,11 @@ import (
 	"github.com/transferia/transferia/pkg/abstract"
 	"github.com/transferia/transferia/pkg/abstract/model"
 	pgcommon "github.com/transferia/transferia/pkg/providers/postgres"
+	"github.com/transferia/transferia/pkg/providers/postgres/pgrecipe"
 	"github.com/transferia/transferia/tests/canon"
 	"github.com/transferia/transferia/tests/canon/validator"
 	"github.com/transferia/transferia/tests/helpers"
+	"github.com/transferia/transferia/tests/tcrecipes"
 )
 
 var (
@@ -30,16 +31,11 @@ var (
 
 func TestCanonizeSequences(t *testing.T) {
 	t.Setenv("YC", "1") // to not go to vanga
-	Source := &pgcommon.PgSource{
-		ClusterID: os.Getenv("PG_CLUSTER_ID"),
-		Hosts:     []string{"localhost"},
-		User:      os.Getenv("PG_LOCAL_USER"),
-		Password:  model.SecretString(os.Getenv("PG_LOCAL_PASSWORD")),
-		Database:  os.Getenv("PG_LOCAL_DATABASE"),
-		Port:      helpers.GetIntFromEnv("PG_LOCAL_PORT"),
-		SlotID:    "test_slot_id",
+	if !tcrecipes.Enabled() {
+		helpers.SkipIfMissingEnv(t, "PG_LOCAL_PORT", "PG_LOCAL_USER", "PG_LOCAL_PASSWORD", "PG_LOCAL_DATABASE")
 	}
-	Source.WithDefaults()
+	Source := pgrecipe.RecipeSource(pgrecipe.WithPrefix(""))
+	Source.SlotID = "test_slot_id"
 	defer func() {
 		require.NoError(t, helpers.CheckConnections(
 			helpers.LabeledPort{Label: "PG source", Port: Source.Port},

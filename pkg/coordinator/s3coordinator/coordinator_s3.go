@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
 	"github.com/transferia/transferia/pkg/abstract"
@@ -32,7 +32,7 @@ type CoordinatorS3 struct {
 
 	mu       sync.Mutex
 	state    map[string]map[string]*coordinator.TransferStateData
-	s3Client *s3.S3
+	s3Client *s3.Client
 	bucket   string
 	lgr      log.Logger
 }
@@ -47,7 +47,7 @@ func (c *CoordinatorS3) GetTransferState(transferID string) (map[string]*coordin
 		Bucket: aws.String(c.bucket),
 		Prefix: aws.String(prefix),
 	}
-	listResp, err := c.s3Client.ListObjectsV2(listInput)
+	listResp, err := c.s3Client.ListObjectsV2(context.Background(), listInput)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to list objects: %w", err)
 	}
@@ -58,12 +58,12 @@ func (c *CoordinatorS3) GetTransferState(transferID string) (map[string]*coordin
 			// see: https://stackoverflow.com/questions/75620230/aws-s3-listobjectsv2-returns-folder-as-an-object
 			continue
 		}
-		key := strings.TrimPrefix(*obj.Key, prefix)
+		key := strings.TrimPrefix(aws.ToString(obj.Key), prefix)
 		getInput := &s3.GetObjectInput{
 			Bucket: aws.String(c.bucket),
 			Key:    obj.Key,
 		}
-		resp, err := c.s3Client.GetObject(getInput)
+		resp, err := c.s3Client.GetObject(context.Background(), getInput)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to get object: %w", err)
 		}
@@ -89,7 +89,7 @@ func (c *CoordinatorS3) SetTransferState(transferID string, state map[string]*co
 			return xerrors.Errorf("failed to marshal state data: %w", err)
 		}
 
-		_, err = c.s3Client.PutObject(&s3.PutObjectInput{
+		_, err = c.s3Client.PutObject(context.Background(), &s3.PutObjectInput{
 			Bucket: aws.String(c.bucket),
 			Key:    aws.String(objectKey),
 			Body:   bytes.NewReader(body),
@@ -107,7 +107,7 @@ func (c *CoordinatorS3) RemoveTransferState(transferID string, keys []string) er
 	for _, key := range keys {
 		objectKey := transferID + "/" + key + ".json"
 
-		_, err := c.s3Client.DeleteObject(&s3.DeleteObjectInput{
+		_, err := c.s3Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
 			Bucket: aws.String(c.bucket),
 			Key:    aws.String(objectKey),
 		})
@@ -166,9 +166,9 @@ func (c *CoordinatorS3) GetOperationWorkers(operationID string) ([]*model.Operat
 
 	var workers []*model.OperationWorker
 	for _, obj := range objects {
-		resp, err := c.getObject(*obj.Key)
+		resp, err := c.getObject(aws.ToString(obj.Key))
 		if err != nil {
-			return nil, xerrors.Errorf("failed to get key: %s: %w", *obj.Key, err)
+			return nil, xerrors.Errorf("failed to get key: %s: %w", aws.ToString(obj.Key), err)
 		}
 
 		var worker model.OperationWorker
@@ -218,9 +218,9 @@ func (c *CoordinatorS3) GetOperationTablesParts(operationID string) ([]*abstract
 
 	var tables []*abstract.OperationTablePart
 	for _, obj := range objects {
-		resp, err := c.getObject(*obj.Key)
+		resp, err := c.getObject(aws.ToString(obj.Key))
 		if err != nil {
-			return nil, xerrors.Errorf("failed to get: %s: %w", *obj.Key, err)
+			return nil, xerrors.Errorf("failed to get: %s: %w", aws.ToString(obj.Key), err)
 		}
 
 		var table abstract.OperationTablePart
@@ -353,7 +353,7 @@ func (c *CoordinatorS3) FinishOperation(operationID string, taskType string, sha
 
 // Utility functions to interact with S3.
 func (c *CoordinatorS3) putObject(key string, body []byte) error {
-	_, err := c.s3Client.PutObject(&s3.PutObjectInput{
+	_, err := c.s3Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket: aws.String(c.bucket),
 		Key:    aws.String(key),
 		Body:   bytes.NewReader(body),
@@ -362,7 +362,7 @@ func (c *CoordinatorS3) putObject(key string, body []byte) error {
 }
 
 func (c *CoordinatorS3) getObject(key string) ([]byte, error) {
-	resp, err := c.s3Client.GetObject(&s3.GetObjectInput{
+	resp, err := c.s3Client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: aws.String(c.bucket),
 		Key:    aws.String(key),
 	})
@@ -374,31 +374,23 @@ func (c *CoordinatorS3) getObject(key string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func (c *CoordinatorS3) listObjects(prefix string) ([]*s3.Object, error) {
+func (c *CoordinatorS3) listObjects(prefix string) ([]s3types.Object, error) {
 	listInput := &s3.ListObjectsV2Input{
 		Bucket: aws.String(c.bucket),
 		Prefix: aws.String(prefix),
 	}
-	listResp, err := c.s3Client.ListObjectsV2(listInput)
+	listResp, err := c.s3Client.ListObjectsV2(context.Background(), listInput)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to list objects: %w", err)
 	}
 	return listResp.Contents, nil
 }
 
-// NewS3 creates a new CoordinatorS3 with AWS SDK v1.
-func NewS3(bucket string, l log.Logger, cfgs ...*aws.Config) (*CoordinatorS3, error) {
-	sess, err := session.NewSession(cfgs...)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to create AWS session: %w", err)
-	}
+func NewS3(bucket string, l log.Logger, cfg aws.Config, optFns ...func(*s3.Options)) (*CoordinatorS3, error) {
+	s3Client := s3.NewFromConfig(cfg, optFns...)
 
-	// Create the S3 client using the session.
-	s3Client := s3.New(sess)
-
-	// Return the CoordinatorS3 instance.
 	return &CoordinatorS3{
-		CoordinatorNoOp: coordinator.NewFakeClient(), // Assuming this is a valid function in your code.
+		CoordinatorNoOp: coordinator.NewFakeClient(),
 		mu:              sync.Mutex{},
 		state:           map[string]map[string]*coordinator.TransferStateData{},
 		bucket:          bucket,

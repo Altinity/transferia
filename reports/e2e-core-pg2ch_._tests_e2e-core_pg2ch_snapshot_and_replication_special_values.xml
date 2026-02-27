@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="tests/e2e-core" tests="1" failures="0" errors="0" time="26.838161">
+	<testsuite tests="1" failures="0" time="26.838000" name="snapshot_and_replication_special_values" timestamp="2026-02-26T20:18:16+01:00">
+		<properties>
+			<property name="go.version" value="go1.24.13 darwin/arm64"></property>
+		</properties>
+		<testcase classname="github.com/transferia/transferia/tests/e2e-core/pg2ch/snapshot_and_replication_special_values" name="TestSnapshotAndIncrement" time="19.550000"></testcase>
+	</testsuite>
+</testsuites>

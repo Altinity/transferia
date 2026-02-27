@@ -2,15 +2,20 @@ package chrecipe
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/transferia/transferia/internal/logger"
 	"github.com/transferia/transferia/library/go/core/xerrors"
+	amodel "github.com/transferia/transferia/pkg/abstract/model"
 	"github.com/transferia/transferia/pkg/providers/clickhouse/model"
 	"github.com/transferia/transferia/tests/tcrecipes"
 	tc_clickhouse "github.com/transferia/transferia/tests/tcrecipes/clickhouse"
+)
+
+const (
+	defaultHTTPPort   = 8123
+	defaultNativePort = 9000
 )
 
 type ContainerParams struct {
@@ -86,11 +91,11 @@ func Source(opts ...Option) (*model.ChSource, error) {
 	if err := Prepare(params); err != nil {
 		return nil, xerrors.Errorf("unable to prepare container: %w", err)
 	}
-	httpPort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_HTTP_PORT"))
+	httpPort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_HTTP_PORT", defaultHTTPPort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_HTTP_PORT: %w", err)
 	}
-	nativePort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_NATIVE_PORT"))
+	nativePort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_NATIVE_PORT", defaultNativePort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_NATIVE_PORT: %w", err)
 	}
@@ -108,7 +113,7 @@ func Source(opts ...Option) (*model.ChSource, error) {
 		HTTPPort:         httpPort,
 		NativePort:       nativePort,
 		User:             params.user,
-		Password:         "",
+		Password:         amodel.SecretString(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_PASSWORD")),
 		SSLEnabled:       false,
 		PemFileContent:   "",
 		Database:         params.database,
@@ -153,11 +158,11 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		return nil, xerrors.Errorf("unable to prepare container: %w", err)
 	}
 
-	httpPort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_HTTP_PORT"))
+	httpPort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_HTTP_PORT", defaultHTTPPort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_HTTP_PORT: %w", err)
 	}
-	nativePort, err := strconv.Atoi(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_NATIVE_PORT"))
+	nativePort, err := parseRecipePort(params.prefix+"RECIPE_CLICKHOUSE_NATIVE_PORT", defaultNativePort)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to read RECIPE_CLICKHOUSE_NATIVE_PORT: %w", err)
 	}
@@ -166,7 +171,7 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		MdbClusterID:            "",
 		ChClusterName:           "test_shard_localhost",
 		User:                    params.user,
-		Password:                "",
+		Password:                amodel.SecretString(os.Getenv(params.prefix + "RECIPE_CLICKHOUSE_PASSWORD")),
 		Database:                params.database,
 		Partition:               "",
 		SSLEnabled:              false,
@@ -174,7 +179,6 @@ func Target(opts ...Option) (*model.ChDestination, error) {
 		NativePort:              nativePort,
 		TTL:                     "",
 		InferSchema:             false,
-		MigrationOptions:        nil,
 		ForceJSONMode:           false,
 		ProtocolUnspecified:     true,
 		AnyAsString:             false,
@@ -220,19 +224,12 @@ func Prepare(params ContainerParams) error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	// test running outside arcadia
-	zk, err := tc_clickhouse.PrepareZK(ctx)
-	if err != nil {
-		return xerrors.Errorf("unable to prepare Zookeeper: %w", err)
-	}
-	fmt.Printf("zk: 0.0.0.0:%s \n", zk.Port().Port())
 
 	chcntr, err := tc_clickhouse.Prepare(
 		ctx,
 		tc_clickhouse.WithDatabase("default"),
 		tc_clickhouse.WithUsername(params.user),
-		tc_clickhouse.WithPassword(""),
-		tc_clickhouse.WithZookeeper(zk),
+		tc_clickhouse.WithKeeper(),
 		tc_clickhouse.WithInitScripts(params.initScripts...),
 	)
 	if err != nil {
@@ -252,5 +249,25 @@ func Prepare(params ContainerParams) error {
 	if err := os.Setenv(params.prefix+"RECIPE_CLICKHOUSE_HTTP_PORT", httpPort.Port()); err != nil {
 		return xerrors.Errorf("unable to set RECIPE_CLICKHOUSE_HTTP_PORT: %w", err)
 	}
+	// tc_clickhouse.Prepare exports non-prefixed RECIPE_CLICKHOUSE_PASSWORD.
+	// Mirror it into the requested prefix so prefixed sources/targets keep valid auth.
+	if err := os.Setenv(params.prefix+"RECIPE_CLICKHOUSE_PASSWORD", os.Getenv("RECIPE_CLICKHOUSE_PASSWORD")); err != nil {
+		return xerrors.Errorf("unable to set RECIPE_CLICKHOUSE_PASSWORD: %w", err)
+	}
 	return nil
+}
+
+func parseRecipePort(envName string, fallback int) (int, error) {
+	rawValue := os.Getenv(envName)
+	if rawValue == "" {
+		if tcrecipes.Enabled() {
+			return 0, xerrors.Errorf("empty env %s while testcontainers are enabled", envName)
+		}
+		return fallback, nil
+	}
+	port, err := strconv.Atoi(rawValue)
+	if err != nil {
+		return 0, err
+	}
+	return port, nil
 }

@@ -17,7 +17,6 @@ CREATE TABLE some_db.some_table
     ENGINE = MergeTree()
         PARTITION BY toMonday(DateVal)
         ORDER BY (StringVal, DateVal, OneMoreStringVal)
-        SAMPLE BY OneMoreStringVal
         SETTINGS index_granularity = 8192;
 
 INSERT INTO some_db.some_table

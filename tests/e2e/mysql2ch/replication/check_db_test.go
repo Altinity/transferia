@@ -7,8 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/transferia/transferia/pkg/abstract"
-	dp_model "github.com/transferia/transferia/pkg/abstract/model"
-	"github.com/transferia/transferia/pkg/providers/clickhouse/model"
+	chrecipe "github.com/transferia/transferia/pkg/providers/clickhouse/recipe"
 	"github.com/transferia/transferia/pkg/providers/mysql"
 	"github.com/transferia/transferia/tests/e2e/mysql2ch"
 	"github.com/transferia/transferia/tests/e2e/pg2ch"
@@ -17,30 +16,8 @@ import (
 
 var (
 	TransferType = abstract.TransferTypeSnapshotAndIncrement
-	Source       = mysql.MysqlSource{
-		Host:     os.Getenv("RECIPE_MYSQL_HOST"),
-		User:     os.Getenv("RECIPE_MYSQL_USER"),
-		Password: dp_model.SecretString(os.Getenv("RECIPE_MYSQL_PASSWORD")),
-		Database: os.Getenv("RECIPE_MYSQL_SOURCE_DATABASE"),
-		Port:     helpers.GetIntFromEnv("RECIPE_MYSQL_PORT"),
-		ServerID: 1, // what is it?
-	}
-	Target = model.ChDestination{
-		ShardsList: []model.ClickHouseShard{
-			{
-				Name: "_",
-				Hosts: []string{
-					"localhost",
-				},
-			},
-		},
-		User:                "default",
-		Password:            "",
-		Database:            "source",
-		HTTPPort:            helpers.GetIntFromEnv("RECIPE_CLICKHOUSE_HTTP_PORT"),
-		NativePort:          helpers.GetIntFromEnv("RECIPE_CLICKHOUSE_NATIVE_PORT"),
-		ProtocolUnspecified: true,
-	}
+	Source       = *helpers.RecipeMysqlSource()
+	Target       = *chrecipe.MustTarget(chrecipe.WithInitFile("dump/ch/dump.sql"), chrecipe.WithDatabase("source"))
 )
 
 func init() {

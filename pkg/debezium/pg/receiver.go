@@ -420,6 +420,7 @@ func (d *BitVarying) Do(in string, _ *debeziumcommon.OriginalTypeInfo, _ *debezi
 	if err != nil {
 		return "", xerrors.Errorf("unable to decode base64: %s, err: %w", in, err)
 	}
+	resultBuf = typeutil.ReverseBytesArr(resultBuf)
 	return typeutil.BufToChangeItemsBits(resultBuf), nil
 }
 
@@ -434,6 +435,7 @@ func (d *BitN) Do(in string, _ *debeziumcommon.OriginalTypeInfo, _ *debeziumcomm
 	if err != nil {
 		return "", xerrors.Errorf("unable to decode base64: %s, err: %w", in, err)
 	}
+	resultBuf = typeutil.ReverseBytesArr(resultBuf)
 	return typeutil.BufToChangeItemsBits(resultBuf), nil
 }
 

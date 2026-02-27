@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -69,6 +71,7 @@ func Run(ctx context.Context, img string, opts ...testcontainers.ContainerCustom
 		Image: img,
 		Env: map[string]string{
 			"MYSQL_ALLOW_EMPTY_PASSWORD": "yes",
+			"MYSQL_ROOT_HOST":            "%",
 			"TZ":                         tz,
 		},
 		ExposedPorts: []string{"3306/tcp", "33060/tcp"},
@@ -92,8 +95,11 @@ func Run(ctx context.Context, img string, opts ...testcontainers.ContainerCustom
 CREATE DATABASE %[1]s;
 CREATE DATABASE %[2]s;
 CREATE USER '%[3]s'@'%%' IDENTIFIED BY '%[4]s';
-GRANT ALL PRIVILEGES ON *.* TO '%[3]s'@'%%';
+GRANT ALL PRIVILEGES ON %[1]s.* TO '%[3]s'@'%%';
+GRANT ALL PRIVILEGES ON %[2]s.* TO '%[3]s'@'%%';
+GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO '%[3]s'@'%%';
 SET GLOBAL time_zone = "%[5]s";
+FLUSH PRIVILEGES;
 `, SourceDB, TargetDB, defaultUser, defaultPassword, tz)
 	if _, err := f.Write([]byte(initSQL)); err != nil {
 		return nil, xerrors.Errorf("unable to write init script: %w", err)
@@ -180,19 +186,38 @@ func InitScripts() error {
 	if err != nil {
 		return xerrors.Errorf("unable to build conn params: %w", err)
 	}
-	for _, dir := range knownSourceDumps {
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			if !os.IsExist(err) {
-				continue
-			}
-			return xerrors.Errorf("unable to read dir: %w", err)
+	srcParams.User = rootUser
+	srcParams.Password = os.Getenv("MYSQL_ROOT_PASSWORD")
+	srcParams.Database = SourceDB
+	for _, baseDir := range knownSourceDumps {
+		dir := baseDir
+		if st, err := os.Stat(filepath.Join(baseDir, "mysql")); err == nil && st.IsDir() {
+			dir = filepath.Join(baseDir, "mysql")
 		}
 
-		for _, e := range entries {
-			data, err := os.ReadFile(dir + "/" + e.Name())
+		var files []string
+		err := filepath.WalkDir(dir, func(path string, d os.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return walkErr
+			}
+			if d.IsDir() {
+				return nil
+			}
+			files = append(files, path)
+			return nil
+		})
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return xerrors.Errorf("unable to walk dir %s: %w", dir, err)
+		}
+
+		sort.Strings(files)
+		for _, path := range files {
+			data, err := os.ReadFile(path)
 			if err != nil {
-				return xerrors.Errorf("unable to read: %s: %w", e.Name(), err)
+				return xerrors.Errorf("unable to read: %s: %w", path, err)
 			}
 			if err := Exec(string(data), srcParams); err != nil {
 				return xerrors.Errorf("unable to exec query: %w", err)

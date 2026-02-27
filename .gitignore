@@ -9,3 +9,5 @@ report
 docs-html
 _docs-lint
 trcli
+.claude/
+reports/

@@ -44,17 +44,19 @@ func TestCanonizeParserConfigsList(t *testing.T) {
 		"cloud_events.common",
 		"cloud_events.lb",
 		"cloud_logging.common",
+		"confluent_schema_registry.common",
+		"confluent_schema_registry.lb",
 		"debezium.common",
 		"debezium.lb",
 		"json.common",
 		"json.lb",
-		"logfeller.lb",
 		"native.lb",
+		"proto.common",
+		"proto.lb",
+		"raw_to_table.common",
+		"raw_to_table.lb",
 		"tskv.common",
 		"tskv.lb",
-		"yql.lb",
-		"proto.lb",
-		"proto.common",
 	}
 
 	for _, expectedParserConfigName := range canonizedParsersConfigsNames {
