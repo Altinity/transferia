@@ -114,8 +114,18 @@ var converterParams = set.New([]string{
 	ValueConverterSslCa,
 }...)
 
+var sensitiveParameters = set.New([]string{
+	KeyConverterBasicAuthUserInfo,
+
+	ValueConverterBasicAuthUserInfo,
+}...)
+
 func IsConverterParam(param string) bool {
 	return converterParams.Contains(param)
+}
+
+func IsSensitiveParam(param string) bool {
+	return sensitiveParameters.Contains(param)
 }
 
 type connectorSetting struct {
