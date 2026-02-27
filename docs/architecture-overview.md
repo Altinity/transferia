@@ -192,7 +192,6 @@ The closest functional open-source implementations are:
 * <span style="text-decoration:underline;">HBase</span> - in terms of data storage organization;
 * <span style="text-decoration:underline;">Spanner</span> - in terms of transaction implementation;
 * <span style="text-decoration:underline;">Impala</span> - in terms of a query calculation model.
-* [YTSaurus](https://ytsaurus.tech/) - in terms of their dynamic tables.
 
 And from the proprietary cloud realm:
 
@@ -607,32 +606,6 @@ For some storages, we have the following approximate matrix:
    </td>
   </tr>
   <tr>
-   <td>Greenplum
-   </td>
-   <td>+
-   </td>
-   <td>+
-   </td>
-   <td>+
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>+
-   </td>
-   <td>+
-   </td>
-   <td>+
-   </td>
-   <td>+
-   </td>
-  </tr>
-  <tr>
    <td>Oracle
    </td>
    <td>+
@@ -656,32 +629,6 @@ For some storages, we have the following approximate matrix:
    <td>+
    </td>
    <td>+
-   </td>
-  </tr>
-  <tr>
-   <td>YDB
-   </td>
-   <td>+
-   </td>
-   <td>+
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>
-   </td>
-   <td>+
-   </td>
-   <td>+
-   </td>
-   <td>
-   </td>
-   <td>
    </td>
   </tr>
   <tr>

@@ -9,6 +9,88 @@ import (
 )
 
 //---
+// YTTypeStorer interface for returning YT type strings
+
+type YTTypeStorer interface {
+	YTType() string
+}
+
+//---
+// YT type implementations
+
+type YTTypeInt8 struct{}
+
+func (y *YTTypeInt8) YTType() string { return string(ytschema.TypeInt8) }
+
+type YTTypeUint8 struct{}
+
+func (y *YTTypeUint8) YTType() string { return string(ytschema.TypeUint8) }
+
+type YTTypeInt16 struct{}
+
+func (y *YTTypeInt16) YTType() string { return string(ytschema.TypeInt16) }
+
+type YTTypeUint16 struct{}
+
+func (y *YTTypeUint16) YTType() string { return string(ytschema.TypeUint16) }
+
+type YTTypeInt32 struct{}
+
+func (y *YTTypeInt32) YTType() string { return string(ytschema.TypeInt32) }
+
+type YTTypeUint32 struct{}
+
+func (y *YTTypeUint32) YTType() string { return string(ytschema.TypeUint32) }
+
+type YTTypeInt64 struct{}
+
+func (y *YTTypeInt64) YTType() string { return string(ytschema.TypeInt64) }
+
+type YTTypeUint64 struct{}
+
+func (y *YTTypeUint64) YTType() string { return string(ytschema.TypeUint64) }
+
+type YTTypeBoolean struct{}
+
+func (y *YTTypeBoolean) YTType() string { return string(ytschema.TypeBoolean) }
+
+type YTTypeFloat32 struct{}
+
+func (y *YTTypeFloat32) YTType() string { return string(ytschema.TypeFloat32) }
+
+type YTTypeFloat64 struct{}
+
+func (y *YTTypeFloat64) YTType() string { return string(ytschema.TypeFloat64) }
+
+type YTTypeString struct{}
+
+func (y *YTTypeString) YTType() string { return string(ytschema.TypeString) }
+
+type YTTypeBytes struct{}
+
+func (y *YTTypeBytes) YTType() string { return string(ytschema.TypeBytes) }
+
+type YTTypeAny struct{}
+
+func (y *YTTypeAny) YTType() string { return string(ytschema.TypeAny) }
+
+type YTTypeDate struct{}
+
+func (y *YTTypeDate) YTType() string { return string(ytschema.TypeDate) }
+
+type YTTypeDatetime struct{}
+
+func (y *YTTypeDatetime) YTType() string { return string(ytschema.TypeDatetime) }
+
+type YTTypeTimestamp struct{}
+
+func (y *YTTypeTimestamp) YTType() string { return string(ytschema.TypeTimestamp) }
+
+type YTTypeInterval struct{}
+
+func (y *YTTypeInterval) YTType() string { return string(ytschema.TypeInterval) }
+
+//---
 // main interface for FieldReceiver objects
 
 type FieldReceiver interface {

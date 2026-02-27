@@ -67,7 +67,6 @@ const (
 
 	SourceTypePg    = "pg"
 	SourceTypeMysql = "mysql"
-	SourceTypeYDB   = "ydb"
 
 	MysqlTimeZoneUTC = "UTC"
 
@@ -130,7 +129,7 @@ var connectorSettings = []connectorSetting{
 	{TopicPrefix, []string{}, ""},
 	{UnknownTypesPolicy, []string{UnknownTypesPolicyFail, UnknownTypesPolicySkip, UnknownTypesPolicyToString}, UnknownTypesPolicyFail},
 	{AddOriginalTypes, []string{BoolFalse, BoolTrue}, BoolFalse},
-	{SourceType, []string{"", SourceTypePg, SourceTypeMysql, SourceTypeYDB}, ""},
+	{SourceType, []string{"", SourceTypePg, SourceTypeMysql}, ""},
 	{MysqlTimeZone, []string{}, MysqlTimeZoneUTC},
 	{BatchingMaxSize, []string{}, "0"},
 	{WriteIntoOneFullTopicName, []string{BoolFalse, BoolTrue}, BoolFalse},

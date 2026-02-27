@@ -53,9 +53,7 @@ var (
 	ProviderTypePostgresql    = ProviderType("managed-postgresql")
 	ProviderTypeMongodb       = ProviderType("managed-mongodb")
 	ProviderTypeClickhouse    = ProviderType("managed-clickhouse")
-	ProviderTypeGreenplum     = ProviderType("managed-greenplum")
 	ProviderTypeElasticSearch = ProviderType("managed-elasticsearch")
-	ProviderTypeOpenSearch    = ProviderType("managed-opensearch")
 )
 
 type InstanceType string

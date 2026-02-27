@@ -5,12 +5,6 @@ meta:
   coverage_model: Tiered Core+Extensions
   rollout: Two Waves
   kafka_snapshot_policy: excluded_from_mandatory_core
-  inventory:
-    total_ydb_yt_tests: 125
-    dest_2yt: 82
-    dest_2ydb: 20
-    src_ydb2: 28
-    src_yt2: 15
 sources:
 - pg2ch
 - mysql2ch
