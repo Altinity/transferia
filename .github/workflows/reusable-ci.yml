@@ -1,0 +1,267 @@
+name: Reusable CI
+
+on:
+  workflow_call:
+    inputs:
+      stream:
+        description: "Pipeline stream: prod or dev"
+        required: true
+        type: string
+      run_e2e:
+        description: "Run e2e jobs"
+        required: false
+        default: true
+        type: boolean
+      run_optional:
+        description: "Run optional e2e suites"
+        required: false
+        default: true
+        type: boolean
+      go_version:
+        description: "Go version to use"
+        required: false
+        default: "1.24.13"
+        type: string
+
+concurrency:
+  group: reusable-ci-${{ inputs.stream }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build / ${{ inputs.stream }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go_version }}
+      - shell: bash
+        run: |
+          make build
+
+  smoke-tests:
+    needs: [build]
+    if: github.event_name == 'push'
+    name: smoke / cmd / ${{ inputs.stream }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go_version }}
+      - shell: bash
+        run: |
+          packages=$(go list ./cmd/... | grep -v '/tests$' || true)
+          if [ -z "$packages" ]; then
+            echo "No cmd packages selected"
+            exit 1
+          fi
+          go test $packages -timeout=20m
+
+  generic-tests:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    needs: build
+    name: tests / ${{ inputs.stream }} / ${{ matrix.suite.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [
+            { group: "tests/canon", name: "canon-parser", path: "parser" },
+            { group: "tests/storage", name: "storage-pg", path: "pg" },
+            { group: "internal", name: "internal", path: "" },
+            { group: "pkg/providers", name: "providers-mongo", path: "mongo" },
+            { group: "pkg/providers", name: "providers-mysql", path: "mysql" },
+            { group: "pkg/providers", name: "providers-sample", path: "sample" },
+            { group: "pkg/providers", name: "providers-stdout", path: "stdout" },
+            { group: "pkg/providers", name: "providers-kafka", path: "kafka" },
+            { group: "pkg/providers", name: "providers-kinesis", path: "kinesis" },
+            { group: "pkg/providers", name: "providers-clickhouse", path: "clickhouse" },
+            { group: "pkg/providers", name: "providers-airbyte", path: "airbyte" },
+            { group: "pkg/providers", name: "providers-eventhub", path: "eventhub" },
+            { group: "pkg/providers", name: "providers-oracle", path: "oracle" },
+            { group: "pkg", name: "abstract", path: "abstract" },
+            { group: "pkg", name: "transformer", path: "transformer" },
+            { group: "pkg", name: "predicate", path: "predicate" },
+            { group: "pkg", name: "dblog", path: "dblog" },
+            { group: "pkg", name: "functions", path: "functions" },
+            { group: "pkg", name: "middlewares", path: "middlewares" },
+            { group: "pkg", name: "parsequeue", path: "parsequeue" },
+            { group: "pkg", name: "util", path: "util" },
+            { group: "pkg", name: "stringutil", path: "stringutil" },
+            { group: "pkg", name: "serializer", path: "serializer" },
+            { group: "pkg", name: "worker", path: "worker" },
+            { group: "pkg", name: "schemaregistry", path: "schemaregistry" },
+            { group: "pkg", name: "parsers-generic", path: "parsers/generic" },
+            { group: "pkg", name: "parsers-tests", path: "parsers/tests" },
+            { group: "pkg", name: "parsers-scanner", path: "parsers/scanner" },
+          ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go_version }}
+      - shell: bash
+        run: |
+          go install gotest.tools/gotestsum@latest
+      - shell: bash
+        run: |
+          curl https://clickhouse.com/ | sh
+          sudo ./clickhouse install
+      - name: Setup PostgreSQL
+        uses: tj-actions/install-postgresql@v3
+        with:
+          postgresql-version: 16
+      - shell: bash
+        run: |
+          echo "Running ${{ matrix.suite.group }} suite ${{ matrix.suite.name }}"
+          export RECIPE_CLICKHOUSE_BIN=clickhouse
+          export USE_TESTCONTAINERS=1
+          EXTRA_GO_TEST_ARGS=""
+          if [[ "${{ matrix.suite.group }}" == "pkg/providers" && "${{ matrix.suite.path }}" == "clickhouse" ]]; then
+            # ClickHouse provider tests initialize multiple testcontainer recipes at package init;
+            # serial package execution avoids ryuk/reaper startup races.
+            EXTRA_GO_TEST_ARGS="-p=1"
+          fi
+          gotestsum \
+            --junitfile="reports/${{ inputs.stream }}-${{ matrix.suite.name }}.xml" \
+            --junitfile-project-name="${{ matrix.suite.group }}" \
+            --junitfile-testsuite-name="short" \
+            --rerun-fails \
+            --format github-actions \
+            --packages="./${{ matrix.suite.group }}/${{ matrix.suite.path }}/..." \
+            -- -timeout=15m $EXTRA_GO_TEST_ARGS
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ inputs.stream }}-${{ matrix.suite.name }}
+          path: reports/${{ inputs.stream }}-${{ matrix.suite.name }}.xml
+      - name: Fail if tests failed
+        if: failure()
+        run: exit 1
+
+  e2e-core:
+    if: inputs.run_e2e && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    needs: [build]
+    name: e2e-core / ${{ inputs.stream }} / ${{ matrix.suite.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [
+            { group: "tests/e2e-core", name: "pg2ch", path: "pg2ch" },
+            { group: "tests/e2e-core", name: "mysql2ch", path: "mysql2ch" },
+            { group: "tests/e2e-core", name: "mongo2ch", path: "mongo2ch" },
+            { group: "tests/e2e-core", name: "kafka2ch", path: "kafka2ch" },
+          ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go_version }}
+      - shell: bash
+        run: |
+          go install gotest.tools/gotestsum@latest
+      - shell: bash
+        run: |
+          curl https://clickhouse.com/ | sh
+          sudo ./clickhouse install
+      - name: Setup PostgreSQL
+        uses: tj-actions/install-postgresql@v3
+        with:
+          postgresql-version: 16
+      - shell: bash
+        run: |
+          pg_dump --version
+      - shell: bash
+        run: |
+          make run-tests SUITE_GROUP="${{ matrix.suite.group }}" SUITE_PATH="${{ matrix.suite.path }}" SUITE_NAME="${{ inputs.stream }}-${{ matrix.suite.name }}"
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ inputs.stream }}-${{ matrix.suite.name }}
+          path: reports/*.xml
+      - name: Fail if tests failed
+        if: failure()
+        run: exit 1
+
+  e2e-optional:
+    if: inputs.run_e2e && inputs.run_optional && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    needs: [build]
+    name: e2e-optional / ${{ inputs.stream }} / ${{ matrix.suite.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [
+            { group: "tests/e2e-optional", name: "airbyte2ch", path: "airbyte2ch" },
+            { group: "tests/e2e-optional", name: "ch2ch", path: "ch2ch" },
+            { group: "tests/e2e-optional", name: "eventhub2ch", path: "eventhub2ch" },
+            { group: "tests/e2e-optional", name: "kafka2ch", path: "kafka2ch" },
+            { group: "tests/e2e-optional", name: "kinesis2ch", path: "kinesis2ch" },
+            { group: "tests/e2e-optional", name: "oracle2ch", path: "oracle2ch" },
+          ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go_version }}
+      - shell: bash
+        run: |
+          go install gotest.tools/gotestsum@latest
+      - shell: bash
+        run: |
+          curl https://clickhouse.com/ | sh
+          sudo ./clickhouse install
+      - name: Setup PostgreSQL
+        uses: tj-actions/install-postgresql@v3
+        with:
+          postgresql-version: 16
+      - shell: bash
+        run: |
+          pg_dump --version
+      - shell: bash
+        run: |
+          make run-tests SUITE_GROUP="${{ matrix.suite.group }}" SUITE_PATH="${{ matrix.suite.path }}" SUITE_NAME="${{ inputs.stream }}-optional-${{ matrix.suite.name }}"
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-${{ inputs.stream }}-optional-${{ matrix.suite.name }}
+          path: reports/*.xml
+      - name: Fail if tests failed
+        if: failure()
+        run: exit 1
+
+  test-report:
+    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    needs: [generic-tests, e2e-core, e2e-optional]
+    name: test-report / ${{ inputs.stream }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download All Test Reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-reports-${{ inputs.stream }}-*
+          merge-multiple: true
+          path: reports/
+      - name: Test Summary
+        uses: test-summary/action@v2
+        if: always()
+        with:
+          paths: "reports/*.xml"
